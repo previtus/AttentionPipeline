@@ -17,7 +17,7 @@ save_mixes_folder = "/home/ekmek/saliency_tools/_sample_inputs/mixes/"
 image_files = os.listdir(images_folder)
 saliency_files = os.listdir(saliency_folder)
 
-#for i in range(0,2):
+#for i in range(0,1):
 for i in range(0,len(image_files)):
     img_path = images_folder+image_files[i]
     sal_path = saliency_folder+saliency_files[i]
