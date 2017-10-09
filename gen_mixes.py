@@ -1,7 +1,9 @@
-# show figures of images
+# Save mixes into new folder = alpha blended image and saliency over it
 
 import os
 from PIL import Image
+
+from helpers import make_dir_if_doesnt_exist
 
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
@@ -13,6 +15,7 @@ import numpy as np
 images_folder = "/home/ekmek/saliency_tools/_sample_inputs/images/"
 saliency_folder = "/home/ekmek/saliency_tools/_sample_inputs/heatmaps/"
 save_mixes_folder = "/home/ekmek/saliency_tools/_sample_inputs/mixes/"
+make_dir_if_doesnt_exist(save_mixes_folder)
 
 image_files = os.listdir(images_folder)
 saliency_files = os.listdir(saliency_folder)

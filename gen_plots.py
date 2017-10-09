@@ -1,4 +1,4 @@
-# process heatmaps
+# Save k-means plots of images, solely for visualization
 
 import os
 from PIL import Image
@@ -7,6 +7,7 @@ import matplotlib.transforms as transforms
 from matplotlib.pyplot import imshow
 
 from visualization import visualize_kmeans
+from helpers import make_dir_if_doesnt_exist
 
 import numpy as np
 from sklearn.cluster import KMeans
@@ -16,8 +17,8 @@ from timeit import default_timer as timer
 # paths:
 images_folder = "/home/ekmek/saliency_tools/_sample_inputs/images/"
 saliency_folder = "/home/ekmek/saliency_tools/_sample_inputs/heatmaps/"
-save_mixes_folder = "/home/ekmek/saliency_tools/_sample_inputs/mixes/"
 save_plots_folder = "/home/ekmek/saliency_tools/_sample_inputs/plots/"
+make_dir_if_doesnt_exist(save_plots_folder)
 
 image_files = os.listdir(images_folder)
 saliency_files = os.listdir(saliency_folder)
@@ -46,11 +47,6 @@ for i in range(0,len(image_files)):
     px2d = np.array(tmp)
     nonzero_px = np.transpose(np.nonzero(px2d))
     print len(nonzero_px), nonzero_px[0:10]
-
-    X = np.array([[1, 2], [1, 4], [1, 0],
-                  [4, 2], [4, 4], [4, 0]])
-    print X.shape
-    print nonzero_px.shape
 
     k = 4
     kmeans = KMeans(n_clusters=k).fit(nonzero_px)
