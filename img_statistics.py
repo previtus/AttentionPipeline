@@ -2,9 +2,10 @@ voc2012 = "/home/ekmek/Downloads/datasets/pascal voc 2012/VOCdevkit/VOC2012/JPEG
 cat2000 = "/home/ekmek/Downloads/datasets/CAT2000 saliency/trainSet/Stimuli/Action/"
 salicon_challenge = "/home/ekmek/Downloads/datasets/salicon-2017-challenge/images/"
 mit300 = "/home/ekmek/Downloads/datasets/MIT300/BenchmarkIMAGES/BenchmarkIMAGES/"
+examples = "/home/ekmek/saliency_tools/_sample_inputs/images/"
 
 
-folder = cat2000
+folder = examples
 
 import os
 import numpy
@@ -18,8 +19,7 @@ hs = []
 ws = []
 ds = []
 
-for i in range(0,100):
-#for i in range(0,len(image_files)):
+for i in range(0,min(100,len(image_files))):
 
     img_path = folder+image_files[i]
     #print img_path
