@@ -1,4 +1,6 @@
 # [PyCharm]
+.idea/**
+.idea/*
 
 # User-specific stuff:
 .idea/**/workspace.xml
