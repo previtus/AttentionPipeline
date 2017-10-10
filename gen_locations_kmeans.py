@@ -22,8 +22,8 @@ saliency_files = os.listdir(saliency_folder)
 dictionary_id_to_centers = {}
 
 start = timer()
-for i in range(0,1):
-#for i in range(0,len(image_files)):
+#for i in range(0,1):
+for i in range(0,len(image_files)):
     img_path = images_folder+image_files[i]
     sal_path = saliency_folder+saliency_files[i]
 
