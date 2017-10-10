@@ -24,21 +24,36 @@ def offset_into_interval(values, interval):
         values[1] += off
     return values
 
+
+
 # paths:
 images_folder = "/home/ekmek/saliency_tools/_sample_inputs/images/"
 saliency_folder = "/home/ekmek/saliency_tools/_sample_inputs/heatmaps/"
 save_indices_folder = "/home/ekmek/saliency_tools/_sample_inputs/indices/"
-make_dir_if_doesnt_exist(save_indices_folder)
 save_plots2_folder = "/home/ekmek/saliency_tools/_sample_inputs/plots2/"
-make_dir_if_doesnt_exist(save_plots2_folder)
-
 save_crops_folder = "/home/ekmek/saliency_tools/_sample_inputs/crops/"
+
+images_folder = "/home/ekmek/saliency-salgan-2017/images1k/"
+saliency_folder = "/home/ekmek/saliency-salgan-2017/saliency1k/"
+
+images_folder = "/home/ekmek/Downloads/streetview images dataset/SCORED_ONLY/images/"
+saliency_folder = "/home/ekmek/Downloads/streetview images dataset/SCORED_ONLY/saliency/"
+
+#save_indices_folder = "/home/ekmek/saliency_tools/_sample_inputs/30k_k3/indices/"
+#save_plots2_folder = "/home/ekmek/saliency_tools/_sample_inputs/30k_k3/plots2/"
+save_crops_folder = "/home/ekmek/Downloads/streetview images dataset/SCORED_ONLY/crops_50proc_3clusters/"
+
+
+make_dir_if_doesnt_exist(save_indices_folder)
+#make_dir_if_doesnt_exist(save_plots2_folder)
 make_dir_if_doesnt_exist(save_crops_folder)
 
 image_files = os.listdir(images_folder)
 saliency_files = os.listdir(saliency_folder)
 
 dictionary_id_to_centers = {}
+
+bool_generate_plots = False
 
 start = timer()
 #for i in range(1,2):
@@ -66,25 +81,24 @@ for i in range(0,len(image_files)):
     centers = kmeans.cluster_centers_
     centers = centers.astype(int)
 
-    fig, ax = plt.subplots()
-
-    centroids = kmeans.cluster_centers_
-    plt.scatter(centroids[:, 1], centroids[:, 0],
-            marker='x', s=169, linewidths=3,
-            color='r', zorder=10)
-
     id = image_files[i][:-4]
-    #print id, centers
+    print i,":",id
 
-    plt.imshow(img)
-    plt.xlim(-100, 740)
-    plt.ylim(-100, 740)
-    plt.gca().invert_yaxis()
+    if bool_generate_plots:
+        fig, ax = plt.subplots()
+        plt.scatter(centers[:, 1], centers[:, 0],
+                marker='x', s=169, linewidths=3,
+                color='r', zorder=10)
+
+        plt.imshow(img)
+        plt.xlim(-100, 740)
+        plt.ylim(-100, 740)
+        plt.gca().invert_yaxis()
 
     desired_size = (224,224)
     k_idx = 0
     for center in centers:
-        print center
+        #print center
         xc = center[0]
         yc = center[1]
         xleft = xc - desired_size[0]/2
@@ -102,27 +116,31 @@ for i in range(0,len(image_files)):
         area = (start_x, start_y, start_x + width, start_y + height)
         cropped_img = img.crop(box=area)
         cropped_img.load()
-        print cropped_img, cropped_img.size
+        #print cropped_img, cropped_img.size
         #cropped_img.show()
         cropped_img.save(save_crops_folder+id+'_'+str(k_idx)+".jpg")
 
-        ax.add_patch(
-            patches.Rectangle(
-                (ybottom, xleft),
-                xright-xleft,
-                ytop-ybottom,fill=False
+        if bool_generate_plots:
+            ax.add_patch(
+                patches.Rectangle(
+                    (ybottom, xleft),
+                    xright-xleft,
+                    ytop-ybottom,fill=False
+                )
             )
-        )
 
         k_idx += 1
-    #plt.show()
 
-    plt.title(str(k)+'-means of image with threshold of '+str(int(perc*100))+'%')
-    plt.savefig(save_plots2_folder+image_files[i],bbox_inches='tight', pad_inches=0, dpi=140)
-    plt.close()
+    if bool_generate_plots:
+        plt.show()
+
+        plt.title(str(k)+'-means of image with threshold of '+str(int(perc*100))+'%')
+        plt.savefig(save_plots2_folder+image_files[i],bbox_inches='tight', pad_inches=0, dpi=140)
+        plt.close()
 
     dictionary_id_to_centers[id] = centers
 
+#np.save(save_indices_folder+'indices.npy', dictionary_id_to_centers)
 
 end = timer()
 t = (end - start)
