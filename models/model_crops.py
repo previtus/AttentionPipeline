@@ -29,7 +29,7 @@ from keras.losses import mean_squared_error
 
 from timeit import default_timer as timer
 
-data_train, data_val = default_load()
+data_train, data_val = default_load(force_split_by_ids=False)
 
 train = np.transpose(data_train)
 t_filenames = train[0]
@@ -62,13 +62,13 @@ model = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
 # InceptionV3 5, 5, 2048
 # Xception 7, 7, 2048
 
-filename_features_train = "train_features_cropdata_Resnet_3clusters.npy"
-filename_features_test = "val_features_cropdata_Resnet_3clusters.npy"
-features_need_cooking = True
-
-#filename_features_train = "train_features_cropdataTEST.npy"
-#filename_features_test = "val_features_cropdataTEST.npy"
+#filename_features_train = "train_features_cropdata_Resnet_3clusters.npy"
+#filename_features_test = "val_features_cropdata_Resnet_3clusters.npy"
 #features_need_cooking = True
+
+filename_features_train = "train_features_cropdata.npy"
+filename_features_test = "val_features_cropdata.npy"
+features_need_cooking = False
 
 if features_need_cooking:
 
@@ -185,11 +185,12 @@ def grouped_mse(k=3):
     return f
 
 k=3
-model.compile(optimizer='rmsprop', loss='mean_squared_error', metrics=[grouped_mse(k)])
+#model.compile(optimizer='rmsprop', loss='mean_squared_error', metrics=[grouped_mse(k)])
 
 # Incompatible shapes: [7] vs. [21] // n - n/3
 #model.compile(optimizer='rmsprop', loss=grouped_mse(k), metrics=['mean_squared_error'])
 
+model.compile(optimizer='rmsprop', loss='mean_squared_error')
 
 start = timer()
 history = model.fit(train_data, train_labels, verbose=2,
@@ -200,7 +201,8 @@ time = (end - start)
 
 
 history = history.history
-visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(time)+"s",show=False,save=True,save_path='loss.png')
+#visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(time)+"s",show=False,save=True,save_path='loss.png')
+visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(time)+"s")
 
 # Evaluate the true score:
 start = timer()

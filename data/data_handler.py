@@ -67,10 +67,10 @@ def get_data_from_folder(folder, include_osm=False):
             data.append( [path, id] + label )
     return data
 
-def default_load(folder="crops_50proc_3clusters"):
+def default_load(folder="crops_50proc_3clusters",force_split_by_ids=True):
     data = get_data_from_folder(folder)
 
-    data_train, data_val = split_one_array(data)
+    data_train, data_val = split_one_array(data,force_split_by_ids=force_split_by_ids)
 
     return data_train, data_val
 
