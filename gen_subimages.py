@@ -33,15 +33,14 @@ save_indices_folder = "/home/ekmek/saliency_tools/_sample_inputs/indices/"
 save_plots2_folder = "/home/ekmek/saliency_tools/_sample_inputs/plots2/"
 save_crops_folder = "/home/ekmek/saliency_tools/_sample_inputs/crops/"
 
-images_folder = "/home/ekmek/saliency-salgan-2017/images1k/"
-saliency_folder = "/home/ekmek/saliency-salgan-2017/saliency1k/"
 
-images_folder = "/home/ekmek/Downloads/streetview images dataset/SCORED_ONLY/images/"
-saliency_folder = "/home/ekmek/Downloads/streetview images dataset/SCORED_ONLY/saliency/"
+images_folder = "/home/ekmek/saliency_tools/data/images/"
+saliency_folder = "/home/ekmek/saliency_tools/data/saliency/"
 
 #save_indices_folder = "/home/ekmek/saliency_tools/_sample_inputs/30k_k3/indices/"
 #save_plots2_folder = "/home/ekmek/saliency_tools/_sample_inputs/30k_k3/plots2/"
-save_crops_folder = "/home/ekmek/Downloads/streetview images dataset/SCORED_ONLY/crops_50proc_3clusters/"
+#save_crops_folder = "/home/ekmek/Downloads/streetview images dataset/SCORED_ONLY/crops_50proc_3clusters/"
+save_crops_folder = "/home/ekmek/saliency_tools/data/crops_50proc_6clusters/"
 
 
 make_dir_if_doesnt_exist(save_indices_folder)
@@ -75,7 +74,7 @@ for i in range(0,len(image_files)):
     px2d = np.array(tmp)
     nonzero_px = np.transpose(np.nonzero(px2d))
 
-    k = 3
+    k = 6
     kmeans = KMeans(n_clusters=k).fit(nonzero_px)
 
     centers = kmeans.cluster_centers_
