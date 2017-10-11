@@ -3,7 +3,7 @@
 """
 data/images/0000_0.jpg (8376 images with 640x640x3 size)
 data/saliency/0000_0.jpg (8376 images with 640x640x3 size)
-data/crops.../0000_0_0.jpg
+data/crops.../0000_0_0.jpg (25128 images with 224x224x3 size)
 
 Where we have 3 sets of numbers delineated by underscore.
 
@@ -21,6 +21,8 @@ third _0 - this applies for crops, we generated k smaller crops
 import numpy as np
 import os
 
+PATH = os.path.dirname(os.path.realpath(__file__)) + "/"
+
 def split_one_array(arr,validation_split=0.2):
     split_at = int(len(arr) * (1 - validation_split))
     arr_train = arr[0:split_at]
@@ -28,9 +30,9 @@ def split_one_array(arr,validation_split=0.2):
     return arr_train,arr_val
 
 def load_dictionaries(include_osm=False):
-    filename = "id_to_score.npy"
+    filename = PATH+"id_to_score.npy"
     if include_osm:
-        filename = "id_to_score_and_osm.npy"
+        filename = PATH+"id_to_score_and_osm.npy"
     dictionary = np.load(filename).item()
     return dictionary
 
@@ -39,13 +41,13 @@ def get_data_from_folder(folder, include_osm=False):
     data = []
     dictionary = load_dictionaries(include_osm)
 
-    files = os.listdir(folder)
+    files = os.listdir(PATH+folder)
     files.sort()
     for i in range(len(files)):
     #for i in range(5):
         file = files[i]
         if file.endswith(".jpg"):
-            path = os.path.join(folder, file)
+            path = PATH+os.path.join(folder, file)
             underscores = file.split("_")
             id = -1
             if len(underscores) == 2:
@@ -62,13 +64,16 @@ def default_load(folder="crops_50proc_3clusters"):
 
     data_train, data_val = split_one_array(data)
 
-    #datat = np.transpose(data)
-    #filenames = datat[0]
-    #scores = datat[1]
-
     return data_train, data_val
 
+def filenames_to_data(filenames):
+    from keras.preprocessing.image import load_img, img_to_array
 
-a,b = default_load()
-print a[0:2]
-print b[0:2]
+    imgs_arr = []
+    for img_path in filenames:
+
+        pil_img = load_img(img_path, target_size=None)
+        arr = img_to_array(pil_img, 'channels_last')
+        imgs_arr.append(arr)
+
+    return np.array(imgs_arr)
