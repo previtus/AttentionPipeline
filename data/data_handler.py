@@ -74,13 +74,13 @@ def default_load(folder="crops_50proc_3clusters",force_split_by_ids=True):
 
     return data_train, data_val
 
-def filenames_to_data(filenames):
+def filenames_to_data(filenames, target_size=None):
     from keras.preprocessing.image import load_img, img_to_array
 
     imgs_arr = []
     for img_path in filenames:
 
-        pil_img = load_img(img_path, target_size=None)
+        pil_img = load_img(img_path, target_size=target_size)
         arr = img_to_array(pil_img, 'channels_last')
         imgs_arr.append(arr)
 

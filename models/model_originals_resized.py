@@ -48,3 +48,32 @@ print len(t_ids), train_labels.shape
 print len(v_ids), validation_labels.shape
 
 # load them and resize
+
+
+input_shape = None
+model = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
+
+
+
+#v_filenames = v_filenames[0:21]
+#validation_labels = validation_labels[0:21]
+#t_filenames = t_filenames[0:21]
+#train_labels = train_labels[0:21]
+
+
+filename_features_train = "train_features_resizeddata_Resnet50.npy"
+filename_features_test = "val_features_resizeddata_Resnet50.npy"
+features_need_cooking = True
+
+if features_need_cooking:
+    t_data = filenames_to_data(t_filenames,target_size=(213,224)) #img_height, img_width
+    v_data = filenames_to_data(v_filenames,target_size=(213,224))
+
+
+    bottleneck_features_validation = model.predict(v_data, batch_size=32, verbose=1)
+    print "saving val_features of size", len(bottleneck_features_validation), " into ", filename_features_test
+    np.save(open(filename_features_test, 'w'), bottleneck_features_validation)
+
+    bottleneck_features_train = model.predict(t_data, batch_size=32, verbose=1)
+    print "saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train
+    np.save(open(filename_features_train, 'w'), bottleneck_features_train)
