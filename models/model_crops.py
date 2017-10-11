@@ -14,8 +14,11 @@ n images * 224x224x3 ----[ ResNet50 ]-[flatten]-[ custom top: dense, dropout ]-[
 
 import numpy as np
 import os
+import sys
+sys.path.append("..")
+
 from data.data_handler import *
-from models import *
+from helpers import visualize_history
 from keras.applications.resnet50 import ResNet50
 
 data_train, data_val = default_load()
@@ -54,9 +57,8 @@ if features_need_cooking:
     # 25.7GB/32GB MEM
     # 1962s + 7846s
 
-
-    #training dataset: (20102, 224, 224, 3) images (20102,) labels
-    #validation dataset: (5026, 224, 224, 3) images (5026,) labels
+    #t_data: (20102, 224, 224, 3) images
+    #v_data: (5026, 224, 224, 3) images
 
     #train_generator = getImageGenerator(t_filenames, t_scores)
     #val_generator = getImageGenerator(v_filenames, v_scores)
@@ -83,7 +85,35 @@ validation_data = np.load(open(filename_features_test))
 
 print "training dataset:", train_data.shape, "features", train_labels.shape, "labels"
 print "validation dataset:", validation_data.shape, "features", validation_labels.shape, "labels"
+#training dataset: (20102, 1, 1, 2048) features (20102,) labels
+#validation dataset: (5026, 1, 1, 2048) features (5026,) labels
 
 
 #### TOP MODEL
 # Features - [flatten]-[ custom top: dense, dropout ]-[dense sigmoid 1]-- n labels x 1
+from keras.layers import Dropout, Flatten, Dense, Conv2D, MaxPooling2D
+from keras.models import Model
+from keras.layers import Input, concatenate, GlobalAveragePooling2D
+
+
+img_features_input = Input(shape=(1, 1, 2048))
+top = Flatten()(img_features_input)
+top = Dense(256, activation='relu')(top)
+top = Dropout(0.5)(top)
+top = Dense(256, activation='relu')(top)
+top = Dropout(0.5)(top)
+output = Dense(1, activation='sigmoid')(top)
+
+model = Model(inputs=img_features_input, outputs=output)
+
+#model.summary()
+epochs = 100
+batch_size = 256
+
+model.compile(optimizer='rmsprop', loss='mean_squared_error')
+history = model.fit(train_data, train_labels, verbose=2,
+                    epochs=epochs, batch_size=batch_size,
+                    validation_data=(validation_data, validation_labels))
+
+history = history.history
+visualize_history(history)
