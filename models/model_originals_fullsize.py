@@ -1,14 +1,14 @@
 # Here we want to use data and model
 """
-inputs: cropped images 25128 images with 224x224x3 size
-labels: 25128 labels
+inputs: cropped images 6701+1675 images with 224x213x3 size
+labels: 6701+1675 labels
 
-25128 dataset => [20102 train, 5026 validation]
+dataset => [6701 train, 1675 validation]
 
-n images * 224x224x3 ----[ CNN model ]---- n labels x 1
+n images * 640x640x3 ----[ CNN model ]---- n labels x 1
 
 Possibly:
-n images * 224x224x3 ----[ ResNet50 ]-[flatten]-[ custom top: dense, dropout ]-[dense sigmoid 1]-- n labels x 1
+n images * 640x640x3 ----[ ResNet50 ]-[flatten]-[ custom top: dense, dropout ]-[dense sigmoid 1]-- n labels x 1
 
 """
 
