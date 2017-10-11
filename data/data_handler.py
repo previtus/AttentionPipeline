@@ -23,10 +23,18 @@ import os
 
 PATH = os.path.dirname(os.path.realpath(__file__)) + "/"
 
-def split_one_array(arr,validation_split=0.2):
+def split_one_array(arr,validation_split=0.2, force_split_by_ids = True):
     split_at = int(len(arr) * (1 - validation_split))
+
+    if force_split_by_ids:
+        k = 0
+        while arr[split_at+k][1] == arr[split_at][1]:
+            k += 1
+        split_at += k
+
     arr_train = arr[0:split_at]
     arr_val = arr[split_at:]
+
     return arr_train,arr_val
 
 def load_dictionaries(include_osm=False):
@@ -56,7 +64,7 @@ def get_data_from_folder(folder, include_osm=False):
                 id = underscores[0]+"_"+underscores[1]
             label = dictionary[id]
 
-            data.append( [path] + label )
+            data.append( [path, id] + label )
     return data
 
 def default_load(folder="crops_50proc_3clusters"):
