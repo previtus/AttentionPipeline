@@ -64,7 +64,7 @@ model = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
 
 filename_features_train = "train_features_cropdata_Resnet_3clusters.npy"
 filename_features_test = "val_features_cropdata_Resnet_3clusters.npy"
-features_need_cooking = True
+features_need_cooking = False
 
 #filename_features_train = "train_features_cropdata.npy"
 #filename_features_test = "val_features_cropdata.npy"
