@@ -2,7 +2,8 @@ import numpy as np
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 
-
+# adapted from https://techblog.appnexus.com/a-keras-multithreaded-dataframe-generator-for-millions-of-image-files-84d3027f6f43
+# however we need only simpler version
 def generator_from_filenames(data, batch_size, resize):
     """
     data = [ [filename1, y1],[filename2, y2], ... ]
