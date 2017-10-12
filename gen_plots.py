@@ -48,7 +48,7 @@ for i in range(0,len(image_files)):
     nonzero_px = np.transpose(np.nonzero(px2d))
     print len(nonzero_px), nonzero_px[0:10]
 
-    k = 4
+    k = 3
     kmeans = KMeans(n_clusters=k).fit(nonzero_px)
     print kmeans
     print kmeans.cluster_centers_
