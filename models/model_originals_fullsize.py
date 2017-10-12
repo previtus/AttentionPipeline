@@ -18,18 +18,15 @@ import sys
 sys.path.append("..")
 
 from data.data_handler import *
-from helpers import visualize_history
-from keras.applications.vgg16 import VGG16
-from keras.applications.vgg19 import VGG19
 from keras.applications.resnet50 import ResNet50
-from keras.applications.inception_v3 import InceptionV3
-from keras.applications.xception import Xception
-#from keras.applications.inception_resnet_v2 import InceptionResNetV2
-from keras.losses import mean_squared_error
-
 from timeit import default_timer as timer
+from generator_fun import generator_from_filenames
 
 data_train, data_val = default_load(folder="images")
+
+# LIMIT DATA
+data_train = data_train#[0:21]
+data_val = data_val#[0:14]
 
 train = np.transpose(data_train)
 t_filenames = train[0]
@@ -40,6 +37,19 @@ val = np.transpose(data_val)
 v_filenames = val[0]
 v_ids = val[1]
 validation_labels = np.array(val[2])
+
+t_filenames_and_labels = [t_filenames, train_labels]
+t_filenames_and_labels = np.transpose(t_filenames_and_labels)
+
+v_filenames_and_labels = [v_filenames, validation_labels]
+v_filenames_and_labels = np.transpose(v_filenames_and_labels)
+
+t_filenames_and_labels = [t_filenames, train_labels]
+t_filenames_and_labels = np.transpose(t_filenames_and_labels)
+
+v_filenames_and_labels = [v_filenames, validation_labels]
+v_filenames_and_labels = np.transpose(v_filenames_and_labels)
+
 
 print ("training dataset:", len(t_filenames), "image files")
 print ("validation dataset:", len(v_filenames), "image files")
@@ -66,20 +76,42 @@ filename_features_test = "val_features_fullsizedata_Resnet50.npy"
 features_need_cooking = True
 
 if features_need_cooking:
-    # FULL SIZE - 32GB Mem not enough for both
-    t_data = filenames_to_data(t_filenames)
 
-    bottleneck_features_train = model.predict(t_data, batch_size=32, verbose=1)
-    print ("saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train)
+    target_size = None # testing
+
+    # SEEMS LIKE THEY HAVE TO MAKE UP THE WHOLE SET
+    #batch_size = 16
+    #mod = 1
+    #while mod <> 0:
+    #    batch_size = batch_size - 1
+    #    nbatches_train, mod = divmod(len(t_filenames_and_labels), batch_size)
+    #print batch_size, "x", nbatches_train, "with mod", mod
+
+    batch_size = 1
+    nbatches_train = len(t_filenames_and_labels)
+
+    train_generator = generator_from_filenames(t_filenames_and_labels, batch_size, target_size)
+    bottleneck_features_train = model.predict_generator(train_generator, steps=nbatches_train, verbose=1)
+    print ""
+    print bottleneck_features_train.shape
     np.save(open(filename_features_train, 'w'), bottleneck_features_train)
 
-    t_data = []
+    batch_size = 1
+    nbatches_val = len(v_filenames_and_labels)
+    val_generator = generator_from_filenames(v_filenames_and_labels, batch_size, target_size)
+    bottleneck_features_val = model.predict_generator(val_generator, steps=nbatches_val, verbose=1)
+    print ""
+    print bottleneck_features_val.shape
+    np.save(open(bottleneck_features_val, 'w'), bottleneck_features_val)
 
 
-    v_data = filenames_to_data(v_filenames)
-
-    bottleneck_features_validation = model.predict(v_data, batch_size=32, verbose=1)
-    print ("saving val_features of size", len(bottleneck_features_validation), " into ", filename_features_test)
-    np.save(open(filename_features_test, 'w'), bottleneck_features_validation)
-
-    v_data = []
+    """
+    # FULL SIZE - 32GB Mem not enough for both
+    t_data = filenames_to_data(t_filenames)
+    bottleneck_features_train = model.predict(t_data, batch_size=32, verbose=1)
+    print ""
+    print bottleneck_features_train.shape
+    #print ("saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train)
+    #np.save(open(filename_features_train, 'w'), bottleneck_features_train)
+    np.save(open("TESTf2.npy", 'w'), bottleneck_features_train)
+    """
