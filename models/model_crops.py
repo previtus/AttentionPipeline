@@ -3,7 +3,7 @@
 inputs: cropped images 25128 images with 224x224x3 size
 labels: 25128 labels
 
-25128 dataset => [20102 train, 5026 validation]
+25128 dataset => [20103 train, 5025 validation]
 
 n images * 224x224x3 ----[ CNN model ]---- n labels x 1
 
@@ -29,7 +29,7 @@ from keras.losses import mean_squared_error
 
 from timeit import default_timer as timer
 
-data_train, data_val = default_load(force_split_by_ids=False)
+data_train, data_val = default_load()
 
 train = np.transpose(data_train)
 t_filenames = train[0]
@@ -62,13 +62,13 @@ model = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
 # InceptionV3 5, 5, 2048
 # Xception 7, 7, 2048
 
-#filename_features_train = "train_features_cropdata_Resnet_3clusters.npy"
-#filename_features_test = "val_features_cropdata_Resnet_3clusters.npy"
-#features_need_cooking = True
+filename_features_train = "train_features_cropdata_Resnet_3clusters.npy"
+filename_features_test = "val_features_cropdata_Resnet_3clusters.npy"
+features_need_cooking = True
 
-filename_features_train = "train_features_cropdata.npy"
-filename_features_test = "val_features_cropdata.npy"
-features_need_cooking = False
+#filename_features_train = "train_features_cropdata.npy"
+#filename_features_test = "val_features_cropdata.npy"
+#features_need_cooking = False
 
 if features_need_cooking:
 

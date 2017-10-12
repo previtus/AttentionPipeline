@@ -66,15 +66,20 @@ filename_features_test = "val_features_fullsizedata_Resnet50.npy"
 features_need_cooking = True
 
 if features_need_cooking:
-    # FULL SIZE
+    # FULL SIZE - 32GB Mem not enough for both
     t_data = filenames_to_data(t_filenames)
-    v_data = filenames_to_data(v_filenames)
 
+    bottleneck_features_train = model.predict(t_data, batch_size=32, verbose=1)
+    print "saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train
+    np.save(open(filename_features_train, 'w'), bottleneck_features_train)
+
+    t_data = []
+
+
+    v_data = filenames_to_data(v_filenames)
 
     bottleneck_features_validation = model.predict(v_data, batch_size=32, verbose=1)
     print "saving val_features of size", len(bottleneck_features_validation), " into ", filename_features_test
     np.save(open(filename_features_test, 'w'), bottleneck_features_validation)
 
-    bottleneck_features_train = model.predict(t_data, batch_size=32, verbose=1)
-    print "saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train
-    np.save(open(filename_features_train, 'w'), bottleneck_features_train)
+    v_data = []
