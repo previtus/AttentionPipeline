@@ -20,8 +20,11 @@ third _0 - this applies for crops, we generated k smaller crops
 
 import numpy as np
 import os
+from helpers import path_exists
 
 PATH = os.path.dirname(os.path.realpath(__file__)) + "/"
+
+DATA_FOLDER_PATH = "/home/vruzicka/storage_pylon2/data/5556x_croppedTo_640x608_with_labels_saliencies_and_crops/"
 
 def split_one_array(arr,validation_split=0.2, force_split_by_ids = True):
     split_at = int(len(arr) * (1 - validation_split))
@@ -41,6 +44,12 @@ def load_dictionaries(include_osm=False):
     filename = PATH+"id_to_score.npy"
     if include_osm:
         filename = PATH+"id_to_score_and_osm.npy"
+
+    if path_exists(DATA_FOLDER_PATH):
+        filename = DATA_FOLDER_PATH + "id_to_score.npy"
+        if include_osm:
+            filename = DATA_FOLDER_PATH + "id_to_score_and_osm.npy"
+
     dictionary = np.load(filename).item()
     return dictionary
 
@@ -49,7 +58,11 @@ def get_data_from_folder(folder, include_osm=False):
     data = []
     dictionary = load_dictionaries(include_osm)
 
-    files = os.listdir(PATH+folder)
+    if path_exists(DATA_FOLDER_PATH):
+        files = os.listdir(DATA_FOLDER_PATH + folder)
+    else:
+        files = os.listdir(PATH+folder)
+
     files.sort()
     for i in range(len(files)):
     #for i in range(5):
