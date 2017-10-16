@@ -88,20 +88,22 @@ from keras.models import Model
 
 img_features_input = Input(shape=(1, 1, 2048))
 top = Flatten()(img_features_input)
-top = Dense(256, activation='relu')(top)
+top = Dense(64, activation='relu')(top)
 top = Dropout(0.6)(top)
-top = Dense(256, activation='relu')(top)
+top = Dense(32, activation='relu')(top)
 top = Dropout(0.6)(top)
 output = Dense(1, activation='sigmoid')(top)
 
 model = Model(inputs=img_features_input, outputs=output)
 print "\n[TOP MODEL]"
-short_summary(model)
+param_string = short_summary(model)
+print "Model widths:", param_string
 print ""
 
+
 # Training
-epochs = 100
-batch_size = 255
+epochs = 300
+batch_size = 28*4
 model.compile(optimizer='rmsprop', loss='mean_squared_error')
 
 start = timer()
@@ -123,3 +125,5 @@ history = history.history
 #visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(time)+"s",show=False,save=True,save_path='loss.png')
 visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(training_time)+"s")
 
+info = {"epochs":epochs, "time train":training_time, "param_string":param_string}
+save_history(history,"resized_history.npy",added=info)

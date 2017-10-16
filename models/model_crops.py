@@ -18,14 +18,8 @@ import sys
 sys.path.append("..")
 
 from data.data_handler import *
-from helpers import visualize_history
-from keras.applications.vgg16 import VGG16
-from keras.applications.vgg19 import VGG19
+from helpers import *
 from keras.applications.resnet50 import ResNet50
-from keras.applications.inception_v3 import InceptionV3
-from keras.applications.xception import Xception
-#from keras.applications.inception_resnet_v2 import InceptionResNetV2
-from keras.losses import mean_squared_error
 
 from timeit import default_timer as timer
 
@@ -52,9 +46,6 @@ print "validation dataset:", len(v_filenames), "image files"
 
 #### BASE MODEL
 # n images * 224x224x3 ----[ ResNet50 ]- Features
-
-input_shape = None
-model = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
 # Feature size by model:
 # ResNet50 1, 1, 2048
 # VGG16 7, 7, 512
@@ -66,11 +57,10 @@ filename_features_train = "train_features_cropdata_Resnet_3clusters.npy"
 filename_features_test = "val_features_cropdata_Resnet_3clusters.npy"
 features_need_cooking = False
 
-#filename_features_train = "train_features_cropdata.npy"
-#filename_features_test = "val_features_cropdata.npy"
-#features_need_cooking = False
 
 if features_need_cooking:
+    input_shape = None
+    model = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
 
     t_data = filenames_to_data(t_filenames)
     v_data = filenames_to_data(v_filenames)
@@ -80,21 +70,14 @@ if features_need_cooking:
     #t_data: (20102, 224, 224, 3) images
     #v_data: (5026, 224, 224, 3) images
 
-    #train_generator = getImageGenerator(t_filenames, t_scores)
-    #val_generator = getImageGenerator(v_filenames, v_scores)
-
     num_train = len(train_labels)
     num_val = len(validation_labels)
 
-    #bottleneck_features_validation = model.predict_generator(val_generator, steps=num_val, verbose=1)
     bottleneck_features_validation = model.predict(v_data, batch_size=32, verbose=1)
-
     print "saving val_features of size", len(bottleneck_features_validation), " into ", filename_features_test
     np.save(open(filename_features_test, 'w'), bottleneck_features_validation)
 
-    #bottleneck_features_train = model.predict_generator(train_generator, steps=num_train, verbose=1)
     bottleneck_features_train = model.predict(t_data, batch_size=32, verbose=1)
-
     print "saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train
     np.save(open(filename_features_train, 'w'), bottleneck_features_train)
 
@@ -118,37 +101,40 @@ from keras.layers import Input, concatenate, GlobalAveragePooling2D
 
 img_features_input = Input(shape=(1, 1, 2048))
 top = Flatten()(img_features_input)
+top = Dense(64, activation='relu')(top)
+top = Dropout(0.6)(top)
 top = Dense(32, activation='relu')(top)
 top = Dropout(0.6)(top)
 output = Dense(1, activation='sigmoid')(top)
 
 model = Model(inputs=img_features_input, outputs=output)
+print "\n[TOP MODEL]"
+param_string = short_summary(model)
+print "Model widths:", param_string
+print ""
 
-#model.summary()
-epochs = 100
-batch_size = 255
+epochs = 300
+batch_size = 28*4
 
 from keras import backend as K
 import tensorflow as tf
-from tensorflow.python.framework import dtypes
-
 
 def grouped_mse(k=3):
-    def f(y_true, y_pred):
+    def clustered_mse(y_true, y_pred):
         group_by = tf.constant(k)
         real_size = tf.size(y_pred)
 
         remainder = tf.truncatemod(real_size, group_by)
-        remainder = K.print_tensor(remainder, message="remainder is: ")
+        #remainder = K.print_tensor(remainder, message="remainder is: ")
 
         # ignore the rest
         y_true = y_true[0:real_size - remainder]
         y_pred = y_pred[0:real_size - remainder]
 
-        real_size = tf.size(y_pred) + 0*remainder
-        real_size = K.print_tensor(real_size, message="real_size is: ")
+        real_size = tf.size(y_pred)# + 0*remainder
+        #real_size = K.print_tensor(real_size, message="real_size is: ")
         n = real_size / group_by
-        n = K.print_tensor(n, message="n is: ")
+        #n = K.print_tensor(n, message="n is: ")
 
 
         idx = tf.range(n)
@@ -182,28 +168,34 @@ def grouped_mse(k=3):
         tmp = tf.scalar_mul(1+0*a+0*b,tmp)
         """
         return tmp
-    return f
+    return clustered_mse
 
 k=3
-#model.compile(optimizer='rmsprop', loss='mean_squared_error', metrics=[grouped_mse(k)])
+model.compile(optimizer='rmsprop', loss='mean_squared_error', metrics=[grouped_mse(k)])
 
 # Incompatible shapes: [7] vs. [21] // n - n/3
 #model.compile(optimizer='rmsprop', loss=grouped_mse(k), metrics=['mean_squared_error'])
 
-model.compile(optimizer='rmsprop', loss='mean_squared_error')
+#model.compile(optimizer='rmsprop', loss='mean_squared_error')
 
+# PS: shuffle=True applies for training data, but not validation!
 start = timer()
 history = model.fit(train_data, train_labels, verbose=2,
+                    shuffle=False,
                     epochs=epochs, batch_size=batch_size,
                     validation_data=(validation_data, validation_labels))
 end = timer()
-time = (end - start)
+training_time = (end - start)
 
 
 history = history.history
-#visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(time)+"s",show=False,save=True,save_path='loss.png')
-visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(time)+"s")
 
+print history
+#visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(time)+"s",show=False,save=True,save_path='loss.png')
+visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(training_time)+"s",
+                  show_also='clustered_mse')
+
+"""
 # Evaluate the true score:
 start = timer()
 validation_pred = model.predict(validation_data)
@@ -243,4 +235,7 @@ mse1 = np.mean(np.square(y_true - y_pred))
 from sklearn.metrics import mean_squared_error
 mse2 = mean_squared_error(y_true, y_pred)
 print mse1, mse2
+"""
 
+info = {"epochs":epochs, "time train":training_time, "param_string":param_string, "use_param":"clustered_mse"}
+save_history(history,"crops_history.npy",added=info)
