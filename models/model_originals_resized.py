@@ -127,4 +127,4 @@ history = history.history
 visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(training_time)+"s")
 
 info = {"epochs":epochs, "time train":training_time, "param_string":param_string}
-save_history(history,"resized_history_1000.npy",added=info)
+save_history(history,"resized_history_1000_s.npy",added=info)

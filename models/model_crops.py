@@ -115,7 +115,7 @@ param_string = short_summary(model)
 print ("Model widths:", param_string)
 print ("")
 
-epochs = 50
+epochs = 10
 batch_size = 28*4
 
 from keras import backend as K
@@ -239,4 +239,4 @@ print (mse1, mse2)
 """
 
 info = {"epochs":epochs, "time train":training_time, "param_string":param_string, "use_param":"clustered_mse"}
-save_history(history,"crops_history_3k_tmp.npy",added=info)
+save_history(history,"crops_history_3k_10_s.npy",added=info)

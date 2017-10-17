@@ -252,4 +252,4 @@ print (mse1, mse2)
 """
 
 info = {"epochs":epochs, "time train":training_time, "param_string":param_string, "use_param":"clustered_mse"}
-save_history(history,"crops_history_6k_1000_B.npy",added=info)
+save_history(history,"crops_history_6k_1000_s.npy",added=info)
