@@ -98,8 +98,8 @@ if features_need_cooking:
 
 # JUST LOAD FEATURES
 
-train_data = np.load(open(filename_features_train))
-validation_data = np.load(open(filename_features_val))
+train_data = np.load(filename_features_train)
+validation_data = np.load(filename_features_val)
 
 print ("training dataset:", train_data.shape, "features", train_labels.shape, "labels")
 print ("validation dataset:", validation_data.shape, "features", validation_labels.shape, "labels")

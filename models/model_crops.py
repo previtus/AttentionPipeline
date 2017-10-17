@@ -56,7 +56,7 @@ print ("validation dataset:", len(v_filenames), "image files")
 # Xception 7, 7, 2048
 
 filename_features_train = "train_features_cropdata_Resnet_3clusters.npy"
-filename_features_test = "val_features_cropdata_Resnet_3clusters.npy"
+filename_features_val = "val_features_cropdata_Resnet_3clusters.npy"
 features_need_cooking = False
 
 
@@ -76,8 +76,8 @@ if features_need_cooking:
     num_val = len(validation_labels)
 
     bottleneck_features_validation = model.predict(v_data, batch_size=32, verbose=1)
-    print ("saving val_features of size", len(bottleneck_features_validation), " into ", filename_features_test)
-    np.save(open(filename_features_test, 'w'), bottleneck_features_validation)
+    print ("saving val_features of size", len(bottleneck_features_validation), " into ", filename_features_val)
+    np.save(open(filename_features_val, 'w'), bottleneck_features_validation)
 
     bottleneck_features_train = model.predict(t_data, batch_size=32, verbose=1)
     print ("saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train)
@@ -85,8 +85,8 @@ if features_need_cooking:
 
 # JUST LOAD FEATURES
 
-train_data = np.load(open(filename_features_train))
-validation_data = np.load(open(filename_features_test))
+train_data = np.load(filename_features_train)
+validation_data = np.load(filename_features_val)
 
 print ("training dataset:", train_data.shape, "features", train_labels.shape, "labels")
 print ("validation dataset:", validation_data.shape, "features", validation_labels.shape, "labels")
