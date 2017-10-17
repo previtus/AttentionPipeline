@@ -27,9 +27,9 @@ def short_summary(model):
             param_string += str(layer.units)+"-"
 
         if trainable_count == 0 and non_trainable_count == 0:
-            print ('{:<10}[{:<10}]: {:<20} => {:<20}'.format(layer.name, layer.__class__.__name__, layer.input_shape,layer.output_shape))
+            print ('{:10}[{:10}]: {:20} => {:20}'.format(str(layer.name), str(layer.__class__.__name__), str(layer.input_shape), str(layer.output_shape)))
         else:
-            print ('{:<10}[{:<10}]: {:<20} => {:<20}, with {} trainable + {} nontrainable'.format(layer.name, layer.__class__.__name__, layer.input_shape, layer.output_shape, trainable_count, non_trainable_count))
+            print ('{:10}[{:10}]: {:20} => {:20}, with {} trainable + {} nontrainable'.format(str(layer.name), str(layer.__class__.__name__), str(layer.input_shape), str(layer.output_shape), str(trainable_count), str(non_trainable_count)))
 
     return param_string[0:-1]
 
@@ -97,7 +97,7 @@ def visualize_history(hi, show=True, save=False, save_path='', show_also='', cus
     plt.plot(hi['loss'])
     plt.plot(hi['val_loss'])
 
-    if show_also <> '':
+    if show_also is not '':
         plt.plot(hi[show_also], linestyle='dotted')
         plt.plot(hi['val_'+show_also], linestyle='dotted')
 
@@ -137,7 +137,7 @@ def visualize_history(hi, show=True, save=False, save_path='', show_also='', cus
 def save_history(history_dict, filename, added=None):
     # Save history or histories into npy file
     dirname = os.path.dirname(filename)
-    if not os.path.exists(dirname) and dirname <> '':
+    if not os.path.exists(dirname) and dirname is not '':
         try:
             os.makedirs(dirname)
         except OSError as exc: # Guard against race condition
@@ -148,7 +148,7 @@ def save_history(history_dict, filename, added=None):
         to_be_saved = data = {'S': history_dict}
     else:
         to_be_saved = data = {'S': history_dict, 'A': added}
-    np.save(open(filename, 'w'), to_be_saved)
+    np.save(filename, to_be_saved)
 
 def load_history(filename):
     try:

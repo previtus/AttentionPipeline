@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH -p LM
+#SBATCH --mem 2000GB
+#SBATCH -t 1:00:00
+# echo commands to stdout
+set -x
+
+module add keras
+module load keras/2.0.6_anaconda_nogpu
+source activate $KERAS_ENV
+
+cd /home/vruzicka/saliency_tools/models/
+python model_crops_python3.py
