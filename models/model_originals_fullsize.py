@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Here we want to use data and model
 """
 inputs: cropped images 6701+1675 images with 224x213x3 size
@@ -86,23 +87,23 @@ if features_need_cooking:
     #while mod <> 0:
     #    batch_size = batch_size - 1
     #    nbatches_train, mod = divmod(len(t_filenames_and_labels), batch_size)
-    #print batch_size, "x", nbatches_train, "with mod", mod
+    #print (batch_size, "x", nbatches_train, "with mod", mod)
 
     batch_size = 1
     nbatches_train = len(t_filenames_and_labels)
 
     #train_generator = generator_from_filenames(t_filenames_and_labels, batch_size, target_size)
     #bottleneck_features_train = model.predict_generator(train_generator, steps=nbatches_train, verbose=1)
-    #print ""
-    #print bottleneck_features_train.shape
+    #print ("")
+    #print (bottleneck_features_train.shape)
     #np.save(open(filename_features_train, 'w'), bottleneck_features_train)
 
     batch_size = 1
     nbatches_val = len(v_filenames_and_labels)
     val_generator = generator_from_filenames(v_filenames_and_labels, batch_size, target_size)
     bottleneck_features_val = model.predict_generator(val_generator, steps=nbatches_val, verbose=1)
-    print ""
-    print bottleneck_features_val.shape
+    print ("")
+    print (bottleneck_features_val.shape)
     np.save(open(filename_features_val, 'w'), bottleneck_features_val)
 
 
@@ -110,8 +111,8 @@ if features_need_cooking:
     # FULL SIZE - 32GB Mem not enough for both
     t_data = filenames_to_data(t_filenames)
     bottleneck_features_train = model.predict(t_data, batch_size=32, verbose=1)
-    print ""
-    print bottleneck_features_train.shape
+    print ("")
+    print (bottleneck_features_train.shape)
     #print ("saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train)
     #np.save(open(filename_features_train, 'w'), bottleneck_features_train)
     np.save(open("TESTf2.npy", 'w'), bottleneck_features_train)
@@ -124,8 +125,8 @@ if features_need_cooking:
 train_data = np.load(open(filename_features_train))
 validation_data = np.load(open(filename_features_val))
 
-print "training dataset:", train_data.shape, "features", train_labels.shape, "labels"
-print "validation dataset:", validation_data.shape, "features", validation_labels.shape, "labels"
+print ("training dataset:", train_data.shape, "features", train_labels.shape, "labels")
+print ("validation dataset:", validation_data.shape, "features", validation_labels.shape, "labels")
 
 # build model
 
@@ -143,13 +144,13 @@ top = Dropout(0.5)(top)
 output = Dense(1, activation='sigmoid')(top)
 
 model = Model(inputs=img_features_input, outputs=output)
-print "\n[TOP MODEL]"
+print ("\n[TOP MODEL]")
 param_string = short_summary(model)
-print "Model widths:", param_string
-print ""
+print ("Model widths:", param_string)
+print ("")
 
 # Training
-epochs = 300
+epochs = 1000
 batch_size = 32
 model.compile(optimizer='rmsprop', loss='mean_squared_error')
 
@@ -166,11 +167,11 @@ validation_pred = model.predict(validation_data)
 end = timer()
 validation_time = (end - start)
 
-print "Time of training:", training_time, "(per sample:", (training_time/float(len(validation_labels)),"), Evaluation time:", validation_time)
+print ("Time of training:", training_time, "(per sample:", (training_time/float(len(validation_labels)),"), Evaluation time:", validation_time))
 
 history = history.history
 #visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(time)+"s",show=False,save=True,save_path='loss.png')
 visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(training_time)+"s")
 
 info = {"epochs":epochs, "time train":training_time, "param_string":param_string}
-save_history(history,"fullsize_history_B.npy",added=info)
+save_history(history,"fullsize_history_1000_B.npy",added=info)

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Here we want to use data and model
 """
 inputs: cropped images 6701+1675 images with 224x213x3 size
@@ -41,8 +42,8 @@ v_filenames = val[0]
 v_ids = val[1]
 validation_labels = np.array(val[2])
 
-#print "training dataset:", len(t_filenames), "image files",  len(t_ids), train_labels.shape
-#print "validation dataset:", len(v_filenames), "image files", len(v_ids), validation_labels.shape
+#print ("training dataset:", len(t_filenames), "image files",  len(t_ids), train_labels.shape)
+#print ("validation dataset:", len(v_filenames), "image files", len(v_ids), validation_labels.shape)
 
 
 #v_filenames = v_filenames[0:21]
@@ -64,11 +65,11 @@ if features_need_cooking:
 
 
     bottleneck_features_validation = model.predict(v_data, batch_size=32, verbose=1)
-    print "saving val_features of size", len(bottleneck_features_validation), " into ", filename_features_test
+    print ("saving val_features of size", len(bottleneck_features_validation), " into ", filename_features_test)
     np.save(open(filename_features_test, 'w'), bottleneck_features_validation)
 
     bottleneck_features_train = model.predict(t_data, batch_size=32, verbose=1)
-    print "saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train
+    print ("saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train)
     np.save(open(filename_features_train, 'w'), bottleneck_features_train)
 
 # load and report features
@@ -76,8 +77,8 @@ if features_need_cooking:
 train_data = np.load(open(filename_features_train))
 validation_data = np.load(open(filename_features_test))
 
-print "training dataset:", train_data.shape, "features", train_labels.shape, "labels"
-print "validation dataset:", validation_data.shape, "features", validation_labels.shape, "labels"
+print ("training dataset:", train_data.shape, "features", train_labels.shape, "labels")
+print ("validation dataset:", validation_data.shape, "features", validation_labels.shape, "labels")
 
 # build model
 
@@ -95,14 +96,14 @@ top = Dropout(0.6)(top)
 output = Dense(1, activation='sigmoid')(top)
 
 model = Model(inputs=img_features_input, outputs=output)
-print "\n[TOP MODEL]"
+print ("\n[TOP MODEL]")
 param_string = short_summary(model)
-print "Model widths:", param_string
-print ""
+print ("Model widths:", param_string)
+print ("")
 
 
 # Training
-epochs = 300
+epochs = 1000
 batch_size = 28*4
 model.compile(optimizer='rmsprop', loss='mean_squared_error')
 
@@ -119,11 +120,11 @@ validation_pred = model.predict(validation_data)
 end = timer()
 validation_time = (end - start)
 
-print "Time of training:", training_time, "(per sample:", (training_time/float(len(validation_labels)),"), Evaluation time:", validation_time)
+print ("Time of training:", training_time, "(per sample:", (training_time/float(len(validation_labels)),"), Evaluation time:", validation_time))
 
 history = history.history
 #visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(time)+"s",show=False,save=True,save_path='loss.png')
 visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(training_time)+"s")
 
 info = {"epochs":epochs, "time train":training_time, "param_string":param_string}
-save_history(history,"resized_history.npy",added=info)
+save_history(history,"resized_history_1000.npy",added=info)

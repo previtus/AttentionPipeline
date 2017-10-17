@@ -1,11 +1,13 @@
+from __future__ import print_function
 # histories:
 from helpers import *
 
-#crops_history_path = "/home/ekmek/saliency_tools/models/crops_history.npy"
-crops_history_path = "/home/ekmek/saliency_tools/models/crops_history(w_shuffle).npy"
+crops_history_path = "/home/ekmek/saliency_tools/models/crops_history_3k.npy"
+#crops_history_path = "/home/ekmek/saliency_tools/models/crops_history_6k.npy"
 resized_history_path = "/home/ekmek/saliency_tools/models/resized_history.npy"
-fullsize_history_path = "/home/ekmek/saliency_tools/models/fullsize_history_B.npy"
-#fullsize_history_path = "/home/ekmek/saliency_tools/models/fullsize_history.npy"
+fullsize_history_path = "/home/ekmek/saliency_tools/models/fullsize_history.npy"
+
+#fullsize_history_path = "/home/ekmek/saliency_tools/models/fullsize_history_B.npy"
 #fullsize_history_path = "/home/ekmek/saliency_tools/models/fullsize_history_100ep.npy"
 
 

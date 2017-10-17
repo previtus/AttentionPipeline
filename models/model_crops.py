@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 # Here we want to use data and model
 """
 inputs: cropped images 25128 images with 224x224x3 size
@@ -35,8 +37,8 @@ v_filenames = val[0]
 v_ids = val[1]
 validation_labels = np.array(val[2])
 
-print "training dataset:", len(t_filenames), "image files"
-print "validation dataset:", len(v_filenames), "image files"
+print ("training dataset:", len(t_filenames), "image files")
+print ("validation dataset:", len(v_filenames), "image files")
 
 # small version
 #v_filenames = v_filenames[0:21]
@@ -74,11 +76,11 @@ if features_need_cooking:
     num_val = len(validation_labels)
 
     bottleneck_features_validation = model.predict(v_data, batch_size=32, verbose=1)
-    print "saving val_features of size", len(bottleneck_features_validation), " into ", filename_features_test
+    print ("saving val_features of size", len(bottleneck_features_validation), " into ", filename_features_test)
     np.save(open(filename_features_test, 'w'), bottleneck_features_validation)
 
     bottleneck_features_train = model.predict(t_data, batch_size=32, verbose=1)
-    print "saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train
+    print ("saving train_features of size", len(bottleneck_features_train), " into ", filename_features_train)
     np.save(open(filename_features_train, 'w'), bottleneck_features_train)
 
 # JUST LOAD FEATURES
@@ -86,8 +88,8 @@ if features_need_cooking:
 train_data = np.load(open(filename_features_train))
 validation_data = np.load(open(filename_features_test))
 
-print "training dataset:", train_data.shape, "features", train_labels.shape, "labels"
-print "validation dataset:", validation_data.shape, "features", validation_labels.shape, "labels"
+print ("training dataset:", train_data.shape, "features", train_labels.shape, "labels")
+print ("validation dataset:", validation_data.shape, "features", validation_labels.shape, "labels")
 #training dataset: (20102, 1, 1, 2048) features (20102,) labels
 #validation dataset: (5026, 1, 1, 2048) features (5026,) labels
 
@@ -108,12 +110,12 @@ top = Dropout(0.6)(top)
 output = Dense(1, activation='sigmoid')(top)
 
 model = Model(inputs=img_features_input, outputs=output)
-print "\n[TOP MODEL]"
+print ("\n[TOP MODEL]")
 param_string = short_summary(model)
-print "Model widths:", param_string
-print ""
+print ("Model widths:", param_string)
+print ("")
 
-epochs = 300
+epochs = 50
 batch_size = 28*4
 
 from keras import backend as K
@@ -181,7 +183,6 @@ model.compile(optimizer='rmsprop', loss='mean_squared_error', metrics=[grouped_m
 # PS: shuffle=True applies for training data, but not validation!
 start = timer()
 history = model.fit(train_data, train_labels, verbose=2,
-                    shuffle=False,
                     epochs=epochs, batch_size=batch_size,
                     validation_data=(validation_data, validation_labels))
 end = timer()
@@ -190,7 +191,7 @@ training_time = (end - start)
 
 history = history.history
 
-print history
+print (history)
 #visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(time)+"s",show=False,save=True,save_path='loss.png')
 visualize_history(history,custom_title="Training, "+str(epochs)+" epochs, "+str(training_time)+"s",
                   show_also='clustered_mse')
@@ -202,11 +203,11 @@ validation_pred = model.predict(validation_data)
 end = timer()
 time = (end - start)
 
-print "time of eval:", time, ", per sample:", (time/float(len(validation_labels)))
+print ("time of eval:", time, ", per sample:", (time/float(len(validation_labels))))
 
 
-print validation_pred.shape, validation_labels.shape
-print v_ids[0:7]
+print (validation_pred.shape, validation_labels.shape)
+print (v_ids[0:7])
 
 # Get whichever k we chose
 #k = 0
@@ -228,14 +229,14 @@ for i in range(original_images):
 y_true = np.array(y_true).astype(float)
 y_pred = np.array(y_pred).astype(float)
 
-print y_true.shape,y_pred.shape
+print (y_true.shape,y_pred.shape)
 
 mse1 = np.mean(np.square(y_true - y_pred))
 
 from sklearn.metrics import mean_squared_error
 mse2 = mean_squared_error(y_true, y_pred)
-print mse1, mse2
+print (mse1, mse2)
 """
 
 info = {"epochs":epochs, "time train":training_time, "param_string":param_string, "use_param":"clustered_mse"}
-save_history(history,"crops_history.npy",added=info)
+save_history(history,"crops_history_3k_tmp.npy",added=info)

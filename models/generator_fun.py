@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
@@ -35,7 +36,7 @@ def generator_from_filenames(data, batch_size, resize):
                 yield X, Y
 
             except IOError as err:
-                print "IOERROR", err
+                print ("IOERROR", err)
                 count -= 1
 
             i = j

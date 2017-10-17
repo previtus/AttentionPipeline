@@ -11,10 +11,10 @@ v_filenames = val[0]
 v_ids = val[1]
 validation_labels = np.array(val[2])
 
-print "FULL IMAGES"
-print "training dataset:", len(t_filenames), "image files", len(t_ids), train_labels.shape
-print "validation dataset:", len(v_filenames), "image files", len(v_ids), validation_labels.shape
-print ""
+print ("FULL IMAGES")
+print ("training dataset:", len(t_filenames), "image files", len(t_ids), train_labels.shape)
+print ("validation dataset:", len(v_filenames), "image files", len(v_ids), validation_labels.shape)
+print ("")
 
 data_train, data_val = default_load()
 train = np.transpose(data_train)
@@ -27,6 +27,6 @@ v_filenames = val[0]
 v_ids = val[1]
 validation_labels = np.array(val[2])
 
-print "CROP IMAGES"
-print "training dataset:", len(t_filenames), "image files", len(t_ids), train_labels.shape
-print "validation dataset:", len(v_filenames), "image files", len(v_ids), validation_labels.shape
+print ("CROP IMAGES")
+print ("training dataset:", len(t_filenames), "image files", len(t_ids), train_labels.shape)
+print ("validation dataset:", len(v_filenames), "image files", len(v_ids), validation_labels.shape)

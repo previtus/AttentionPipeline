@@ -1,6 +1,6 @@
 import matplotlib, os, errno
 # IF WE ARE ON SERVER WITH NO DISPLAY, then we use Agg:
-#print matplotlib.get_backend()
+#print (matplotlib.get_backend())
 if not('DISPLAY' in os.environ):
     matplotlib.use("Agg")
 
@@ -27,9 +27,9 @@ def short_summary(model):
             param_string += str(layer.units)+"-"
 
         if trainable_count == 0 and non_trainable_count == 0:
-            print '{:<10}[{:<10}]: {:<20} => {:<20}'.format(layer.name, layer.__class__.__name__, layer.input_shape,layer.output_shape)
+            print ('{:<10}[{:<10}]: {:<20} => {:<20}'.format(layer.name, layer.__class__.__name__, layer.input_shape,layer.output_shape))
         else:
-            print '{:<10}[{:<10}]: {:<20} => {:<20}, with {} trainable + {} nontrainable'.format(layer.name, layer.__class__.__name__, layer.input_shape, layer.output_shape, trainable_count, non_trainable_count)
+            print ('{:<10}[{:<10}]: {:<20} => {:<20}, with {} trainable + {} nontrainable'.format(layer.name, layer.__class__.__name__, layer.input_shape, layer.output_shape, trainable_count, non_trainable_count))
 
     return param_string[0:-1]
 
@@ -53,7 +53,7 @@ def visualize_histories(histories, names, parameters, parameters_val, show=True,
     leg = []
     for hi in histories:
         n = names[i]
-        print parameters[i], parameters_val[i], hi.keys()
+        print (parameters[i], parameters_val[i], hi.keys())
         # summarize history for loss
         if not just_val:
             p = plt.plot(hi[parameters[i]], linestyle='dashed')
@@ -127,7 +127,7 @@ def visualize_history(hi, show=True, save=False, save_path='', show_also='', cus
         plt.savefig(filename)
         #plt.savefig(filename+'.pdf', format='pdf')
 
-        print "Saved image to "+filename
+        print ("Saved image to "+filename)
     if show:
         plt.show()
 
