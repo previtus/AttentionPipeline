@@ -1,4 +1,4 @@
 print ("SERVER RUN")
 
-import models.model_originals_fullsize
+import models.model_crops
 

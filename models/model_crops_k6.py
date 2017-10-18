@@ -156,6 +156,7 @@ def grouped_mse(k=3):
         idx = tf.reshape(idx, [-1, 1])  # Convert to a len(yp) x 1 matrix.
         idx = tf.tile(idx, [1, group_by])  # Create multiple columns.
         idx = tf.reshape(idx, [-1])  # Convert back to a vector.
+        idx = tf.cast(idx, tf.int32)
 
 
         y_pred_byK = tf.segment_mean(y_pred, idx) #segment_ids should be the same size as dimension 0 of input.
@@ -252,4 +253,4 @@ print (mse1, mse2)
 """
 
 info = {"epochs":epochs, "time train":training_time, "param_string":param_string, "use_param":"clustered_mse"}
-save_history(history,"crops_history_6k_1000_s.npy",added=info)
+save_history(history,"crops_history_6k_1000_C.npy",added=info)

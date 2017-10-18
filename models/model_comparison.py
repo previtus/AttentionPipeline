@@ -8,7 +8,6 @@ resized_history_path = "/home/ekmek/saliency_tools/models/resized_history.npy"
 fullsize_history_path = "/home/ekmek/saliency_tools/models/fullsize_history.npy"
 
 #fullsize_history_path = "/home/ekmek/saliency_tools/models/fullsize_history_B.npy"
-#fullsize_history_path = "/home/ekmek/saliency_tools/models/fullsize_history_100ep.npy"
 
 
 paths = [crops_history_path, resized_history_path, fullsize_history_path]

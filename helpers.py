@@ -14,9 +14,11 @@ def make_dir_if_doesnt_exist(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
-def short_summary(model):
+def short_summary(model, formating_lens=[10,10,20,20]):
     param_string = ""
     from keras import backend as K
+    formating_lens = str(formating_lens)
+
     for layer in model.layers:
         trainable_count = int( np.sum([K.count_params(p) for p in set(layer.trainable_weights)]))
         non_trainable_count = int( np.sum([K.count_params(p) for p in set(layer.non_trainable_weights)]))

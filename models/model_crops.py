@@ -59,6 +59,8 @@ filename_features_train = "train_features_cropdata_Resnet_3clusters.npy"
 filename_features_val = "val_features_cropdata_Resnet_3clusters.npy"
 features_need_cooking = False
 
+#model = ResNet50(weights='imagenet', include_top=False, input_shape=(640,640,3))
+#short_summary(model, [15, 20, 40, 40])
 
 if features_need_cooking:
     input_shape = None
@@ -143,7 +145,7 @@ def grouped_mse(k=3):
         idx = tf.reshape(idx, [-1, 1])  # Convert to a len(yp) x 1 matrix.
         idx = tf.tile(idx, [1, group_by])  # Create multiple columns.
         idx = tf.reshape(idx, [-1])  # Convert back to a vector.
-
+        idx = tf.cast(idx, tf.int32)
 
         y_pred_byK = tf.segment_mean(y_pred, idx) #segment_ids should be the same size as dimension 0 of input.
         y_true_byK = tf.segment_mean(y_true, idx) #segment_ids should be the same size as dimension 0 of input
