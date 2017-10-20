@@ -159,6 +159,7 @@ venv.bak/
 # custom
 
 *.jpg
+*.npy
 
 
 
