@@ -4,18 +4,48 @@ import os
 import cv2
 import argparse
 
-def extractImages(pathIn, pathOut, toFrame=-1):
+def video2frames(pathIn, pathOut, toFrame=-1):
     # inputs
     if not os.path.exists(pathOut):
         os.makedirs(pathOut)
     toFrame = int(toFrame)
 
+    """
+
     # convert
     import skvideo.io
     cap = skvideo.io.VideoCapture("Exchanging_bags_day_indoor_1_original.mp4")
+    metadata = cap.get_info()
+    print metadata
+
+    video_stream = metadata["streams"][0]
+    length = int(video_stream["nb_frames"])
+    width = int(video_stream["width"])
+    height = int(video_stream["height"])
+
+    framerate_string = video_stream["avg_frame_rate"].split("/")
+    fps = int( float(framerate_string[0]) / float(framerate_string[1]) )
+
+
+    """
+    # CV2 not installed
+    cap = cv2.VideoCapture("Exchanging_bags_day_indoor_1_original.mp4")
+    length = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
+    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+    fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
+
+
+    print length, "frames", "@", fps, width, "x", height, (length/fps)
+
+    import json
+    #print(metadata.keys())
+    #print(json.dumps(metadata["streams"], indent=4))
+    #print(json.dumps(metadata["format"], indent=4))
 
     count = 0
     success = True
+    frames = []
     while success:
         if toFrame is not -1 and count > toFrame:
             break
@@ -23,7 +53,9 @@ def extractImages(pathIn, pathOut, toFrame=-1):
         print ('Read frame (',count,'): ', success)
         if success:
             cv2.imwrite( pathOut + "frame%d.jpg" % count, image, [cv2.IMWRITE_JPEG_QUALITY, 50])     # save frame as JPEG file
+            frames.append( pathOut + "frame%d.jpg" % count )
             count += 1
+    return frames
 
 
 if __name__=="__main__":
@@ -34,4 +66,5 @@ if __name__=="__main__":
     args = parser.parse_args()
     #print(args)
 
-    extractImages(args.pathIn, args.pathOut, args.toFrame)
+    frames = video2frames(args.pathIn, args.pathOut, 5) #args.toFrame
+    print frames
