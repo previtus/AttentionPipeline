@@ -1,6 +1,8 @@
 # [PyCharm]
 .idea/**
 .idea/*
+*/.idea/**
+*/.idea/*
 
 # User-specific stuff:
 .idea/**/workspace.xml
@@ -160,6 +162,6 @@ venv.bak/
 
 *.jpg
 *.npy
-
+*.mp4
 
 
