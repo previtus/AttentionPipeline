@@ -3,6 +3,7 @@ import numpy, random
 from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from crop_functions import get_crops_parameters
 
 img_path = "/home/ekmek/intership_project/video_parser/PL_Pizza/0000.jpg"
 save_crops_folder = "/home/ekmek/intership_project/video_parser/crops_test/"
@@ -22,24 +23,6 @@ if bool_generate_plot:
     plt.ylim(-1*(height/10.0), height+1*(height/10.0))
     plt.gca().invert_yaxis()
 
-def get_crops_parameters(w, crop=288, over=0.5, scale=1.0):
-    crop = scale * crop
-
-    block = crop * (1.0 - over)
-    pocet = (w - (crop - block)) / block
-    nastejne = (w - (crop - block)) / int(pocet)
-
-    offset = w - (int((int(pocet) - 1) * nastejne) + crop)
-    balance = offset / 2.0
-
-    params = []
-    for i in range(0, int(pocet)):
-        w_from = int(i * nastejne + balance)
-        w_to = int(w_from + crop)
-        params.append((w_from, w_to))
-
-    #print w - w_to
-    return params
 
 # crop*scale is the size inside input image
 # crop is the size of output image
