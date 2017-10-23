@@ -30,13 +30,14 @@ def video2frames(pathIn, pathOut, toFrame=-1):
     """
     # CV2 not installed
     cap = cv2.VideoCapture("Exchanging_bags_day_indoor_1_original.mp4")
-    length = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT))
-    width = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
-    fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
-
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = cap.get(cv2.CAP_PROP_FPS)
 
     print length, "frames", "@", fps, width, "x", height, (length/fps)
+
+    desired_fps = 1.0
 
     import json
     #print(metadata.keys())
