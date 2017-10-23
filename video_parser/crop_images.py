@@ -1,10 +1,10 @@
 import os
-import math
+import numpy, random
 from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-img_path = "/home/ekmek/intership_project/video_parser/test/frame294.jpg"
+img_path = "/home/ekmek/intership_project/video_parser/PL_Pizza/0000.jpg"
 save_crops_folder = "/home/ekmek/intership_project/video_parser/crops_test/"
 if not os.path.exists(save_crops_folder):
     os.makedirs(save_crops_folder)
@@ -44,21 +44,26 @@ def get_crops_parameters(w, crop=288, over=0.5, scale=1.0):
 # crop*scale is the size inside input image
 # crop is the size of output image
 crop = 544
-over = 0.2
+over = 0.6
 scale = 1.0
 w_crops = get_crops_parameters(width, crop, over, scale)
 h_crops = get_crops_parameters(height, crop, over, scale)
 
 print "Number of crops:", len(w_crops) * len(h_crops)
 
+N = len(w_crops) * len(h_crops)
+cmap = plt.cm.get_cmap("hsv", N+1)
+
 i = 0
 for w_crop in w_crops:
     for h_crop in h_crops:
+        jitter = random.uniform(0, 1) * 15
+
         ax.add_patch(
             patches.Rectangle(
-                (w_crop[0], h_crop[0]),
+                (w_crop[0] + jitter, h_crop[0] + jitter),
                 scale*crop,
-                scale*crop, fill=False
+                scale*crop, fill=False, linewidth=2.0, color=numpy.random.rand(3,1) #color=cmap(i)
             )
         )
 
