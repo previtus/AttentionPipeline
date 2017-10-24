@@ -20,7 +20,7 @@ def get_crops_parameters(w, crop=288, over=0.5, scale=1.0):
         w_to = int(w_from + crop)
         params.append((w_from, w_to))
 
-    #print w - w_to
+    #print (w - w_to)
     return params
 
 def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show):
@@ -32,7 +32,7 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show):
     if not os.path.exists(out_folder+frame_name+"/"):
         os.makedirs(out_folder+frame_name+"/")
 
-    print frame_name, out_folder+frame_name+"/"
+    print (frame_name, out_folder+frame_name+"/")
 
     img = Image.open(frame_path)
     width, height = img.size
@@ -49,7 +49,7 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show):
     h_crops = get_crops_parameters(height, crop, over, scale)
     N = len(w_crops) * len(h_crops)
 
-    print "Number of crops:", N
+    print ("Number of crops:", N)
 
     i = 0
     for w_crop in w_crops:
@@ -69,8 +69,9 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show):
             cropped_img = img.crop(box=area)
             cropped_img = cropped_img.resize((crop, crop), resample=Image.ANTIALIAS)
             cropped_img.load()
-            cropped_img.save(out_folder+frame_name+"/"+ str(i) + ".jpg")
+            cropped_img.save(out_folder+frame_name+"/"+ str(i).zfill(4) + ".jpg")
             i += 1
 
     if show:
         plt.show()
+

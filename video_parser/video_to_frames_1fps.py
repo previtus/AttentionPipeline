@@ -16,7 +16,7 @@ def video2frames(pathIn, pathOut):
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    print length, "frames", "@", fps, width, "x", height, (length/fps)
+    print (length, "frames", "@", fps, width, "x", height, (length/fps))
 
     import subprocess
     # ffmpeg -i Exchanging_bags_day_indoor_1_original.mp4 -vf fps=1 test_1fps/frame_%d.png
@@ -35,4 +35,4 @@ if __name__=="__main__":
     #print(args)
 
     frames = video2frames(args.pathIn, args.pathOut) #args.toFrame
-    print frames
+    print (frames)

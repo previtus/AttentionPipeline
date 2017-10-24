@@ -32,7 +32,7 @@ scale = 1.0
 w_crops = get_crops_parameters(width, crop, over, scale)
 h_crops = get_crops_parameters(height, crop, over, scale)
 
-print "Number of crops:", len(w_crops) * len(h_crops)
+print ("Number of crops:", len(w_crops) * len(h_crops))
 
 N = len(w_crops) * len(h_crops)
 cmap = plt.cm.get_cmap("hsv", N+1)

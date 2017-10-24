@@ -16,7 +16,7 @@ def video2frames(pathIn, pathOut, toFrame=-1):
     import skvideo.io
     cap = skvideo.io.VideoCapture("Exchanging_bags_day_indoor_1_original.mp4")
     metadata = cap.get_info()
-    print metadata
+    print (metadata)
 
     video_stream = metadata["streams"][0]
     length = int(video_stream["nb_frames"])
@@ -35,7 +35,7 @@ def video2frames(pathIn, pathOut, toFrame=-1):
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    print length, "frames", "@", fps, width, "x", height, (length/fps)
+    print (length, "frames", "@", fps, width, "x", height, (length/fps))
 
     desired_fps = 1.0
 
@@ -68,4 +68,4 @@ if __name__=="__main__":
     #print(args)
 
     frames = video2frames(args.pathIn, args.pathOut, 5) #args.toFrame
-    print frames
+    print (frames)
