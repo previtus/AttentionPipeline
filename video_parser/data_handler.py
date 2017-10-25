@@ -35,12 +35,11 @@ def get_data(frames_folder, ground_truth_file, dataset):
 
     image_paths = []
     for frame_dir in frame_dirs:
+        frame_num = frame_dir[-4:]
+
         crops = sorted(os.listdir(frame_dir))
-        crops = [frame_dir + "/" + s for s in crops]
+        crops = [frame_num + "/" + s for s in crops]
         image_paths.append(crops)
 
     return image_paths, ground_truths
 
-frames_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/set1_544_0.6/"
-ground_truth_file = "/home/ekmek/intership_project/video_parser/PL_Pizza/PL_Pizza_GT.txt"
-get_data(frames_folder, ground_truth_file, dataset = 'ParkingLot')

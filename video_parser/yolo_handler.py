@@ -1,47 +1,94 @@
 # call yolo code on our own data
 # my data will come in list of images
 # i want to get measurements of both time and accuracy while using yolo v2
-from data_handler import use_path_which_exists
+from data_handler import use_path_which_exists, get_data
+from visualize_time_measurement import visualize_time_measurements
 import argparse
+import numpy as np
 
-yolo_paths = ["/home/ekmek/YAD2K/", "/home/vruzicka/storage_pylon2/YAD2K/"]
+def run_yolo(frames_folder, output_folder, show_viz = False, ground_truth_file = None):
 
-path_to_yolo = use_path_which_exists(yolo_paths)
+    yolo_paths = ["/home/ekmek/YAD2K/", "/home/vruzicka/storage_pylon2/YAD2K/"]
 
-print (path_to_yolo)
+    path_to_yolo = use_path_which_exists(yolo_paths)
 
-import sys,site
-site.addsitedir(path_to_yolo)
-print (sys.path)  # Just verify it is there
-import yad2k, test_yolo
+    print (path_to_yolo)
+
+    import sys,site
+    site.addsitedir(path_to_yolo)
+    print (sys.path)  # Just verify it is there
+    import yad2k, eval_yolo
+
+    parser = argparse.ArgumentParser(
+        description='Run a YOLO_v2 style detection model on test images..')
+    parser.add_argument(
+        '-model_path', help='path to h5 model file containing body of a YOLO_v2 model',
+        default=path_to_yolo+'model_data/yolo.h5')
+    parser.add_argument(
+        '--anchors_path',help='path to anchors file, defaults to yolo_anchors.txt',
+        default=path_to_yolo+'model_data/yolo_anchors.txt')
+    parser.add_argument(
+        '--classes_path', help='path to classes file, defaults to coco_classes.txt',
+        default=path_to_yolo+'model_data/coco_classes.txt')
+    parser.add_argument(
+        '--test_path', help='path to directory of test images, defaults to images/',
+        default=path_to_yolo+'images')
+    parser.add_argument(
+        '--output_path', help='path to output test images, defaults to images/out',
+        default=path_to_yolo+"images/out")
+    parser.add_argument(
+        '--score_threshold', type=float, help='threshold for bounding box scores, default .3',
+        default=.3)
+    parser.add_argument(
+        '--iou_threshold', type=float, help='threshold for non max suppression IOU, default .5',
+        default=.5)
+
+    ################################################################
+    image_names, ground_truths = get_data(frames_folder, ground_truth_file, dataset = 'ParkingLot')
+
+    image_names = np.array(image_names).flatten()
+    output_paths = [output_folder + s for s in image_names]
+    input_paths = [frames_folder + s for s in image_names]
+
+    print (len(image_names), image_names[0:2])
+    print (len(input_paths), input_paths[0:2])
+    print (len(output_paths), output_paths[0:2])
+
+    ## TESTS
+    #limit = 60
+    #image_names = image_names[0:limit]
+    #input_paths = input_paths[0:limit]
+    #output_paths = output_paths[0:limit]
+
+    evaluation_times, additional_times, bboxes = eval_yolo._main(parser.parse_args(), input_paths, ground_truths, output_paths)
+
+    avg_evaltime = np.array(evaluation_times[1:]).mean()
+    avg_addtime = np.array(additional_times[1:]).mean()
+    print("Mean times (ignoring first):", avg_evaltime, "eval, ", avg_addtime, "additional")
+
+    if show_viz:
+        print ("--------------===========================--------------")
+        print ("Evaluation:", evaluation_times)
+        print ("Additional OS:", additional_times)
+        evaluation_times = evaluation_times[1:]
+        additional_times = additional_times[1:]
+        visualize_time_measurements([evaluation_times, additional_times], ["Evaluation", "Additional"])
+
+    return evaluation_times, bboxes
+"""
+    #frames_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/set1_544_0.6/"
+    #output_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/OUT_set1_544_0.6/"
+    
+    #frames_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/set2_288_0.6/"
+    #output_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/OUT_set2_288_0.6/"
+    
+    frames_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/set3_1024_0.6/"
+    output_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/OUT_set3_1024_0.6/"
+    
+    #frames_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/set4_1472_0.6/"
+    #output_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/OUT_set4_1472_0.6/"
+    
+    ground_truth_file = "/home/ekmek/intership_project/video_parser/PL_Pizza/PL_Pizza_GT.txt"
 
 
-parser = argparse.ArgumentParser(
-    description='Run a YOLO_v2 style detection model on test images..')
-parser.add_argument(
-    '-model_path', help='path to h5 model file containing body of a YOLO_v2 model',
-    default=path_to_yolo+'model_data/yolo.h5')
-parser.add_argument(
-    '--anchors_path',help='path to anchors file, defaults to yolo_anchors.txt',
-    default=path_to_yolo+'model_data/yolo_anchors.txt')
-parser.add_argument(
-    '--classes_path', help='path to classes file, defaults to coco_classes.txt',
-    default=path_to_yolo+'model_data/coco_classes.txt')
-parser.add_argument(
-    '--test_path', help='path to directory of test images, defaults to images/',
-    default=path_to_yolo+'images')
-parser.add_argument(
-    '--output_path', help='path to output test images, defaults to images/out',
-    default=path_to_yolo+"images/out")
-parser.add_argument(
-    '--score_threshold', type=float, help='threshold for bounding box scores, default .3',
-    default=.3)
-parser.add_argument(
-    '--iou_threshold', type=float, help='threshold for non max suppression IOU, default .5',
-    default=.5)
-
-evaluation_times = test_yolo._main(parser.parse_args())
-
-print ("--------------===========================--------------")
-print (evaluation_times)
-
+"""

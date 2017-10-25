@@ -16,20 +16,20 @@ def video2frames(pathIn, pathOut):
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    print (length, "frames", "@", fps, width, "x", height, (length/fps))
+    print (length, "frames", "@", fps, width, "x", height)
 
     import subprocess
     # ffmpeg -i Exchanging_bags_day_indoor_1_original.mp4 -vf fps=1 test_1fps/frame_%d.png
     os.chdir(os.path.dirname(pathIn))
-    subprocess.call(['ffmpeg', '-i', os.path.basename(pathIn), '-vf', 'fps=1', pathOut+"frame_%03d.jpg"])
+    subprocess.call(['ffmpeg', '-i', os.path.basename(pathIn), '-vf', 'fps=1', pathOut+"%04d.jpg"])
 
     image_files = os.listdir(pathOut)
     return image_files
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pathIn", default="/home/ekmek/intership_project/video_parser/Exchanging_bags_day_indoor_1_original.mp4")
-    parser.add_argument("--pathOut", default="test_1fps/")
+    parser.add_argument("--pathIn", default="/home/ekmek/intership_project/video_parser/_videos_to_test/bag exchange/input/Exchanging_bags_day_indoor_1_original.mp4")
+    parser.add_argument("--pathOut", default="/home/ekmek/intership_project/video_parser/_videos_to_test/bag exchange/input/frames/")
     parser.add_argument("--toFrame", default="-1")
     args = parser.parse_args()
     #print(args)
