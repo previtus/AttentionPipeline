@@ -6,7 +6,7 @@ from visualize_time_measurement import visualize_time_measurements
 import argparse
 import numpy as np
 
-def run_yolo(frames_folder, output_folder, show_viz = False, ground_truth_file = None):
+def run_yolo(frames_folder, output_folder, fixbb_crop_per_frames, fixbb_scale, fixbb_crop, show_viz = False, ground_truth_file = None):
 
     yolo_paths = ["/home/ekmek/YAD2K/", "/home/vruzicka/storage_pylon2/YAD2K/"]
 
@@ -16,7 +16,7 @@ def run_yolo(frames_folder, output_folder, show_viz = False, ground_truth_file =
 
     import sys,site
     site.addsitedir(path_to_yolo)
-    print (sys.path)  # Just verify it is there
+    #print (sys.path)  # Just verify it is there
     import yad2k, eval_yolo
 
     parser = argparse.ArgumentParser(
@@ -44,15 +44,17 @@ def run_yolo(frames_folder, output_folder, show_viz = False, ground_truth_file =
         default=.5)
 
     ################################################################
-    image_names, ground_truths = get_data(frames_folder, ground_truth_file, dataset = 'ParkingLot')
+    image_names, ground_truths, frame_ids, crop_ids = get_data(frames_folder, ground_truth_file, dataset = 'ParkingLot')
 
     image_names = np.array(image_names).flatten()
+    frame_ids = np.array(frame_ids).flatten()
+    crop_ids = np.array(crop_ids).flatten()
     output_paths = [output_folder + s for s in image_names]
     input_paths = [frames_folder + s for s in image_names]
 
-    print (len(image_names), image_names[0:2])
-    print (len(input_paths), input_paths[0:2])
-    print (len(output_paths), output_paths[0:2])
+    #print (len(image_names), image_names[0:2])
+    #print (len(input_paths), input_paths[0:2])
+    #print (len(output_paths), output_paths[0:2])
 
     ## TESTS
     #limit = 60
@@ -60,7 +62,46 @@ def run_yolo(frames_folder, output_folder, show_viz = False, ground_truth_file =
     #input_paths = input_paths[0:limit]
     #output_paths = output_paths[0:limit]
 
-    evaluation_times, additional_times, bboxes = eval_yolo._main(parser.parse_args(), input_paths, ground_truths, output_paths)
+    evaluation_times, additional_times, bboxes = eval_yolo._main(parser.parse_args(), input_paths, ground_truths, output_paths, save_annotated_images=False, verbose=1)
+
+    bboxes_per_frames=[]
+
+    for index in range(0,len(image_names)):
+        frame_index = frame_ids[index]
+        crop_index = crop_ids[index]
+
+        if len(bboxes_per_frames) < frame_index+1:
+            bboxes_per_frames.append([])
+
+        crops_in_frame = fixbb_crop_per_frames[frame_index]
+        current_crop = crops_in_frame[crop_index]
+
+        #print("current_crop_coord", current_crop[1], fixbb_scale )
+        #print("these bboxes need fixing:",len(bboxes[index]), bboxes[index])
+
+        #debug_bbox = [['crop',[100,200,400,205],1.0,13]]
+        a_left = current_crop[1][0]
+        a_top = current_crop[1][1]
+        a_right = current_crop[1][2]
+        a_bottom = current_crop[1][3]
+        debug_bbox = [['crop',[a_top,a_left,a_bottom,a_right],1.0,70]]
+
+        fixed_bboxes = []
+        for bbox in bboxes[index]:
+            bbox_aray = bbox[1]
+            max_limit = fixbb_crop * fixbb_scale
+
+            #bbox_aray = np.maximum(bbox_aray,[0,0,0,0])
+            #bbox_aray = np.minimum(bbox_aray,[max_limit,max_limit,max_limit,max_limit])
+            fix_aray = bbox_aray * fixbb_scale + [a_top, a_left, a_top, a_left]
+            #print(bbox_aray, fix_aray)
+            bbox[1] = fix_aray
+
+        bboxes_per_frames[frame_index] += bboxes[index]
+        bboxes_per_frames[frame_index] += debug_bbox
+
+    #for i in bboxes_per_frames:
+    #    print (len(i))
 
     avg_evaltime = np.array(evaluation_times[1:]).mean()
     avg_addtime = np.array(additional_times[1:]).mean()
@@ -74,7 +115,7 @@ def run_yolo(frames_folder, output_folder, show_viz = False, ground_truth_file =
         additional_times = additional_times[1:]
         visualize_time_measurements([evaluation_times, additional_times], ["Evaluation", "Additional"])
 
-    return evaluation_times, bboxes
+    return evaluation_times, bboxes_per_frames
 """
     #frames_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/set1_544_0.6/"
     #output_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/OUT_set1_544_0.6/"

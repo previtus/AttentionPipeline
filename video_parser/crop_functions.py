@@ -33,7 +33,8 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save=Tr
     if not os.path.exists(out_folder+frame_name+"/"):
         os.makedirs(out_folder+frame_name+"/")
 
-    print (frame_name, out_folder+frame_name+"/")
+    print(str(int(frame_name))+", ", end='', flush=True)
+    #print (frame_name, out_folder+frame_name+"/")
 
     img = Image.open(frame_path)
     width, height = img.size
@@ -50,7 +51,7 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save=Tr
     h_crops = get_crops_parameters(height, crop, over, scale)
     N = len(w_crops) * len(h_crops)
 
-    print ("Number of crops:", N)
+    #print ("Number of crops:", N)
 
     crops = []
     i = 0
