@@ -1,8 +1,13 @@
+# Server tricks with matplotlib plotting
+import matplotlib, os
+if not('DISPLAY' in os.environ):
+    matplotlib.use("Agg")
+
+
 # input frames images
 # output marked frames images
 
 def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
-
     import os
     import numpy as np
     from crop_functions import crop_from_one_frame
@@ -19,6 +24,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         os.makedirs(crops_folder)
     if not os.path.exists(output_frames_folder):
         os.makedirs(output_frames_folder)
+
 
     # Frames to crops
     print("################## Cropping frames ##################")
