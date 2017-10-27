@@ -68,7 +68,7 @@ def run_yolo(frames_folder, output_folder, fixbb_crop_per_frames, fixbb_scale, f
     #output_paths = output_paths[0:limit]
 
     evaluation_times, additional_times, bboxes = eval_yolo._main(parser.parse_args(), input_paths, ground_truths, output_paths,
-                                                                 save_annotated_images=False, verbose=1, person_only=False)
+                                                                 save_annotated_images=False, verbose=1, person_only=True)
     bboxes_per_frames = []
     for i in range(0,num_frames):
         bboxes_per_frames.append([])
@@ -122,7 +122,7 @@ def run_yolo(frames_folder, output_folder, fixbb_crop_per_frames, fixbb_scale, f
         additional_times = additional_times[1:]
         visualize_time_measurements([evaluation_times, additional_times], ["Evaluation", "Additional"])
 
-    return evaluation_times, bboxes_per_frames
+    return evaluation_times, bboxes_per_frames, num_frames, num_crops
 """
     #frames_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/set1_544_0.6/"
     #output_folder = "/home/ekmek/intership_project/video_parser/PL_Pizza/OUT_set1_544_0.6/"
