@@ -44,11 +44,16 @@ def run_yolo(frames_folder, output_folder, fixbb_crop_per_frames, fixbb_scale, f
         default=.5)
 
     ################################################################
-    image_names, ground_truths, frame_ids, crop_ids = get_data(frames_folder, ground_truth_file, dataset = 'ParkingLot')
+    image_names, ground_truths, frame_ids, crop_ids, num_frames, num_crops = get_data(frames_folder, ground_truth_file, dataset = 'ParkingLot')
 
-    image_names = np.array(image_names).flatten()
-    frame_ids = np.array(frame_ids).flatten()
-    crop_ids = np.array(crop_ids).flatten()
+    image_names = [val for sublist in image_names for val in sublist]
+    frame_ids = [val for sublist in frame_ids for val in sublist]
+    crop_ids = [val for sublist in crop_ids for val in sublist]
+
+    #image_names = np.array(image_names).flatten()
+    #frame_ids = np.array(frame_ids).flatten()
+    #crop_ids = np.array(crop_ids).flatten()
+
     output_paths = [output_folder + s for s in image_names]
     input_paths = [frames_folder + s for s in image_names]
 
@@ -62,16 +67,20 @@ def run_yolo(frames_folder, output_folder, fixbb_crop_per_frames, fixbb_scale, f
     #input_paths = input_paths[0:limit]
     #output_paths = output_paths[0:limit]
 
-    evaluation_times, additional_times, bboxes = eval_yolo._main(parser.parse_args(), input_paths, ground_truths, output_paths, save_annotated_images=False, verbose=1)
-
-    bboxes_per_frames=[]
+    evaluation_times, additional_times, bboxes = eval_yolo._main(parser.parse_args(), input_paths, ground_truths, output_paths,
+                                                                 save_annotated_images=False, verbose=1, person_only=False)
+    bboxes_per_frames = []
+    for i in range(0,num_frames):
+        bboxes_per_frames.append([])
 
     for index in range(0,len(image_names)):
-        frame_index = frame_ids[index]
+        frame_index = frame_ids[index] - frame_ids[0]
         crop_index = crop_ids[index]
 
-        if len(bboxes_per_frames) < frame_index+1:
-            bboxes_per_frames.append([])
+        #if len(bboxes_per_frames) < frame_index+1:
+        #    bboxes_per_frames.append([])
+        if bboxes_per_frames[frame_index] is None:
+            bboxes_per_frames[frame_index] = []
 
         crops_in_frame = fixbb_crop_per_frames[frame_index]
         current_crop = crops_in_frame[crop_index]
@@ -86,22 +95,20 @@ def run_yolo(frames_folder, output_folder, fixbb_crop_per_frames, fixbb_scale, f
         a_bottom = current_crop[1][3]
         debug_bbox = [['crop',[a_top,a_left,a_bottom,a_right],1.0,70]]
 
-        fixed_bboxes = []
-        for bbox in bboxes[index]:
-            bbox_aray = bbox[1]
-            max_limit = fixbb_crop * fixbb_scale
+        if len(bboxes[index]) > 0: #not empty
+            fixed_bboxes = []
+            for bbox in bboxes[index]:
+                bbox_array = bbox[1]
+                max_limit = fixbb_crop * fixbb_scale
 
-            #bbox_aray = np.maximum(bbox_aray,[0,0,0,0])
-            #bbox_aray = np.minimum(bbox_aray,[max_limit,max_limit,max_limit,max_limit])
-            fix_aray = bbox_aray * fixbb_scale + [a_top, a_left, a_top, a_left]
-            #print(bbox_aray, fix_aray)
-            bbox[1] = fix_aray
+                #bbox_aray = np.maximum(bbox_aray,[0,0,0,0])
+                #bbox_aray = np.minimum(bbox_aray,[max_limit,max_limit,max_limit,max_limit])
+                fix_array = bbox_array * fixbb_scale + [a_top, a_left, a_top, a_left]
 
-        bboxes_per_frames[frame_index] += bboxes[index]
+                bboxes_per_frames[frame_index].append([bbox[0],fix_array,bbox[2],bbox[3]])
+
+            bboxes_per_frames[frame_index] += fixed_bboxes
         bboxes_per_frames[frame_index] += debug_bbox
-
-    #for i in bboxes_per_frames:
-    #    print (len(i))
 
     avg_evaltime = np.array(evaluation_times[1:]).mean()
     avg_addtime = np.array(additional_times[1:]).mean()

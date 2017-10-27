@@ -36,6 +36,8 @@ def get_data(frames_folder, ground_truth_file, dataset):
     image_paths = []
     frame_ids = []
     crop_ids = []
+
+    num_frames = 0
     for frame_dir in frame_dirs:
         frame_num = frame_dir[-4:]
 
@@ -44,8 +46,10 @@ def get_data(frames_folder, ground_truth_file, dataset):
         crop_ids.append(list(range(0,len(crops))))
         crops = [frame_num + "/" + s for s in crops]
 
-        frame_ids.append( [int(frame_num) for s in crops] )
+        frame_ids.append( [int(num_frames) for s in crops] )
         image_paths.append(crops)
+        num_frames += 1
+    num_crops = len(crops)
 
-    return image_paths, ground_truths, frame_ids, crop_ids
+    return image_paths, ground_truths, frame_ids, crop_ids, num_frames, num_crops
 

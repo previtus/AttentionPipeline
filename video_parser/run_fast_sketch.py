@@ -52,7 +52,7 @@ def main_sketch_run(INPUT_FRAMES, SETTINGS):
 
     #print (evaluation_times[0:5])
 
-
+"""
 INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
 SETTINGS = {}
 SETTINGS["crop"] = 544 ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
@@ -62,6 +62,7 @@ SETTINGS["scale"] = 1.0
 
 main_sketch_run(INPUT_FRAMES, SETTINGS)
 
+"""
 INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/bag exchange/input/frames/"
 SETTINGS = {}
 SETTINGS["crop"] = 1024 ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
