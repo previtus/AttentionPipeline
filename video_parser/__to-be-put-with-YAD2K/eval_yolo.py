@@ -128,8 +128,9 @@ def _main(args, input_paths, ground_truths, output_paths, num_frames, num_crops,
 
         people = 0
         bboxes_image = []
-        print(num_frames, num_crops)
+        #print(num_frames, num_crops)
         for i, c in reversed(list(enumerate(out_classes))):
+
             predicted_class = class_names[c]
 
             if predicted_class == 'person':
@@ -197,7 +198,7 @@ def _main(args, input_paths, ground_truths, output_paths, num_frames, num_crops,
         loop_time = (end_loop - start_loop)
         additional_times.append(loop_time - evaluation_time)
 
-    sess.close()
+    #sess.close()
 
     return evaluation_times, additional_times, bboxes
 
