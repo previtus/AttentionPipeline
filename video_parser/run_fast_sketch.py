@@ -102,6 +102,11 @@ RUN_NAME = "_Test"
 main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
 """
 
+from datetime import *
+
+months = ["unk","jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
+month = (months[datetime.now().month])
+day = str(datetime.now().day)
 
 import argparse
 
@@ -111,19 +116,19 @@ parser.add_argument('-over', help='percentage of overlap, 0-1', default='0.6')
 parser.add_argument('-scale', help='additional undersampling', default='1.0')
 parser.add_argument('-input', help='path to folder full of frame images',
                     default="/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/")
-parser.add_argument('-name', help='run name - will output in this dir', default='_Test')
+parser.add_argument('-name', help='run name - will output in this dir', default='_Test-'+day+month)
 
 if __name__ == '__main__':
     args = parser.parse_args()
 
     INPUT_FRAMES = args.input
     SETTINGS = {}
-    SETTINGS["crop"] = args.crop  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
-    SETTINGS["over"] = args.over
-    SETTINGS["scale"] = args.scale
+    SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
+    SETTINGS["over"] = float(args.over)
+    SETTINGS["scale"] = float(args.scale)
     RUN_NAME = args.name
 
-    print(SETTINGS)
+    print(RUN_NAME, SETTINGS)
 
-    #main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
+    main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
 
