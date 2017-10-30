@@ -13,6 +13,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     from yolo_handler import run_yolo
     from mark_frame_with_bbox import annotate_image_with_bounding_boxes
     from visualize_time_measurement import visualize_time_measurements
+    from nms import non_max_suppression_fast,non_max_suppression_tf
     from pathlib import Path
 
     video_file_root_folder = str(Path(INPUT_FRAMES).parents[1])
@@ -53,13 +54,37 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     print("################## Annotating frames ##################")
 
+    iou_threshold = 0.5
+    limit_prob_lowest = 0 #0.70 # inside we limited for 0.3
+
     for i in range(0,len(frame_files)):
         test_bboxes = bboxes_per_frames[i]
-        #print(test_bboxes)
 
-        arrays = np.array([list(a[1]) for a in test_bboxes])
-        #print(arrays)
-        #print(arrays.shape)
+        arrays = []
+        scores = []
+        for j in range(0,len(test_bboxes)):
+            if test_bboxes[j][0] == 'person':
+                score = test_bboxes[j][2]
+                if score > limit_prob_lowest:
+                    arrays.append(list(test_bboxes[j][1]))
+                    scores.append(score)
+        arrays = np.array(arrays)
+
+        person_id = 0
+
+        nms_arrays = non_max_suppression_fast(arrays, iou_threshold)
+        reduced_bboxes_1 = []
+        for j in range(0,len(nms_arrays)):
+            a = ['person',nms_arrays[j],0.0,person_id]
+            reduced_bboxes_1.append(a)
+
+        nms_arrays, scores = non_max_suppression_tf(arrays,scores,50,iou_threshold)
+        reduced_bboxes_2 = []
+        for j in range(0,len(nms_arrays)):
+            a = ['person',nms_arrays[j],scores[j],person_id]
+            reduced_bboxes_2.append(a)
+
+        test_bboxes = reduced_bboxes_2
 
         annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i], test_bboxes,
                                            draw_text=False, save=True, show=False)
