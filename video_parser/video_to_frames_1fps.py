@@ -28,8 +28,8 @@ def video2frames(pathIn, pathOut):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pathIn", default="/home/ekmek/intership_project/video_parser/_videos_to_test/bag exchange/input/Exchanging_bags_day_indoor_1_original.mp4")
-    parser.add_argument("--pathOut", default="/home/ekmek/intership_project/video_parser/_videos_to_test/bag exchange/input/frames/")
+    parser.add_argument("--pathIn", default="/home/ekmek/intership_project/video_parser/_videos_to_test/DrivingNY/Driving Downtown - 42nd St Theaters - New York City 4K.mp4")
+    parser.add_argument("--pathOut", default="/home/ekmek/intership_project/video_parser/_videos_to_test/DrivingNY/frames/")
     parser.add_argument("--toFrame", default="-1")
     args = parser.parse_args()
     #print(args)
