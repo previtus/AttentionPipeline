@@ -3,7 +3,6 @@ import matplotlib, os
 if not('DISPLAY' in os.environ):
     matplotlib.use("Agg")
 
-
 # input frames images
 # output marked frames images
 
@@ -55,7 +54,14 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     print("################## Annotating frames ##################")
 
     for i in range(0,len(frame_files)):
-        annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i], bboxes_per_frames[i],
+        test_bboxes = bboxes_per_frames[i]
+        #print(test_bboxes)
+
+        arrays = np.array([list(a[1]) for a in test_bboxes])
+        #print(arrays)
+        #print(arrays.shape)
+
+        annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i], test_bboxes,
                                            draw_text=False, save=True, show=False)
 
     print (len(evaluation_times),evaluation_times)
@@ -66,10 +72,16 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     crops_per_frame = int(len(evaluation_times)/num_frames)
     chunked_per_frame = np.array_split(evaluation_times, crops_per_frame)
 
-    visualize_time_measurements([chunked_per_frame], list(range(0,num_frames)), "Time measurements per frame", show=False, save=True, save_path=output_measurement_viz+'_2.png')
+    frame_measurements = np.array_split(evaluation_times, num_frames)
+    summed_frame_measurements = [sum(i) for i in frame_measurements]
+
+    visualize_time_measurements([chunked_per_frame], list(range(0,num_frames)), "Time measurements over frame", show=False, save=True, save_path=output_measurement_viz+'_2.png')
+
+    visualize_time_measurements([summed_frame_measurements], ['time per frame'], "Time measurements per frame",xlabel='frame #',
+                                show=False, save=True, save_path=output_measurement_viz+'_3.png')
 
 
-
+"""
 INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
 SETTINGS = {}
 SETTINGS["crop"] = 544 ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
@@ -79,7 +91,7 @@ RUN_NAME = "_Test"
 
 main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
 
-"""
+
 INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/bag exchange/input/frames/"
 SETTINGS = {}
 SETTINGS["crop"] = 1024 ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
@@ -89,3 +101,29 @@ RUN_NAME = "_Test"
 
 main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
 """
+
+
+import argparse
+
+parser = argparse.ArgumentParser(description='Project: Find BBoxes in video.')
+parser.add_argument('-crop', help='size of crops, enter multiples of 32', default='544')
+parser.add_argument('-over', help='percentage of overlap, 0-1', default='0.6')
+parser.add_argument('-scale', help='additional undersampling', default='1.0')
+parser.add_argument('-input', help='path to folder full of frame images',
+                    default="/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/")
+parser.add_argument('-name', help='run name - will output in this dir', default='_Test')
+
+if __name__ == '__main__':
+    args = parser.parse_args()
+
+    INPUT_FRAMES = args.input
+    SETTINGS = {}
+    SETTINGS["crop"] = args.crop  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
+    SETTINGS["over"] = args.over
+    SETTINGS["scale"] = args.scale
+    RUN_NAME = args.name
+
+    print(SETTINGS)
+
+    #main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
+
