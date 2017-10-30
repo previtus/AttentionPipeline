@@ -43,13 +43,14 @@ def run_yolo(frames_folder, output_folder, fixbb_crop_per_frames, fixbb_scale, f
     #output_paths = output_paths[0:limit]
 
     args = {}
-    args["anchors_path"]='/home/ekmek/YAD2K/model_data/yolo_anchors.txt'
-    args["classes_path"]='/home/ekmek/YAD2K/model_data/coco_classes.txt'
-    args["model_path"]='/home/ekmek/YAD2K/model_data/yolo.h5'
+    args["anchors_path"]=path_to_yolo+'model_data/yolo_anchors.txt'
+    args["classes_path"]=path_to_yolo+'model_data/coco_classes.txt'
+    args["model_path"]=path_to_yolo+'model_data/yolo.h5'
     args["score_threshold"]=0.3
     args["iou_threshold"]=0.5
-    args["output_path"]='/home/ekmek/YAD2K/images/out'
-    args["test_path"]='/home/ekmek/YAD2K/images'
+    args["output_path"]=''
+    args["test_path"]=''
+    print(args)
 
     evaluation_times, additional_times, bboxes = eval_yolo._main(args, input_paths, ground_truths, output_paths, num_frames, num_crops,
                                                                  save_annotated_images=False, verbose=1, person_only=True)
