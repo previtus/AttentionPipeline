@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 """Run a YOLO_v2 style detection model on test images."""
-import argparse
 import colorsys
 import imghdr
 import os
@@ -15,51 +14,12 @@ from yad2k.models.keras_yolo import yolo_eval, yolo_head
 
 from timeit import default_timer as timer
 
-parser = argparse.ArgumentParser(
-    description='Run a YOLO_v2 style detection model on test images..')
-parser.add_argument(
-    '-model_path',
-    help='path to h5 model file containing body of a YOLO_v2 model',
-    default='model_data/yolo.h5')
-parser.add_argument(
-    '-a',
-    '--anchors_path',
-    help='path to anchors file, defaults to yolo_anchors.txt',
-    default='model_data/yolo_anchors.txt')
-parser.add_argument(
-    '-c',
-    '--classes_path',
-    help='path to classes file, defaults to coco_classes.txt',
-    default='model_data/coco_classes.txt')
-parser.add_argument(
-    '-t',
-    '--test_path',
-    help='path to directory of test images, defaults to images/',
-    default='images')
-parser.add_argument(
-    '-o',
-    '--output_path',
-    help='path to output test images, defaults to images/out',
-    default='images/out')
-parser.add_argument(
-    '-s',
-    '--score_threshold',
-    type=float,
-    help='threshold for bounding box scores, default .3',
-    default=.3)
-parser.add_argument(
-    '-iou',
-    '--iou_threshold',
-    type=float,
-    help='threshold for non max suppression IOU, default .5',
-    default=.5)
 
-
-def _main(args, input_paths, ground_truths, output_paths, save_annotated_images=False, verbose=1, person_only=True):
-    model_path = os.path.expanduser(args.model_path)
+def _main(args, input_paths, ground_truths, output_paths, num_frames, num_crops, save_annotated_images=False, verbose=1, person_only=True):
+    model_path = os.path.expanduser(args["model_path"])
     assert model_path.endswith('.h5'), 'Keras model must be a .h5 file.'
-    anchors_path = os.path.expanduser(args.anchors_path)
-    classes_path = os.path.expanduser(args.classes_path)
+    anchors_path = os.path.expanduser(args["anchors_path"])
+    classes_path = os.path.expanduser(args["classes_path"])
     #test_path = os.path.expanduser(args.test_path)
     #output_path = os.path.expanduser(args.output_path)
 
@@ -114,8 +74,9 @@ def _main(args, input_paths, ground_truths, output_paths, save_annotated_images=
     boxes, scores, classes = yolo_eval(
         yolo_outputs,
         input_image_shape,
-        score_threshold=args.score_threshold,
-        iou_threshold=args.iou_threshold)
+        score_threshold=args["score_threshold"],
+        iou_threshold=args["iou_threshold"],
+        max_boxes=50)
 
     evaluation_times = []
     additional_times = []
@@ -167,6 +128,7 @@ def _main(args, input_paths, ground_truths, output_paths, save_annotated_images=
 
         people = 0
         bboxes_image = []
+        print(num_frames, num_crops)
         for i, c in reversed(list(enumerate(out_classes))):
             predicted_class = class_names[c]
 
@@ -239,6 +201,6 @@ def _main(args, input_paths, ground_truths, output_paths, save_annotated_images=
 
     return evaluation_times, additional_times, bboxes
 
-if __name__ == '__main__':
-    #print(parser.parse_args())
-    _main(parser.parse_args())
+#if __name__ == '__main__':
+#    print(parser.parse_args())
+#    _main(parser.parse_args())

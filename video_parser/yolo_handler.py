@@ -3,7 +3,6 @@
 # i want to get measurements of both time and accuracy while using yolo v2
 from data_handler import use_path_which_exists, get_data
 from visualize_time_measurement import visualize_time_measurements
-import argparse
 import numpy as np
 
 def run_yolo(frames_folder, output_folder, fixbb_crop_per_frames, fixbb_scale, fixbb_crop, show_viz = False, ground_truth_file = None):
@@ -18,30 +17,6 @@ def run_yolo(frames_folder, output_folder, fixbb_crop_per_frames, fixbb_scale, f
     site.addsitedir(path_to_yolo)
     #print (sys.path)  # Just verify it is there
     import yad2k, eval_yolo
-
-    parser = argparse.ArgumentParser(
-        description='Run a YOLO_v2 style detection model on test images..')
-    parser.add_argument(
-        '-model_path', help='path to h5 model file containing body of a YOLO_v2 model',
-        default=path_to_yolo+'model_data/yolo.h5')
-    parser.add_argument(
-        '--anchors_path',help='path to anchors file, defaults to yolo_anchors.txt',
-        default=path_to_yolo+'model_data/yolo_anchors.txt')
-    parser.add_argument(
-        '--classes_path', help='path to classes file, defaults to coco_classes.txt',
-        default=path_to_yolo+'model_data/coco_classes.txt')
-    parser.add_argument(
-        '--test_path', help='path to directory of test images, defaults to images/',
-        default=path_to_yolo+'images')
-    parser.add_argument(
-        '--output_path', help='path to output test images, defaults to images/out',
-        default=path_to_yolo+"images/out")
-    parser.add_argument(
-        '--score_threshold', type=float, help='threshold for bounding box scores, default .3',
-        default=.3)
-    parser.add_argument(
-        '--iou_threshold', type=float, help='threshold for non max suppression IOU, default .5',
-        default=.5)
 
     ################################################################
     image_names, ground_truths, frame_ids, crop_ids, num_frames, num_crops = get_data(frames_folder, ground_truth_file, dataset = 'ParkingLot')
@@ -67,7 +42,16 @@ def run_yolo(frames_folder, output_folder, fixbb_crop_per_frames, fixbb_scale, f
     #input_paths = input_paths[0:limit]
     #output_paths = output_paths[0:limit]
 
-    evaluation_times, additional_times, bboxes = eval_yolo._main(parser.parse_args(), input_paths, ground_truths, output_paths,
+    args = {}
+    args["anchors_path"]='/home/ekmek/YAD2K/model_data/yolo_anchors.txt'
+    args["classes_path"]='/home/ekmek/YAD2K/model_data/coco_classes.txt'
+    args["model_path"]='/home/ekmek/YAD2K/model_data/yolo.h5'
+    args["score_threshold"]=0.3
+    args["iou_threshold"]=0.5
+    args["output_path"]='/home/ekmek/YAD2K/images/out'
+    args["test_path"]='/home/ekmek/YAD2K/images'
+
+    evaluation_times, additional_times, bboxes = eval_yolo._main(args, input_paths, ground_truths, output_paths, num_frames, num_crops,
                                                                  save_annotated_images=False, verbose=1, person_only=True)
     bboxes_per_frames = []
     for i in range(0,num_frames):
