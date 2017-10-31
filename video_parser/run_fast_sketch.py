@@ -163,8 +163,6 @@ parser.add_argument('-attention', help='use guidance of attention', default='Tru
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    args.crop = 288
-
     INPUT_FRAMES = args.input
     SETTINGS = {}
     SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
