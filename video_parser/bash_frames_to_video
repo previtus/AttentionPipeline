@@ -1,1 +1,1 @@
-ffmpeg -r 6/1 -i test_1fps/frame_%03d.jpg -c:v libx264 -vf fps=6 -pix_fmt yuv420p out.mp4
+ffmpeg -r 6/1 -i frames/%04d.jpg -c:v libx264 -vf fps=6 -pix_fmt yuv420p out.mp4
