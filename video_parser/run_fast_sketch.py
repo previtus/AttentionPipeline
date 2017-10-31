@@ -9,7 +9,7 @@ if not('DISPLAY' in os.environ):
 def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     import os
     import numpy as np
-    from crop_functions import crop_from_one_frame
+    from crop_functions import crop_from_one_frame, crop_from_one_frame_WITH_MASK
     from yolo_handler import run_yolo
     from mark_frame_with_bbox import annotate_image_with_bounding_boxes
     from visualize_time_measurement import visualize_time_measurements
@@ -25,18 +25,27 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     if not os.path.exists(output_frames_folder):
         os.makedirs(output_frames_folder)
 
+    attention_model = SETTINGS["attention"]
 
     # Frames to crops
     print("################## Cropping frames ##################")
     crop_per_frames = []
+    crop_number_per_frames = []
     frame_files = sorted(os.listdir(INPUT_FRAMES))
     print("##",len(frame_files),"of frames")
+
+    mask = video_file_root_folder+'/mask2.jpg'
 
     for i in range(0, len(frame_files)):
         frame_path = INPUT_FRAMES + frame_files[i]
 
-        crops = crop_from_one_frame(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save=True)
+        if attention_model:
+            crops = crop_from_one_frame_WITH_MASK(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save=True, mask_url=mask)
+        else:
+            crops = crop_from_one_frame(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save=True)
+
         crop_per_frames.append(crops)
+        crop_number_per_frames.append(len(crops))
 
     # Run YOLO on crops
     print("")
@@ -44,7 +53,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     tmp = video_file_root_folder + "/temporary"+RUN_NAME+"/tmp/"
 
-    evaluation_times, bboxes_per_frames, num_frames, num_crops = run_yolo(crops_folder, tmp, crop_per_frames, SETTINGS["scale"], SETTINGS["crop"])
+    evaluation_times, bboxes_per_frames = run_yolo(crops_folder, tmp, crop_number_per_frames, crop_per_frames, SETTINGS["scale"], SETTINGS["crop"])
+    num_frames = len(crop_number_per_frames)
 
     #bboxes_per_frames = sort_out_crop_coords_and_bboxes(crop_per_frames, bboxes)
 
@@ -94,17 +104,23 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     evaluation_times[0] = evaluation_times[1] # ignore first large value
     visualize_time_measurements([evaluation_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png')
 
-    crops_per_frame = int(len(evaluation_times)/num_frames)
-    chunked_per_frame = np.array_split(evaluation_times, crops_per_frame)
+    # crop_number_per_frames
+    last = 0
+    summed_frame_measurements = []
+    for f in range(0,num_frames):
+        till = crop_number_per_frames[f]
+        sub = evaluation_times[last:last+till]
+        summed_frame_measurements.append(sum(sub))
+        #print(last,till,sum(sub))
 
-    frame_measurements = np.array_split(evaluation_times, num_frames)
-    summed_frame_measurements = [sum(i) for i in frame_measurements]
+        last = till
 
-    visualize_time_measurements([chunked_per_frame], list(range(0,num_frames)), "Time measurements over frame", show=False, save=True, save_path=output_measurement_viz+'_2.png')
-
-    visualize_time_measurements([summed_frame_measurements], ['time per frame'], "Time measurements per frame",xlabel='frame #',
+    visualize_time_measurements([summed_frame_measurements, crop_number_per_frames], ['time per frame', 'crops'], "Time measurements per frame",xlabel='frame #',
                                 show=False, save=True, save_path=output_measurement_viz+'_3.png')
 
+    import shutil
+    temp_dir_del = video_file_root_folder + "/temporary" + RUN_NAME
+    shutil.rmtree(temp_dir_del)
 
 """
 INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
@@ -142,16 +158,24 @@ parser.add_argument('-scale', help='additional undersampling', default='1.0')
 parser.add_argument('-input', help='path to folder full of frame images',
                     default="/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/")
 parser.add_argument('-name', help='run name - will output in this dir', default='_Test-'+day+month)
+parser.add_argument('-attention', help='use guidance of attention', default='True')
 
 if __name__ == '__main__':
     args = parser.parse_args()
+
+    args.crop = 288
 
     INPUT_FRAMES = args.input
     SETTINGS = {}
     SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
     SETTINGS["over"] = float(args.over)
     SETTINGS["scale"] = float(args.scale)
+    SETTINGS["attention"] = (args.attention == 'True')
     RUN_NAME = args.name
+
+    #Test this:
+    #RUN_NAME += "b"
+    #SETTINGS["attention"] = False
 
     print(RUN_NAME, SETTINGS)
 
