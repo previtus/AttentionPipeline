@@ -67,6 +67,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     iou_threshold = 0.5
     limit_prob_lowest = 0 #0.70 # inside we limited for 0.3
 
+    import tensorflow as tf
+    sess = tf.Session()
     for i in range(0,len(frame_files)):
         test_bboxes = bboxes_per_frames[i]
 
@@ -82,7 +84,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         person_id = 0
 
-        DEBUG_TURN_OFF_NMS = True
+        DEBUG_TURN_OFF_NMS = False
         if not DEBUG_TURN_OFF_NMS:
             nms_arrays = non_max_suppression_fast(arrays, iou_threshold)
             reduced_bboxes_1 = []
@@ -90,7 +92,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                 a = ['person',nms_arrays[j],0.0,person_id]
                 reduced_bboxes_1.append(a)
 
-            nms_arrays, scores = non_max_suppression_tf(arrays,scores,50,iou_threshold)
+            nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,50,iou_threshold)
             reduced_bboxes_2 = []
             for j in range(0,len(nms_arrays)):
                 a = ['person',nms_arrays[j],scores[j],person_id]
@@ -100,7 +102,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i], test_bboxes,
                                            draw_text=False, save=True, show=False)
-
+    sess.close()
     print (len(evaluation_times),evaluation_times)
 
     evaluation_times[0] = evaluation_times[1] # ignore first large value
@@ -122,7 +124,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     import shutil
     temp_dir_del = video_file_root_folder + "/temporary" + RUN_NAME
-    shutil.rmtree(temp_dir_del)
+    if os.path.exists(temp_dir_del):
+        shutil.rmtree(temp_dir_del)
 
 """
 INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
@@ -172,6 +175,10 @@ if __name__ == '__main__':
     SETTINGS["scale"] = float(args.scale)
     SETTINGS["attention"] = (args.attention == 'True')
     RUN_NAME = args.name
+
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/DrivingNY/input/frames_1fps_1174_sub/"
+    #SETTINGS["attention"] = False
+    #RUN_NAME = "nydrivetest"
 
     #Test this:
     #RUN_NAME += "b"

@@ -1,18 +1,21 @@
 # import the necessary packages
 import numpy as np
 
-def non_max_suppression_tf(boxes, scores, max_boxes, iou_threshold):
+def non_max_suppression_tf(session, boxes, scores, max_boxes, iou_threshold):
 	import tensorflow as tf
 	from keras import backend as K
 
-	sess_tmp = tf.InteractiveSession()
 	max_boxes_tensor = K.variable(max_boxes, dtype='int32')
-	sess_tmp.run(tf.variables_initializer([max_boxes_tensor]))
+	session.run(tf.variables_initializer([max_boxes_tensor]))
 	nms_index = tf.image.non_max_suppression(boxes, scores, max_boxes_tensor, iou_threshold=iou_threshold)
 	boxes = K.gather(boxes, nms_index)
 	scores = K.gather(scores, nms_index)
 
-	return boxes.eval(), scores.eval()
+	with session.as_default():
+		boxes_out = boxes.eval()
+		scores_out = scores.eval()
+
+	return boxes_out, scores_out
 
 
 # Malisiewicz et al.
