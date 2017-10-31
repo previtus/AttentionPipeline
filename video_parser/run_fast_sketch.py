@@ -82,19 +82,21 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         person_id = 0
 
-        nms_arrays = non_max_suppression_fast(arrays, iou_threshold)
-        reduced_bboxes_1 = []
-        for j in range(0,len(nms_arrays)):
-            a = ['person',nms_arrays[j],0.0,person_id]
-            reduced_bboxes_1.append(a)
+        DEBUG_TURN_OFF_NMS = True
+        if not DEBUG_TURN_OFF_NMS:
+            nms_arrays = non_max_suppression_fast(arrays, iou_threshold)
+            reduced_bboxes_1 = []
+            for j in range(0,len(nms_arrays)):
+                a = ['person',nms_arrays[j],0.0,person_id]
+                reduced_bboxes_1.append(a)
 
-        nms_arrays, scores = non_max_suppression_tf(arrays,scores,50,iou_threshold)
-        reduced_bboxes_2 = []
-        for j in range(0,len(nms_arrays)):
-            a = ['person',nms_arrays[j],scores[j],person_id]
-            reduced_bboxes_2.append(a)
+            nms_arrays, scores = non_max_suppression_tf(arrays,scores,50,iou_threshold)
+            reduced_bboxes_2 = []
+            for j in range(0,len(nms_arrays)):
+                a = ['person',nms_arrays[j],scores[j],person_id]
+                reduced_bboxes_2.append(a)
 
-        test_bboxes = reduced_bboxes_2
+            test_bboxes = reduced_bboxes_2
 
         annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i], test_bboxes,
                                            draw_text=False, save=True, show=False)
