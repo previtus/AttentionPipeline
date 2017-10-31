@@ -115,7 +115,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         last = till
 
-    visualize_time_measurements([summed_frame_measurements, crop_number_per_frames], ['time per frame', 'crops'], "Time measurements per frame",xlabel='frame #',
+    visualize_time_measurements([summed_frame_measurements], ['time per frame'], "Time measurements per frame",xlabel='frame #',
                                 show=False, save=True, save_path=output_measurement_viz+'_3.png')
 
     import shutil
