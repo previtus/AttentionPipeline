@@ -41,7 +41,7 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
                 font=('font/FiraMono-Medium.otf'),
                 size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
         #thickness = (image.size[0] + image.size[1]) // 600
-        thickness = 2
+        thickness = int( 4 * score )
 
         label = '{} {:.2f}'.format(predicted_class, score)
 
