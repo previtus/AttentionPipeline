@@ -82,6 +82,9 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                     scores.append(score)
         arrays = np.array(arrays)
 
+        if len(arrays) == 0:
+            continue
+
         person_id = 0
 
         DEBUG_TURN_OFF_NMS = False
@@ -91,6 +94,17 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             for j in range(0,len(nms_arrays)):
                 a = ['person',nms_arrays[j],0.0,person_id]
                 reduced_bboxes_1.append(a)
+
+
+            print("##############################################")
+            print("test_bboxes (with debug crop bboxes) of len", len(test_bboxes))
+            for bb in test_bboxes:
+                print(len(bb), bb)
+
+            print("##############################################")
+            print("arrays", len(arrays))
+            for aa in arrays:
+                print(len(aa), aa)
 
             nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,50,iou_threshold)
             reduced_bboxes_2 = []
