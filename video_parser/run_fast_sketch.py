@@ -34,7 +34,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     frame_files = sorted(os.listdir(INPUT_FRAMES))
     print("##",len(frame_files),"of frames")
 
-    mask = video_file_root_folder+'/mask2.jpg'
+    mask = video_file_root_folder+'/mask.jpg'
 
     for i in range(0, len(frame_files)):
         frame_path = INPUT_FRAMES + frame_files[i]
@@ -81,6 +81,9 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                     arrays.append(list(test_bboxes[j][1]))
                     scores.append(score)
         arrays = np.array(arrays)
+
+        if len(arrays) == 0:
+            continue
 
         person_id = 0
 
