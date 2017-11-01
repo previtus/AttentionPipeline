@@ -95,9 +95,6 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                 a = ['person',nms_arrays[j],0.0,person_id]
                 reduced_bboxes_1.append(a)
 
-            print("test_bboxes .shape (with debug crop bboxes)",np.array(test_bboxes).shape)
-            print("arrays .shape",np.array(arrays).shape)
-
             nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,50,iou_threshold)
             reduced_bboxes_2 = []
             for j in range(0,len(nms_arrays)):
