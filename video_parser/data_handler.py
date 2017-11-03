@@ -1,5 +1,12 @@
 import os
 
+def save_string_to_file(strings, file):
+    text_file = open(file, "w")
+    for string in strings:
+        text_file.write(string)
+        text_file.write("\n")
+    text_file.close()
+
 def use_path_which_exists(list_of_possible_paths):
     '''
     From a list of possible paths choose the one which exists.
@@ -22,7 +29,7 @@ def use_path_which_exists(list_of_possible_paths):
 def load_ground_truth_ParkingLot(ground_truth_file):
     return None
 
-def get_data(frames_folder, ground_truth_file, dataset):
+def get_data_from_folder(frames_folder, ground_truth_file, dataset):
     # load labels
     if dataset is 'ParkingLot':
         ground_truths = load_ground_truth_ParkingLot(ground_truth_file)
@@ -50,5 +57,27 @@ def get_data(frames_folder, ground_truth_file, dataset):
         image_paths.append(crops)
         num_frames += 1
 
+    # unflattened
     return image_paths, ground_truths, frame_ids, crop_ids
 
+def get_data_from_list(crop_per_frames):
+    image_paths = []
+    frame_ids = []
+    crop_ids = []
+
+    for frame_i in range(0,len(crop_per_frames)):
+        crops_of_frame = crop_per_frames[frame_i]
+
+        for crop_i in range(0,len(crops_of_frame)):
+            crop = crops_of_frame[crop_i]
+
+            full_path = crop[0]
+            image_paths.append(full_path)
+            frame_ids.append(frame_i)
+            crop_ids.append(crop_i)
+
+            #print(frame_i, crop_i, crop)
+
+    # flattened!!!
+    ground_truths = None
+    return image_paths, ground_truths, frame_ids, crop_ids

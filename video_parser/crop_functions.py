@@ -24,7 +24,7 @@ def get_crops_parameters(w, crop=288, over=0.5, scale=1.0):
     #print (w - w_to)
     return params
 
-def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save=True):
+def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_crops=True, save_visualization=True, viz_path=''):
     # crop*scale is the size inside input image
     # crop is the size of output image
     frame_name = os.path.basename(frame_path)
@@ -33,13 +33,10 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save=Tr
     if not os.path.exists(out_folder+frame_name+"/"):
         os.makedirs(out_folder+frame_name+"/")
 
-    print(str(int(frame_name))+", ", end='', flush=True)
-    #print (frame_name, out_folder+frame_name+"/")
-
     img = Image.open(frame_path)
     width, height = img.size
 
-    if show:
+    if show or save_visualization:
         fig, ax = plt.subplots()
 
         plt.imshow(img)
@@ -51,13 +48,18 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save=Tr
     h_crops = get_crops_parameters(height, crop, over, scale)
     N = len(w_crops) * len(h_crops)
 
+    if not save_visualization:
+        print(str((frame_name))+", ", end='', flush=True)
+    else:
+        print(str((frame_name)) + " ("+str(N)+" crops per frame), ", end='', flush=True)
+
     #print ("Number of crops:", N)
 
     crops = []
     i = 0
     for w_crop in w_crops:
         for h_crop in h_crops:
-            if show:
+            if show or save_visualization:
                 jitter = random.uniform(0, 1) * 15
 
                 ax.add_patch(
@@ -73,17 +75,21 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save=Tr
             cropped_img = cropped_img.resize((crop, crop), resample=Image.ANTIALIAS)
             cropped_img.load()
 
-            file_name = out_folder + frame_name + "/" + str(i).zfill(4) + ".jpg"
-            if save:
-                cropped_img.save(file_name)
+            file_name = frame_name + "/" + str(i).zfill(4) + ".jpg"
+            if save_crops:
+                cropped_img.save(out_folder + file_name)
             i += 1
 
             crops.append((file_name, area))
     if show:
         plt.show()
+    if save_visualization:
+        plt.savefig(viz_path+'crops_viz.png')
+        cropped_img.save(viz_path + '_sample_first_crop.jpg')
+
     return crops
 
-def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, show, save=True, mask_url=''):
+def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, show, save_crops=True, save_visualization=True, mask_url='', viz_path=''):
     # crop*scale is the size inside input image
     # crop is the size of output image
     frame_name = os.path.basename(frame_path)
@@ -92,19 +98,16 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
     if not os.path.exists(out_folder+frame_name+"/"):
         os.makedirs(out_folder+frame_name+"/")
 
-    print(str(int(frame_name))+", ", end='', flush=True)
-    #print (frame_name, out_folder+frame_name+"/")
-
     img = Image.open(frame_path)
     mask = Image.open(mask_url)
     width, height = img.size
 
-    if show:
+    if show or save_visualization:
         fig, ax = plt.subplots()
 
         plt.imshow(img)
 
-        plt.imshow(mask)
+        plt.imshow(mask,alpha=0.4)
 
         plt.xlim(-1 * (width / 10.0), width + 1 * (width / 10.0))
         plt.ylim(-1 * (height / 10.0), height + 1 * (height / 10.0))
@@ -116,7 +119,10 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
     h_crops = get_crops_parameters(height, crop, over, scale)
     N = len(w_crops) * len(h_crops)
 
-    #print ("Number of crops:", N)
+    if not save_visualization:
+        print(str((frame_name))+", ", end='', flush=True)
+    else:
+        print(str((frame_name)) + " ("+str(N)+" crops per frame), ", end='', flush=True)
 
     crops = []
     i = 0
@@ -156,7 +162,7 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
             if extrema_sum[0] == 0 and extrema_sum[1] == 0:
                 continue
 
-            if show:
+            if show or save_visualization:
                 jitter = random.uniform(0, 1) * 15
 
                 ax.add_patch(
@@ -166,14 +172,19 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
                         scale * crop, fill=False, linewidth=2.0, color=numpy.random.rand(3, 1)  # color=cmap(i)
                     )
                 )
-            file_name = out_folder + frame_name + "/" + str(i).zfill(4) + ".jpg"
-            if save:
-                cropped_img.save(file_name)
+            file_name = frame_name + "/" + str(i).zfill(4) + ".jpg"
+            if save_crops:
+                cropped_img.save(out_folder + file_name)
+
             i += 1
 
             crops.append((file_name, area))
     if show:
         plt.show()
+    if save_visualization:
+        plt.savefig(viz_path+'crops_viz.png')
+        cropped_img.save(viz_path + '_sample_first_crop.jpg')
+
     return crops
 
 def trim(img, border):

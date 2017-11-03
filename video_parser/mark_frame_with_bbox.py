@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 # CODE USED FROM YAD2K
 
 def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_crops_drawing=True, draw_text=True, show=False, save=True):
+    #print(image_path, save_path)
 
     tmp_len = 80
     # Generate colors for drawing bounding boxes.

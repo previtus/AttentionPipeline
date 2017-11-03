@@ -14,6 +14,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     from mark_frame_with_bbox import annotate_image_with_bounding_boxes
     from visualize_time_measurement import visualize_time_measurements
     from nms import non_max_suppression_fast,non_max_suppression_tf
+    from data_handler import save_string_to_file
     from pathlib import Path
 
     video_file_root_folder = str(Path(INPUT_FRAMES).parents[1])
@@ -36,16 +37,18 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     mask = video_file_root_folder+'/mask.jpg'
 
+    save_one_crop_vis = True
     for i in range(0, len(frame_files)):
         frame_path = INPUT_FRAMES + frame_files[i]
 
         if attention_model:
-            crops = crop_from_one_frame_WITH_MASK(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save=True, mask_url=mask)
+            crops = crop_from_one_frame_WITH_MASK(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_crops=True, save_visualization=save_one_crop_vis, mask_url=mask, viz_path=output_measurement_viz)
         else:
-            crops = crop_from_one_frame(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save=True)
+            crops = crop_from_one_frame(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_visualization=save_one_crop_vis, save_crops=True, viz_path=output_measurement_viz)
 
         crop_per_frames.append(crops)
         crop_number_per_frames.append(len(crops))
+        save_one_crop_vis = False
 
     # Run YOLO on crops
     print("")
@@ -53,8 +56,10 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     tmp = video_file_root_folder + "/temporary"+RUN_NAME+"/tmp/"
 
+
     evaluation_times, bboxes_per_frames = run_yolo(crops_folder, tmp, crop_number_per_frames, crop_per_frames, SETTINGS["scale"], SETTINGS["crop"])
     num_frames = len(crop_number_per_frames)
+    num_crops = len(crop_per_frames[0])
 
     #bboxes_per_frames = sort_out_crop_coords_and_bboxes(crop_per_frames, bboxes)
 
@@ -66,6 +71,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     iou_threshold = 0.5
     limit_prob_lowest = 0 #0.70 # inside we limited for 0.3
+
+    print_first = True
 
     import tensorflow as tf
     sess = tf.Session()
@@ -89,11 +96,11 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         DEBUG_TURN_OFF_NMS = False
         if not DEBUG_TURN_OFF_NMS:
-            nms_arrays = non_max_suppression_fast(arrays, iou_threshold)
-            reduced_bboxes_1 = []
-            for j in range(0,len(nms_arrays)):
-                a = ['person',nms_arrays[j],0.0,person_id]
-                reduced_bboxes_1.append(a)
+            #nms_arrays = non_max_suppression_fast(arrays, iou_threshold)
+            #reduced_bboxes_1 = []
+            #for j in range(0,len(nms_arrays)):
+            #    a = ['person',nms_arrays[j],0.0,person_id]
+            #    reduced_bboxes_1.append(a)
 
             nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,50,iou_threshold)
             reduced_bboxes_2 = []
@@ -103,6 +110,9 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
             test_bboxes = reduced_bboxes_2
 
+        if print_first:
+            print("Annotating files like:", INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i], "with bboxes of len: ", len(test_bboxes))
+            print_first = False
         annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i], test_bboxes,
                                            draw_text=False, save=True, show=False)
     sess.close()
@@ -125,10 +135,18 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     visualize_time_measurements([summed_frame_measurements], ['time per frame'], "Time measurements per frame",xlabel='frame #',
                                 show=False, save=True, save_path=output_measurement_viz+'_3.png')
 
-    import shutil
-    temp_dir_del = video_file_root_folder + "/temporary" + RUN_NAME
-    if os.path.exists(temp_dir_del):
-        shutil.rmtree(temp_dir_del)
+    # save settings
+    avg_time_crop = np.mean(evaluation_times)
+    avg_time_frame = np.mean(summed_frame_measurements)
+    strings = [RUN_NAME+" "+str(SETTINGS), INPUT_FRAMES, str(num_crops)+" crops per frame * "+ str(num_frames) + " frames", "Time:" + str(avg_time_crop) + " avg per crop, " + str(avg_time_frame) + " avg per frame."]
+    save_string_to_file(strings, output_measurement_viz+'_settings.txt')
+
+    keep_temporary = True
+    if not keep_temporary:
+        import shutil
+        temp_dir_del = video_file_root_folder + "/temporary" + RUN_NAME
+        if os.path.exists(temp_dir_del):
+            shutil.rmtree(temp_dir_del)
 
 """
 INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
@@ -179,15 +197,12 @@ if __name__ == '__main__':
     SETTINGS["attention"] = (args.attention == 'True')
     RUN_NAME = args.name
 
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/DrivingNY/input/frames_1fps_1174_sub/"
-    #SETTINGS["attention"] = False
     #RUN_NAME = "nydrivetest"
-
-    #Test this:
-    #RUN_NAME += "b"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/small_dataset/input/frames/"
     #SETTINGS["attention"] = False
+    #SETTINGS["crop"] = 832
+    #RUN_NAME = "_small_test4_diffModelSize_832_832x832"
 
     print(RUN_NAME, SETTINGS)
-
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
 

@@ -1,11 +1,12 @@
 # call yolo code on our own data
 # my data will come in list of images
 # i want to get measurements of both time and accuracy while using yolo v2
-from data_handler import use_path_which_exists, get_data
+from data_handler import use_path_which_exists, get_data_from_folder, get_data_from_list
 from visualize_time_measurement import visualize_time_measurements
 import numpy as np
 
-def run_yolo(frames_folder, output_folder, num_crops_per_frames, fixbb_crop_per_frames, fixbb_scale, fixbb_crop, show_viz = False, ground_truth_file = None):
+def run_yolo(frames_folder, output_folder, num_crops_per_frames, crop_per_frames, fixbb_scale, fixbb_crop, show_viz = False,
+             ground_truth_file = None, model_h5='yolo.h5', anchors_txt='yolo_anchors.txt'):
 
     yolo_paths = ["/home/ekmek/YAD2K/", "/home/vruzicka/storage_pylon2/YAD2K/"]
 
@@ -20,11 +21,12 @@ def run_yolo(frames_folder, output_folder, num_crops_per_frames, fixbb_crop_per_
 
     ################################################################
     num_frames = len(num_crops_per_frames)
-    image_names, ground_truths, frame_ids, crop_ids = get_data(frames_folder, ground_truth_file, dataset = 'ParkingLot')
+    image_names, ground_truths, frame_ids, crop_ids = get_data_from_list(crop_per_frames)
 
-    image_names = [val for sublist in image_names for val in sublist]
-    frame_ids = [val for sublist in frame_ids for val in sublist]
-    crop_ids = [val for sublist in crop_ids for val in sublist]
+    #image_names, ground_truths, frame_ids, crop_ids = get_data_from_folder(frames_folder, ground_truth_file, dataset = 'ParkingLot')
+    #image_names = [val for sublist in image_names for val in sublist]
+    #frame_ids = [val for sublist in frame_ids for val in sublist]
+    #crop_ids = [val for sublist in crop_ids for val in sublist]
 
     #image_names = np.array(image_names).flatten()
     #frame_ids = np.array(frame_ids).flatten()
@@ -33,7 +35,7 @@ def run_yolo(frames_folder, output_folder, num_crops_per_frames, fixbb_crop_per_
     output_paths = [output_folder + s for s in image_names]
     input_paths = [frames_folder + s for s in image_names]
 
-    #print (len(image_names), image_names[0:2])
+    print (len(image_names), image_names[0:2])
     #print (len(input_paths), input_paths[0:2])
     #print (len(output_paths), output_paths[0:2])
 
@@ -44,9 +46,11 @@ def run_yolo(frames_folder, output_folder, num_crops_per_frames, fixbb_crop_per_
     #output_paths = output_paths[0:limit]
 
     args = {}
-    args["anchors_path"]=path_to_yolo+'model_data/yolo_anchors.txt'
+
+    #model_h5 = 'yolo_832x832.h5'
+    args["anchors_path"]=path_to_yolo+'model_data/' + anchors_txt
     args["classes_path"]=path_to_yolo+'model_data/coco_classes.txt'
-    args["model_path"]=path_to_yolo+'model_data/yolo.h5'
+    args["model_path"]=path_to_yolo+'model_data/' + model_h5
     args["score_threshold"]=0.3
     args["iou_threshold"]=0.5
     args["output_path"]=''
@@ -68,7 +72,7 @@ def run_yolo(frames_folder, output_folder, num_crops_per_frames, fixbb_crop_per_
         if bboxes_per_frames[frame_index] is None:
             bboxes_per_frames[frame_index] = []
 
-        crops_in_frame = fixbb_crop_per_frames[frame_index]
+        crops_in_frame = crop_per_frames[frame_index]
         current_crop = crops_in_frame[crop_index]
 
         #print("current_crop_coord", current_crop[1], fixbb_scale )
