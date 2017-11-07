@@ -2,3 +2,4 @@
 
 ffmpeg -i Exchanging_bags_day_indoor_1_original.mp4 -vf fps=1 test_1fps/frame_%d.png
 
+ffmpeg -i "Liverpool Street Station - London Timelapse 8k.webm" -vf fps=1 frames/%04d.jpg

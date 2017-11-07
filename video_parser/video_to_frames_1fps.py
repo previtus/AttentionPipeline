@@ -10,18 +10,20 @@ def video2frames(pathIn, pathOut):
         os.makedirs(pathOut)
 
     # CV2 not installed
-    cap = cv2.VideoCapture("Exchanging_bags_day_indoor_1_original.mp4")
-    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
+    #cap = cv2.VideoCapture("Exchanging_bags_day_indoor_1_original.mp4")
+    #length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    #width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    #height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    #fps = cap.get(cv2.CAP_PROP_FPS)
 
-    print (length, "frames", "@", fps, width, "x", height)
+    #print (length, "frames", "@", fps, width, "x", height)
 
     import subprocess
     # ffmpeg -i Exchanging_bags_day_indoor_1_original.mp4 -vf fps=1 test_1fps/frame_%d.png
     os.chdir(os.path.dirname(pathIn))
-    subprocess.call(['ffmpeg', '-i', os.path.basename(pathIn), '-vf', 'fps=1', pathOut+"%04d.jpg"])
+    command = ['ffmpeg', '-i', os.path.basename(pathIn), '-vf', 'fps=1', pathOut+"%04d.jpg"]
+    print(command)
+    subprocess.call(command)
 
     image_files = os.listdir(pathOut)
     return image_files
