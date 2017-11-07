@@ -161,6 +161,9 @@ venv.bak/
 # custom
 
 *.jpg
+*.png
+*.ods
+*.txt
 *.npy
 *.mp4
 
