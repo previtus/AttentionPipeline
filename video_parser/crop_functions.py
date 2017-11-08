@@ -1,5 +1,6 @@
 import os
-import numpy, random
+import numpy as np
+import random
 from PIL import Image, ImageChops
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -24,9 +25,57 @@ def get_crops_parameters(w, crop=288, over=0.5, scale=1.0):
     #print (w - w_to)
     return params
 
+def crop_from_one_img(img, crop, over, scale, show=False, save_crops=True, folder_name='', frame_name=''):
+
+    width, height = img.size
+
+    if show:
+        fig, ax = plt.subplots()
+
+        plt.imshow(img)
+        plt.xlim(-1 * (width / 10.0), width + 1 * (width / 10.0))
+        plt.ylim(-1 * (height / 10.0), height + 1 * (height / 10.0))
+        plt.gca().invert_yaxis()
+
+    w_crops = get_crops_parameters(width, crop, over, scale)
+    h_crops = get_crops_parameters(height, crop, over, scale)
+    N = len(w_crops) * len(h_crops)
+
+    crops = []
+    i = 0
+    for w_crop in w_crops:
+        for h_crop in h_crops:
+            if show:
+                jitter = random.uniform(0, 1) * 15
+
+                ax.add_patch(
+                    patches.Rectangle(
+                        (w_crop[0] + jitter, h_crop[0] + jitter),
+                        scale * crop,
+                        scale * crop, fill=False, linewidth=2.0, color=np.random.rand(3, 1)  # color=cmap(i)
+                    )
+                )
+
+            area = (int(w_crop[0]), int(h_crop[0]), int(w_crop[0] + scale * crop), int(h_crop[0] + scale * crop))
+            cropped_img = img.crop(box=area)
+            cropped_img = cropped_img.resize((crop, crop), resample=Image.ANTIALIAS)
+            cropped_img.load()
+
+            if save_crops:
+                file_name = frame_name + str(i).zfill(4) + ".jpg"
+                cropped_img.save(folder_name + file_name)
+            i += 1
+
+            crops.append((file_name, area))
+    if show:
+        plt.show()
+
+    return crops
+
 def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_crops=True, save_visualization=True, viz_path=''):
     # crop*scale is the size inside input image
     # crop is the size of output image
+
     frame_name = os.path.basename(frame_path)
     frame_name = frame_name[0:-4]
 
@@ -78,7 +127,7 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
                     patches.Rectangle(
                         (w_crop[0] + jitter, h_crop[0] + jitter),
                         scale * crop,
-                        scale * crop, fill=False, linewidth=2.0, color=numpy.random.rand(3, 1)  # color=cmap(i)
+                        scale * crop, fill=False, linewidth=2.0, color=np.random.rand(3, 1)  # color=cmap(i)
                     )
                 )
 
@@ -112,6 +161,10 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
 
     img = Image.open(frame_path)
     mask = Image.open(mask_url)
+
+    if mask.mode is not "L":
+        mask = mask.convert("L")
+
     width, height = img.size
 
     if show or save_visualization:
@@ -158,7 +211,7 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
             corner_empty = False
             for p in [a,b,c,d]:
                 p.load()
-                lum = numpy.sum(numpy.sum(p.getextrema(), 0))
+                lum = np.sum(np.sum(p.getextrema(), 0))
                 #print(p.size, lum)
                 if lum == 0:
                     corner_empty = True
@@ -168,10 +221,10 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
                 continue
 
             extrema = cropped_mask.getextrema()
-            extrema_sum = numpy.sum(extrema,0)
+            extrema_sum = np.sum(extrema,0)
             #print("summed extrema", extrema_sum)
 
-            if extrema_sum[0] == 0 and extrema_sum[1] == 0:
+            if extrema_sum == 0: # and extrema_sum[1] == 0:
                 continue
 
             if show or save_visualization:
@@ -181,7 +234,7 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
                     patches.Rectangle(
                         (w_crop[0] + jitter, h_crop[0] + jitter),
                         scale * crop,
-                        scale * crop, fill=False, linewidth=2.0, color=numpy.random.rand(3, 1)  # color=cmap(i)
+                        scale * crop, fill=False, linewidth=2.0, color=np.random.rand(3, 1)  # color=cmap(i)
                     )
                 )
             file_name = frame_name + "/" + str(i).zfill(4) + ".jpg"
@@ -198,3 +251,30 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
         cropped_img.save(viz_path + '_sample_first_crop.jpg')
 
     return crops
+
+def mask_from_one_frame(frame_path, SETTINGS, mask_folder, DESIRED_MODEL_LIMIT=608):
+    frame_image = Image.open(frame_path)
+
+    frame_name = os.path.basename(frame_path)
+    frame_name = frame_name[0:-4]
+    if not os.path.exists(mask_folder+frame_name+"/"):
+        os.makedirs(mask_folder+frame_name+"/")
+
+    print(str((frame_name))+", ", end='', flush=True)
+
+    ow, oh = frame_image.size
+
+    # now we want to resize the image so we have height equal to crop size - create only one row of crops
+    # we will have to reproject back the scales
+    nh = DESIRED_MODEL_LIMIT
+    scale_full_img = DESIRED_MODEL_LIMIT / oh
+    nw = ow * scale_full_img
+    crop = DESIRED_MODEL_LIMIT
+    #over = 0.3
+    over = 0.65
+
+    tmp = frame_image.resize((int(nw), int(nh)), Image.ANTIALIAS)
+    mask_crops = crop_from_one_img(tmp, crop, over, 1.0, folder_name=mask_folder, frame_name=frame_name+"/")
+
+    return mask_crops, scale_full_img
+

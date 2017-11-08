@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 # CODE USED FROM YAD2K
 
 def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_crops_drawing=True, draw_text=True, show=False, save=True):
+
     #print(image_path, save_path)
 
     tmp_len = 80
@@ -22,11 +23,10 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
     random.shuffle(colors)  # Shuffle colors to decorrelate adjacent classes.
     random.seed(None)  # Reset seed to default.
 
-
     image = Image.open(image_path)
 
     for bbox in bboxes:
-        #print (bbox)
+        #print (image.size, bbox)
 
         predicted_class = bbox[0]
 
@@ -83,3 +83,50 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
 
     if save:
         image.save(save_path, quality=90)
+
+def mask_from_evaluated_bboxes(image_path, save_path, bboxes, scale, EXTEND_BY, show=False, save=True):
+    print("bboxes",len(bboxes), bboxes)
+    print("scale",scale)
+
+    scaled_bboxes = []
+
+    for bbox in bboxes:
+        bbox_array = bbox[1]
+        scale_array = [a / scale for a in bbox_array]
+        scaled_bboxes.append([bbox[0], scale_array, bbox[2], bbox[3]])
+
+    print(scaled_bboxes)
+    image = Image.open(image_path)
+    mask = Image.new("L", image.size, "black")
+
+    for bbox in scaled_bboxes:
+
+        predicted_class = bbox[0]
+        if predicted_class is 'crop':
+            continue
+        box = bbox[1]
+        score = bbox[2]
+
+        draw = ImageDraw.Draw(mask)
+
+        top, left, bottom, right = box
+        top = max(0, np.floor(top + 0.5).astype('int32'))
+        left = max(0, np.floor(left + 0.5).astype('int32'))
+        bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
+        right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
+
+        draw.rectangle([left - EXTEND_BY, top - EXTEND_BY, right + EXTEND_BY, bottom + EXTEND_BY],outline="white", fill="white")
+
+        del draw
+
+    #resize_output = 0.3
+    #if resize_output is not 1.0:
+    #    mask = mask.resize((int(resize_output*image.size[0]), int(resize_output*image.size[1])))
+
+    if show:
+        mask.show()
+
+    if save:
+        mask.save(save_path, quality=90)
+
+
