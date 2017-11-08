@@ -6,7 +6,7 @@ from visualize_time_measurement import visualize_time_measurements
 import numpy as np
 
 def run_yolo(frames_folder, output_folder, num_crops_per_frames, crop_per_frames, fixbb_scale, fixbb_crop, show_viz = False,
-             ground_truth_file = None, model_h5='yolo.h5', anchors_txt='yolo_anchors.txt'):
+             ground_truth_file = None, model_h5='yolo.h5', anchors_txt='yolo_anchors.txt', VERBOSE=1):
 
     yolo_paths = ["/home/ekmek/YAD2K/", "/home/vruzicka/storage_pylon2/YAD2K/"]
 
@@ -58,7 +58,7 @@ def run_yolo(frames_folder, output_folder, num_crops_per_frames, crop_per_frames
     print(args)
 
     evaluation_times, additional_times, bboxes = eval_yolo._main(args, input_paths, ground_truths, output_paths, num_frames, num_crops_per_frames,
-                                                                 save_annotated_images=False, verbose=1, person_only=True)
+                                                                 save_annotated_images=False, verbose=VERBOSE, person_only=True)
     bboxes_per_frames = []
     for i in range(0,num_frames):
         bboxes_per_frames.append([])
