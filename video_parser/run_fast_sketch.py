@@ -245,8 +245,9 @@ parser.add_argument('-scale', help='additional undersampling', default='1.0')
 parser.add_argument('-input', help='path to folder full of frame images',
                     default="/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/")
 parser.add_argument('-name', help='run name - will output in this dir', default='_Test-'+day+month)
-parser.add_argument('-attention', help='use guidance of attention', default='True')
+parser.add_argument('-attention', help='use guidance of automatic attention model', default='True')
 parser.add_argument('-thickness', help='thickness', default='10,2')
+parser.add_argument('-extendmask', help='extend mask by', default='300')
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -260,20 +261,18 @@ if __name__ == '__main__':
     SETTINGS["over"] = float(args.over)
     SETTINGS["scale"] = float(args.scale)
     SETTINGS["attention"] = (args.attention == 'True')
-    SETTINGS["extend_mask_by"] = 300
+    SETTINGS["extend_mask_by"] = int(args.extendmask)
     thickness = str(args.thickness).split(",")
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
 
     RUN_NAME = args.name
 
-    SETTINGS["crop"] = 1000
-    SETTINGS["over"] = 0.65
-    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/liverpool_station_8k/input/frames/"
-    SETTINGS["attention"] = True
-    RUN_NAME = "_liverpoolWithAtt_"+day+month
+    #SETTINGS["crop"] = 1000
+    #SETTINGS["over"] = 0.65
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/liverpool_station_8k/input/frames/"
+    #SETTINGS["attention"] = True
+    #RUN_NAME = "_liverpoolWithAtt_"+day+month
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
-
-    args = parser.parse_args()
 
