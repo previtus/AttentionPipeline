@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # CODE USED FROM YAD2K
 
-def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_crops_drawing=True, draw_text=True, show=False, save=True):
+def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_crops_drawing=True, draw_text=True, show=False, save=True, thickness=[4.0,1.0]):
 
     #print(image_path, save_path)
 
@@ -41,8 +41,8 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
         font = ImageFont.truetype(
                 font=('font/FiraMono-Medium.otf'),
                 size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
-        #thickness = (image.size[0] + image.size[1]) // 600
-        thickness = int( 4 * score )
+        #thickness_val = (image.size[0] + image.size[1]) // 600
+        thickness_val = int( thickness[0] * score + thickness[1] )
 
         label = '{} {:.2f}'.format(predicted_class, score)
 
@@ -62,7 +62,7 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
             text_origin = np.array([left, top + 1])
 
         # My kingdom for a good redistributable image drawing library.
-        for i in range(thickness):
+        for i in range(thickness_val):
             draw.rectangle(
                     [left + i, top + i, right - i, bottom - i],
                     outline=colors[c])
@@ -85,8 +85,8 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
         image.save(save_path, quality=90)
 
 def mask_from_evaluated_bboxes(image_path, save_path, bboxes, scale, EXTEND_BY, show=False, save=True):
-    print("bboxes",len(bboxes), bboxes)
-    print("scale",scale)
+    #print("bboxes",len(bboxes), bboxes)
+    #print("scale",scale)
 
     scaled_bboxes = []
 
@@ -95,7 +95,7 @@ def mask_from_evaluated_bboxes(image_path, save_path, bboxes, scale, EXTEND_BY, 
         scale_array = [a / scale for a in bbox_array]
         scaled_bboxes.append([bbox[0], scale_array, bbox[2], bbox[3]])
 
-    print(scaled_bboxes)
+    #print(scaled_bboxes)
     image = Image.open(image_path)
     mask = Image.new("L", image.size, "black")
 

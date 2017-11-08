@@ -8,6 +8,8 @@ if not('DISPLAY' in os.environ):
 
 def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     import os
+    from shutil import copyfile
+
     import numpy as np
     from crop_functions import crop_from_one_frame, crop_from_one_frame_WITH_MASK, mask_from_one_frame
     from yolo_handler import run_yolo
@@ -33,20 +35,19 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     frame_files = sorted(os.listdir(INPUT_FRAMES))
 
     print("################## Mask generation ##################")
-    print("##",len(frame_files),"of frames")
     mask_names = []
 
     if attention_model:
+        print("##", len(frame_files), "of frames")
 
         # 1 generate crops from full images
-        DESIRED_MODEL_LIMIT = 608
 
         mask_crops_per_frames = []
         scales_per_frames = []
         mask_crops_number_per_frames = []
         for i in range(0, len(frame_files)):
             frame_path = INPUT_FRAMES + frame_files[i]
-            mask_crops, scale_full_img = mask_from_one_frame(frame_path, SETTINGS, mask_crop_folder, DESIRED_MODEL_LIMIT)
+            mask_crops, scale_full_img = mask_from_one_frame(frame_path, SETTINGS, mask_crop_folder)
             mask_crops_per_frames.append(mask_crops)
             mask_crops_number_per_frames.append(len(mask_crops))
             scales_per_frames.append(scale_full_img)
@@ -60,9 +61,9 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         # 2 eval these
         mask_tmp = video_file_root_folder + "/temporary" + RUN_NAME + "/mask_tmp/"
-        evaluation_times, bboxes_per_frames = run_yolo(mask_crop_folder, mask_tmp, mask_crops_number_per_frames, mask_crops_per_frames,1.0,DESIRED_MODEL_LIMIT, VERBOSE=0)
+        masks_evaluation_times, bboxes_per_frames = run_yolo(mask_crop_folder, mask_tmp, mask_crops_number_per_frames, mask_crops_per_frames,1.0,SETTINGS["attention_crop"], VERBOSE=0)
         #print("bboxes_per_frames", len(bboxes_per_frames), bboxes_per_frames )
-        print("mask evaluation", len(evaluation_times), evaluation_times )
+        #print("mask evaluation", len(masks_evaluation_times), masks_evaluation_times )
 
         # 3 make mask images accordingly
         for frame_i in range(0,len(bboxes_per_frames)):
@@ -92,8 +93,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         crop_number_per_frames.append(len(crops))
         save_one_crop_vis = False
 
-    print("crop_per_frames ", len(crop_per_frames), crop_per_frames)
-    print("crop_number_per_frames ", len(crop_number_per_frames), crop_number_per_frames)
+    #print("crop_per_frames ", len(crop_per_frames), crop_per_frames)
+    #print("crop_number_per_frames ", len(crop_number_per_frames), crop_number_per_frames)
 
     # Run YOLO on crops
     print("")
@@ -135,6 +136,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         arrays = np.array(arrays)
 
         if len(arrays) == 0:
+            # no bboxes found in there, still we should copy the frame img
+            copyfile(INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i])
             continue
 
         person_id = 0
@@ -159,12 +162,13 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             print("Annotating with bboxes of len: ", len(test_bboxes) ,"files in:", INPUT_FRAMES + frame_files[i], ", out:", output_frames_folder + frame_files[i])
             print_first = False
         annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i], test_bboxes,
-                                           draw_text=False, save=True, show=False)
+                                           draw_text=False, save=True, show=False, thickness=SETTINGS["thickness"])
 
     sess.close()
     print (len(evaluation_times),evaluation_times)
 
     evaluation_times[0] = evaluation_times[1] # ignore first large value
+    masks_evaluation_times[0] = masks_evaluation_times[1] # ignore first large value
     visualize_time_measurements([evaluation_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png',  y_min=0.0, y_max=0.5)
     visualize_time_measurements([evaluation_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png',  y_min=0.0, y_max=0.0)
 
@@ -176,10 +180,18 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         sub = evaluation_times[last:last+till]
         summed_frame_measurements.append(sum(sub))
         #print(last,till,sum(sub))
-
         last = till
 
-    visualize_time_measurements([summed_frame_measurements], ['time per frame'], "Time measurements per frame",xlabel='frame #',
+    last = 0
+    summed_mask_measurements = []
+    for f in range(0,num_frames):
+        till = mask_crops_number_per_frames[f]
+        sub = masks_evaluation_times[last:last+till]
+        summed_mask_measurements.append(sum(sub))
+        #print(last,till,sum(sub))
+        last = till
+
+    visualize_time_measurements([summed_frame_measurements, summed_mask_measurements], ['time per frame', 'mask generation'], "Time measurements per frame",xlabel='frame #',
                                 show=False, save=True, save_path=output_measurement_viz+'_3.png')
 
     # save settings
@@ -227,81 +239,41 @@ import argparse
 parser = argparse.ArgumentParser(description='Project: Find BBoxes in video.')
 parser.add_argument('-crop', help='size of crops, enter multiples of 32', default='544')
 parser.add_argument('-over', help='percentage of overlap, 0-1', default='0.6')
+parser.add_argument('-attcrop', help='size of crops for attention model', default='608')
+parser.add_argument('-attover', help='percentage of overlap for attention model', default='0.65')
 parser.add_argument('-scale', help='additional undersampling', default='1.0')
 parser.add_argument('-input', help='path to folder full of frame images',
                     default="/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/")
 parser.add_argument('-name', help='run name - will output in this dir', default='_Test-'+day+month)
 parser.add_argument('-attention', help='use guidance of attention', default='True')
+parser.add_argument('-thickness', help='thickness', default='10,2')
 
 if __name__ == '__main__':
     args = parser.parse_args()
 
     INPUT_FRAMES = args.input
     SETTINGS = {}
+    SETTINGS["attention_crop"] = float(args.attcrop)
+    SETTINGS["attention_over"] = float(args.attover)
+
     SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
     SETTINGS["over"] = float(args.over)
     SETTINGS["scale"] = float(args.scale)
     SETTINGS["attention"] = (args.attention == 'True')
     SETTINGS["extend_mask_by"] = 300
+    thickness = str(args.thickness).split(",")
+    SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
 
     RUN_NAME = args.name
 
     SETTINGS["crop"] = 1000
     SETTINGS["over"] = 0.65
-    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/DrivingNY/input/frames_0.2fps_236/"
+    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/liverpool_station_8k/input/frames/"
     SETTINGS["attention"] = True
-    RUN_NAME = "_1000crop_with-Att-from-Full"
+    RUN_NAME = "_liverpoolWithAtt_"+day+month
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
 
     args = parser.parse_args()
 
-
-    # 2
-    SETTINGS = {}
-    SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
-    SETTINGS["over"] = float(args.over)
-    SETTINGS["scale"] = float(args.scale)
-    SETTINGS["attention"] = (args.attention == 'True')
-    SETTINGS["extend_mask_by"] = 300
-    SETTINGS["crop"] = 1000
-    SETTINGS["over"] = 0.65
-    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/DrivingNY/input/frames_0.2fps_236/"
-    SETTINGS["attention"] = False
-    RUN_NAME = "_1000crop_without-Att"
-
-    print(RUN_NAME, SETTINGS)
-    main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
-
-    # 3
-    SETTINGS = {}
-    SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
-    SETTINGS["over"] = float(args.over)
-    SETTINGS["scale"] = float(args.scale)
-    SETTINGS["attention"] = (args.attention == 'True')
-    SETTINGS["extend_mask_by"] = 300
-    SETTINGS["crop"] = 1000
-    SETTINGS["over"] = 0.65
-    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
-    SETTINGS["attention"] = True
-    RUN_NAME = "_1000crop_with-Att-from-Full"
-
-    print(RUN_NAME, SETTINGS)
-    main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
-
-    # 4
-    SETTINGS = {}
-    SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
-    SETTINGS["over"] = float(args.over)
-    SETTINGS["scale"] = float(args.scale)
-    SETTINGS["attention"] = (args.attention == 'True')
-    SETTINGS["extend_mask_by"] = 300
-    SETTINGS["crop"] = 1000
-    SETTINGS["over"] = 0.65
-    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
-    SETTINGS["attention"] = False
-    RUN_NAME = "_1000crop_without-Att"
-
-    print(RUN_NAME, SETTINGS)
-    main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)

@@ -252,7 +252,7 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
 
     return crops
 
-def mask_from_one_frame(frame_path, SETTINGS, mask_folder, DESIRED_MODEL_LIMIT=608):
+def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
     frame_image = Image.open(frame_path)
 
     frame_name = os.path.basename(frame_path)
@@ -266,12 +266,12 @@ def mask_from_one_frame(frame_path, SETTINGS, mask_folder, DESIRED_MODEL_LIMIT=6
 
     # now we want to resize the image so we have height equal to crop size - create only one row of crops
     # we will have to reproject back the scales
-    nh = DESIRED_MODEL_LIMIT
-    scale_full_img = DESIRED_MODEL_LIMIT / oh
+    crop = SETTINGS["attention_crop"]
+
+    nh = crop
+    scale_full_img = nh / oh
     nw = ow * scale_full_img
-    crop = DESIRED_MODEL_LIMIT
-    #over = 0.3
-    over = 0.65
+    over = SETTINGS["attention_over"]
 
     tmp = frame_image.resize((int(nw), int(nh)), Image.ANTIALIAS)
     mask_crops = crop_from_one_img(tmp, crop, over, 1.0, folder_name=mask_folder, frame_name=frame_name+"/")
