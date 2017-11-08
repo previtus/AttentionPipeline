@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH -p GPU
+#SBATCH -t 02:00:00
+#SBATCH --gres=gpu:p100:2
+
+#echo commands to stdout
+set -x
+
+#move to working directory
+module load keras/2.0.6_anaconda
+source activate $KERAS_ENV
+cd /home/vruzicka/intership_project/video_parser
+
+#run program
+python run_fast_sketch.py -crop 1000 -over 0.65 -input "/home/vruzicka/storage_pylon2/_videos_files/DrivingNY/input/frames_1fps_1174/" -attention True -name "_NYStreet_testingBatchCode"
+
+# run this with: sbatch server_job_batch_script.job
