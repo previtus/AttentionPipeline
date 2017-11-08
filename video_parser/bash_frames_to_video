@@ -3,3 +3,20 @@ ffmpeg -r 6/1 -i frames/%04d.jpg -c:v libx264 -vf fps=6 -pix_fmt yuv420p out.mp4
 
 # all jpgs
 ffmpeg -r 6/1 -pattern_type glob -i 'frames/*.jpg' -c:v libx264 -vf fps=6 -pix_fmt yuv420p out.mp4
+
+
+# convert img to the right size - ps put it there in multiple copies, to be properly visible
+convert -resize 3840x2160! 0000intro.jpg 0000intro4k.jpg
+
+# merge two videos
+ffmpeg \
+  -i without.mp4 \
+  -i with.mp4 \
+  -filter_complex '[0:v]pad=iw*2:ih[int];[int][1:v]overlay=W/2:0[vid]' \
+  -map [vid] \
+  -c:v libx264 \
+  -crf 23 \
+  -preset veryfast \
+  output.mp4
+
+  # crf = quality, sane range is 18-28. Consider 18 to be visually lossless or nearly so
