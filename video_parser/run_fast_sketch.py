@@ -18,6 +18,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     from nms import non_max_suppression_fast,non_max_suppression_tf
     from data_handler import save_string_to_file
     from pathlib import Path
+    from timeit import default_timer as timer
 
     video_file_root_folder = str(Path(INPUT_FRAMES).parents[1])
     mask_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/masks/"
@@ -37,6 +38,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     print("################## Mask generation ##################")
     mask_names = []
 
+    summed_mask_croping_time = []
+
     if attention_model:
         print("##", len(frame_files), "of frames")
 
@@ -46,11 +49,17 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         scales_per_frames = []
         mask_crops_number_per_frames = []
         for i in range(0, len(frame_files)):
+            start = timer()
+
             frame_path = INPUT_FRAMES + frame_files[i]
             mask_crops, scale_full_img = mask_from_one_frame(frame_path, SETTINGS, mask_crop_folder)
             mask_crops_per_frames.append(mask_crops)
             mask_crops_number_per_frames.append(len(mask_crops))
             scales_per_frames.append(scale_full_img)
+
+            end = timer()
+            time = (end - start)
+            summed_mask_croping_time.append(time)
 
             # input img: frame_path
             # scale stuff, eval bboxes, make mask, save temp
@@ -67,10 +76,16 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         # 3 make mask images accordingly
         for frame_i in range(0,len(bboxes_per_frames)):
+            start = timer()
+
             bboxes = bboxes_per_frames[frame_i]
             scale = scales_per_frames[frame_i]
             mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[frame_i], mask_folder + frame_files[frame_i], bboxes, scale, SETTINGS["extend_mask_by"])
             mask_names.append(mask_folder + frame_files[frame_i])
+
+            end = timer()
+            time = (end - start)
+            summed_mask_croping_time[frame_i] += time
 
         #print(mask_names)
 
@@ -78,9 +93,12 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     print("##",len(frame_files),"of frames")
     crop_per_frames = []
     crop_number_per_frames = []
+    summed_croping_time = []
 
     save_one_crop_vis = True
     for i in range(0, len(frame_files)):
+        start = timer()
+
         frame_path = INPUT_FRAMES + frame_files[i]
 
         if attention_model:
@@ -92,6 +110,15 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         crop_per_frames.append(crops)
         crop_number_per_frames.append(len(crops))
         save_one_crop_vis = False
+
+        end = timer()
+        time = (end - start)
+        summed_croping_time.append(time)
+
+
+    tmp_crops = crop_from_one_frame(INPUT_FRAMES + frame_files[0], crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"],
+                                show=False, save_visualization=False, save_crops=False,viz_path='')
+    max_number_of_crops_per_frame = len(tmp_crops)
 
     #print("crop_per_frames ", len(crop_per_frames), crop_per_frames)
     #print("crop_number_per_frames ", len(crop_number_per_frames), crop_number_per_frames)
@@ -167,8 +194,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     sess.close()
     print (len(evaluation_times),evaluation_times)
 
-    evaluation_times[0] = evaluation_times[1] # ignore first large value
-    masks_evaluation_times[0] = masks_evaluation_times[1] # ignore first large value
+    #evaluation_times[0] = evaluation_times[1] # ignore first large value
+    #masks_evaluation_times[0] = masks_evaluation_times[1] # ignore first large value
     visualize_time_measurements([evaluation_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png',  y_min=0.0, y_max=0.5)
     visualize_time_measurements([evaluation_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png',  y_min=0.0, y_max=0.0)
 
@@ -182,21 +209,32 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         #print(last,till,sum(sub))
         last = till
 
-    last = 0
-    summed_mask_measurements = []
-    for f in range(0,num_frames):
-        till = mask_crops_number_per_frames[f]
-        sub = masks_evaluation_times[last:last+till]
-        summed_mask_measurements.append(sum(sub))
-        #print(last,till,sum(sub))
-        last = till
+    if attention_model:
+        last = 0
+        summed_mask_measurements = []
+        for f in range(0,num_frames):
+            till = mask_crops_number_per_frames[f]
+            sub = masks_evaluation_times[last:last+till]
+            summed_mask_measurements.append(sum(sub))
+            #print(last,till,sum(sub))
+            last = till
 
-    visualize_time_measurements([summed_frame_measurements, summed_mask_measurements], ['time per frame', 'mask generation'], "Time measurements per frame",xlabel='frame #',
+    avg_time_crop = np.mean(evaluation_times[1:])
+    max_time_per_frame_estimate = max_number_of_crops_per_frame * avg_time_crop
+    estimated_max_time_per_frame = [max_time_per_frame_estimate] * num_frames
+
+    if attention_model:
+        arrs = [summed_frame_measurements, summed_mask_measurements, summed_croping_time, summed_mask_croping_time, estimated_max_time_per_frame]
+        names = ['image eval', 'mask eval', 'cropping image', 'cropping mask', 'estimated max']
+    else:
+        arrs = [summed_frame_measurements, summed_croping_time]
+        names = ['image eval','cropping image']
+
+    visualize_time_measurements(arrs, names, "Time measurements per frame",xlabel='frame #',
                                 show=False, save=True, save_path=output_measurement_viz+'_3.png')
 
     # save settings
-    avg_time_crop = np.mean(evaluation_times)
-    avg_time_frame = np.mean(summed_frame_measurements)
+    avg_time_frame = np.mean(summed_frame_measurements[1:])
     strings = [RUN_NAME+" "+str(SETTINGS), INPUT_FRAMES, str(num_crops)+" crops per frame * "+ str(num_frames) + " frames", "Time:" + str(avg_time_crop) + " avg per crop, " + str(avg_time_frame) + " avg per frame."]
     save_string_to_file(strings, output_measurement_viz+'_settings.txt')
 
@@ -207,26 +245,6 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         if os.path.exists(temp_dir_del):
             shutil.rmtree(temp_dir_del)
 
-"""
-INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
-SETTINGS = {}
-SETTINGS["crop"] = 544 ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
-SETTINGS["over"] = 0.6
-SETTINGS["scale"] = 1.0
-RUN_NAME = "_Test"
-
-main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
-
-
-INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/bag exchange/input/frames/"
-SETTINGS = {}
-SETTINGS["crop"] = 1024 ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
-SETTINGS["over"] = 0.6
-SETTINGS["scale"] = 1.0
-RUN_NAME = "_Test"
-
-main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
-"""
 
 from datetime import *
 
@@ -253,10 +271,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     INPUT_FRAMES = args.input
+    RUN_NAME = args.name
     SETTINGS = {}
     SETTINGS["attention_crop"] = float(args.attcrop)
     SETTINGS["attention_over"] = float(args.attover)
-
     SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
     SETTINGS["over"] = float(args.over)
     SETTINGS["scale"] = float(args.scale)
@@ -265,13 +283,10 @@ if __name__ == '__main__':
     thickness = str(args.thickness).split(",")
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
 
-    RUN_NAME = args.name
-
     #SETTINGS["crop"] = 1000
     #SETTINGS["over"] = 0.65
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/liverpool_station_8k/input/frames/"
-    #SETTINGS["attention"] = True
-    #RUN_NAME = "_liverpoolWithAtt_"+day+month
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
+    #RUN_NAME = "_graphsTest_"+day+month
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)

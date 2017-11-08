@@ -83,18 +83,6 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
         os.makedirs(out_folder+frame_name+"/")
 
     img = Image.open(frame_path)
-
-    """
-    hack_resize_to_one_row = True
-    if hack_resize_to_one_row:
-        print(img.size)
-        h = img.size[1]
-        w = img.size[0]
-        nh = crop
-        nw = nh * w / h
-        img = img.resize((int(nw), int(nh)), Image.ANTIALIAS)
-        print(img.size)
-    """
     width, height = img.size
 
     if show or save_visualization:
