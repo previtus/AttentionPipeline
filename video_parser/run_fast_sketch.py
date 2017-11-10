@@ -70,7 +70,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         # 2 eval these
         mask_tmp = video_file_root_folder + "/temporary" + RUN_NAME + "/mask_tmp/"
-        masks_evaluation_times, bboxes_per_frames = run_yolo(mask_crop_folder, mask_tmp, mask_crops_number_per_frames, mask_crops_per_frames,1.0,SETTINGS["attention_crop"], VERBOSE=0)
+        masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crop_folder, mask_tmp, mask_crops_number_per_frames, mask_crops_per_frames,1.0,SETTINGS["attention_crop"], INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0)
         #print("bboxes_per_frames", len(bboxes_per_frames), bboxes_per_frames )
         #print("mask evaluation", len(masks_evaluation_times), masks_evaluation_times )
 
@@ -103,9 +103,9 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         if attention_model:
             mask = mask_names[i]
-            crops = crop_from_one_frame_WITH_MASK(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_crops=True, save_visualization=save_one_crop_vis, mask_url=mask, viz_path=output_measurement_viz)
+            crops = crop_from_one_frame_WITH_MASK(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_crops=False, save_visualization=save_one_crop_vis, mask_url=mask, viz_path=output_measurement_viz)
         else:
-            crops = crop_from_one_frame(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_visualization=save_one_crop_vis, save_crops=True, viz_path=output_measurement_viz)
+            crops = crop_from_one_frame(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_visualization=save_one_crop_vis, save_crops=False, viz_path=output_measurement_viz)
 
         crop_per_frames.append(crops)
         crop_number_per_frames.append(len(crops))
@@ -129,8 +129,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     tmp = video_file_root_folder + "/temporary"+RUN_NAME+"/tmp/"
 
-
-    evaluation_times, bboxes_per_frames = run_yolo(crops_folder, tmp, crop_number_per_frames, crop_per_frames, SETTINGS["scale"], SETTINGS["crop"])
+    pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crops_folder, tmp, crop_number_per_frames, crop_per_frames, SETTINGS["scale"], SETTINGS["crop"], INPUT_FRAMES,frame_files)
     num_frames = len(crop_number_per_frames)
     num_crops = len(crop_per_frames[0])
 
@@ -192,19 +191,19 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                                            draw_text=False, save=True, show=False, thickness=SETTINGS["thickness"])
 
     sess.close()
-    print (len(evaluation_times),evaluation_times)
+    print (len(pureEval_times),pureEval_times)
 
     #evaluation_times[0] = evaluation_times[1] # ignore first large value
     #masks_evaluation_times[0] = masks_evaluation_times[1] # ignore first large value
-    visualize_time_measurements([evaluation_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png',  y_min=0.0, y_max=0.5)
-    visualize_time_measurements([evaluation_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png',  y_min=0.0, y_max=0.0)
+    visualize_time_measurements([pureEval_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png',  y_min=0.0, y_max=0.5)
+    visualize_time_measurements([pureEval_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png',  y_min=0.0, y_max=0.0)
 
     # crop_number_per_frames
     last = 0
     summed_frame_measurements = []
     for f in range(0,num_frames):
         till = crop_number_per_frames[f]
-        sub = evaluation_times[last:last+till]
+        sub = pureEval_times[last:last+till]
         summed_frame_measurements.append(sum(sub))
         #print(last,till,sum(sub))
         last = till
@@ -219,16 +218,17 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             #print(last,till,sum(sub))
             last = till
 
-    avg_time_crop = np.mean(evaluation_times[1:])
+    avg_time_crop = np.mean(pureEval_times[1:])
     max_time_per_frame_estimate = max_number_of_crops_per_frame * avg_time_crop
     estimated_max_time_per_frame = [max_time_per_frame_estimate] * num_frames
 
     if attention_model:
-        arrs = [summed_frame_measurements, summed_mask_measurements, summed_croping_time, summed_mask_croping_time, estimated_max_time_per_frame]
-        names = ['image eval', 'mask eval', 'cropping image', 'cropping mask', 'estimated max']
+        arrs = [summed_frame_measurements, summed_mask_measurements, summed_croping_time, summed_mask_croping_time,
+                ioPlusEval_times, masks_additional_times, estimated_max_time_per_frame]
+        names = ['image eval', 'mask eval', 'cropping image', 'cropping mask', 'image eval+io', 'mask eval+io', 'estimated max']
     else:
-        arrs = [summed_frame_measurements, summed_croping_time]
-        names = ['image eval','cropping image']
+        arrs = [summed_frame_measurements, summed_croping_time, ioPlusEval_times]
+        names = ['image eval','cropping image', 'image eval+io']
 
     visualize_time_measurements(arrs, names, "Time measurements per frame",xlabel='frame #',
                                 show=False, save=True, save_path=output_measurement_viz+'_3.png')
@@ -283,10 +283,10 @@ if __name__ == '__main__':
     thickness = str(args.thickness).split(",")
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
 
-    #SETTINGS["crop"] = 1000
-    #SETTINGS["over"] = 0.65
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
-    #RUN_NAME = "_graphsTest_"+day+month
+    SETTINGS["crop"] = 1000
+    SETTINGS["over"] = 0.65
+    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
+    RUN_NAME = "_testWithoutSavingCrops_"+day+month
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)

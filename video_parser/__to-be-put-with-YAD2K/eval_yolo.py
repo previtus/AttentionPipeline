@@ -15,8 +15,9 @@ from yad2k.models.keras_yolo import yolo_eval, yolo_head
 from timeit import default_timer as timer
 
 
-def _main(args, input_paths, ground_truths, output_paths, num_frames, num_crops, save_annotated_images=False, verbose=1, person_only=True):
+def _main(args, input_paths, ground_truths, output_paths, num_frames, num_crops_per_frames, save_annotated_images=False, verbose=1, person_only=True):
     model_path = os.path.expanduser(args["model_path"])
+    print(model_path)
     assert model_path.endswith('.h5'), 'Keras model must be a .h5 file.'
     anchors_path = os.path.expanduser(args["anchors_path"])
     classes_path = os.path.expanduser(args["classes_path"])
@@ -82,7 +83,18 @@ def _main(args, input_paths, ground_truths, output_paths, num_frames, num_crops,
     additional_times = []
     bboxes = []
 
+    frame_number = 0
+    print("Frame", frame_number, " with ", num_crops_per_frames[frame_number], " crops.")
+    images_processed = 0
     for image_i in range(0,len(input_paths)):
+        if images_processed >= num_crops_per_frames[frame_number]:
+            images_processed = 0
+            frame_number += 1
+            print("Frame", frame_number, " with ", num_crops_per_frames[frame_number], " crops.")
+
+        images_processed += 1
+
+
         start_loop = timer()
 
         image_file = input_paths[image_i]
@@ -96,6 +108,10 @@ def _main(args, input_paths, ground_truths, output_paths, num_frames, num_crops,
             continue
 
         image = Image.open(image_file)
+
+        """
+        image_data = np.array(image, dtype='float32')
+        """
         if is_fixed_size:  # TODO: When resizing we can use minibatch input.
             resized_image = image.resize(
                 tuple(reversed(model_image_size)), Image.BICUBIC)
@@ -109,8 +125,12 @@ def _main(args, input_paths, ground_truths, output_paths, num_frames, num_crops,
             image_data = np.array(resized_image, dtype='float32')
             print(image_data.shape)
 
+
         image_data /= 255.
         image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
+
+        if images_processed < 2:
+            print("# image size: ",image_data.shape, image.size)
 
         ################# START #################
         start_eval = timer()
@@ -140,6 +160,8 @@ def _main(args, input_paths, ground_truths, output_paths, num_frames, num_crops,
 
             box = out_boxes[i]
             score = out_scores[i]
+
+            #print(predicted_class, box, score)
 
             bboxes_image.append([predicted_class, box, score, c])
 

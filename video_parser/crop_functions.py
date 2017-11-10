@@ -64,9 +64,11 @@ def crop_from_one_img(img, crop, over, scale, show=False, save_crops=True, folde
             if save_crops:
                 file_name = frame_name + str(i).zfill(4) + ".jpg"
                 cropped_img.save(folder_name + file_name)
+                crops.append((file_name, area))
+            else:
+                crops.append((None,area))
             i += 1
 
-            crops.append((file_name, area))
     if show:
         plt.show()
 
@@ -79,8 +81,9 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
     frame_name = os.path.basename(frame_path)
     frame_name = frame_name[0:-4]
 
-    if not os.path.exists(out_folder+frame_name+"/"):
-        os.makedirs(out_folder+frame_name+"/")
+    if save_crops:
+        if not os.path.exists(out_folder+frame_name+"/"):
+            os.makedirs(out_folder+frame_name+"/")
 
     img = Image.open(frame_path)
     width, height = img.size
@@ -127,9 +130,11 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
             file_name = frame_name + "/" + str(i).zfill(4) + ".jpg"
             if save_crops:
                 cropped_img.save(out_folder + file_name)
+                crops.append((file_name, area))
+            else:
+                crops.append((None, area))
             i += 1
 
-            crops.append((file_name, area))
     if show:
         plt.show()
     if save_visualization:
@@ -144,8 +149,9 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
     frame_name = os.path.basename(frame_path)
     frame_name = frame_name[0:-4]
 
-    if not os.path.exists(out_folder+frame_name+"/"):
-        os.makedirs(out_folder+frame_name+"/")
+    if save_crops:
+        if not os.path.exists(out_folder+frame_name+"/"):
+            os.makedirs(out_folder+frame_name+"/")
 
     img = Image.open(frame_path)
     mask = Image.open(mask_url)
@@ -262,7 +268,9 @@ def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
     over = SETTINGS["attention_over"]
 
     tmp = frame_image.resize((int(nw), int(nh)), Image.ANTIALIAS)
-    mask_crops = crop_from_one_img(tmp, crop, over, 1.0, folder_name=mask_folder, frame_name=frame_name+"/")
+
+    save_crops = False
+    mask_crops = crop_from_one_img(tmp, crop, over, 1.0, folder_name=mask_folder, frame_name=frame_name+"/", save_crops=save_crops)
 
     return mask_crops, scale_full_img
 

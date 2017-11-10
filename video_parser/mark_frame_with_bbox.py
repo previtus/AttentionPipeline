@@ -129,4 +129,5 @@ def mask_from_evaluated_bboxes(image_path, save_path, bboxes, scale, EXTEND_BY, 
     if save:
         mask.save(save_path, quality=90)
 
+    return mask
 
