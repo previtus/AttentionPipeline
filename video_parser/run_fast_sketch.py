@@ -283,10 +283,10 @@ if __name__ == '__main__':
     thickness = str(args.thickness).split(",")
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
 
-    SETTINGS["crop"] = 1000
-    SETTINGS["over"] = 0.65
-    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
-    RUN_NAME = "_testWithoutSavingCrops_"+day+month
+    #SETTINGS["crop"] = 1000
+    #SETTINGS["over"] = 0.65
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
+    #RUN_NAME = "_testWithoutSavingCrops_"+day+month
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
