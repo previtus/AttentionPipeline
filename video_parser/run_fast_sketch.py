@@ -233,6 +233,21 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     visualize_time_measurements(arrs, names, "Time measurements per frame",xlabel='frame #',
                                 show=False, save=True, save_path=output_measurement_viz+'_3.png')
 
+    ## version b and c
+    arrs = [summed_frame_measurements, summed_mask_measurements,
+            ioPlusEval_times, masks_additional_times, estimated_max_time_per_frame]
+    names = ['image eval', 'mask eval', 'image eval+io', 'mask eval+io',
+             'estimated max']
+    visualize_time_measurements(arrs, names, "Time measurements per frame",xlabel='frame #',
+                                show=False, save=True, save_path=output_measurement_viz+'_3b.png')
+
+
+    arrs = [summed_frame_measurements, summed_mask_measurements, estimated_max_time_per_frame]
+    names = ['image eval', 'mask eval', 'estimated max']
+    visualize_time_measurements(arrs, names, "Time measurements per frame",xlabel='frame #',
+                                show=False, save=True, save_path=output_measurement_viz+'_3c.png')
+
+
     # save settings
     avg_time_frame = np.mean(summed_frame_measurements[1:])
     strings = [RUN_NAME+" "+str(SETTINGS), INPUT_FRAMES, str(num_crops)+" crops per frame * "+ str(num_frames) + " frames", "Time:" + str(avg_time_crop) + " avg per crop, " + str(avg_time_frame) + " avg per frame."]
