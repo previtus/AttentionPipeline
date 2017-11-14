@@ -2,7 +2,13 @@
 ffmpeg -r 6/1 -i frames/%04d.jpg -c:v libx264 -vf fps=6 -pix_fmt yuv420p out.mp4
 
 # all jpgs
+6 fps
+
 ffmpeg -r 6/1 -pattern_type glob -i 'frames/*.jpg' -c:v libx264 -vf fps=6 -pix_fmt yuv420p out.mp4
+
+30 fps
+ffmpeg -r 30/1 -pattern_type glob -i 'frames/*.jpg' -c:v libx264 -vf fps=30 -pix_fmt yuv420p out_30fps_v2.mp4
+
 
 
 # convert img to the right size - ps put it there in multiple copies, to be properly visible
