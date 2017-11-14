@@ -3,23 +3,25 @@ import matplotlib, os
 if not('DISPLAY' in os.environ):
     matplotlib.use("Agg")
 
+from shutil import copyfile
+import numpy as np
+from pathlib import Path
+from timeit import default_timer as timer
+from PIL import Image
+
+from crop_functions import crop_from_one_frame, crop_from_one_frame_WITH_MASK, mask_from_one_frame, \
+    crop_from_one_frame_WITH_MASK_in_mem
+from yolo_handler import run_yolo
+from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_evaluated_bboxes, bboxes_to_mask
+from visualize_time_measurement import visualize_time_measurements
+from nms import non_max_suppression_fast, non_max_suppression_tf
+from data_handler import save_string_to_file
+
+
 # input frames images
 # output marked frames images
 
 def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
-    import os
-    from shutil import copyfile
-
-    import numpy as np
-    from crop_functions import crop_from_one_frame, crop_from_one_frame_WITH_MASK, mask_from_one_frame, crop_from_one_frame_WITH_MASK_in_mem
-    from yolo_handler import run_yolo
-    from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_evaluated_bboxes, bboxes_to_mask
-    from visualize_time_measurement import visualize_time_measurements
-    from nms import non_max_suppression_fast,non_max_suppression_tf
-    from data_handler import save_string_to_file
-    from pathlib import Path
-    from timeit import default_timer as timer
-    from PIL import Image
 
     video_file_root_folder = str(Path(INPUT_FRAMES).parents[1])
     output_frames_folder = video_file_root_folder + "/output" + RUN_NAME + "/frames/"
@@ -209,7 +211,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                                            draw_text=False, save=True, show=False, thickness=SETTINGS["thickness"])
 
     sess.close()
-    print (len(pureEval_times),pureEval_times)
+    print (len(pureEval_times),pureEval_times[0:3])
 
     #evaluation_times[0] = evaluation_times[1] # ignore first large value
     #masks_evaluation_times[0] = masks_evaluation_times[1] # ignore first large value
@@ -316,10 +318,10 @@ if __name__ == '__main__':
     thickness = str(args.thickness).split(",")
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
 
-    SETTINGS["crop"] = 1000
-    SETTINGS["over"] = 0.65
-    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
-    RUN_NAME = "_testDontSaveMask_"+day+month
+    #SETTINGS["crop"] = 1000
+    #SETTINGS["over"] = 0.65
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
+    #RUN_NAME = "_runPrjFix_"+day+month
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
