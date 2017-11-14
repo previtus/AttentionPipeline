@@ -143,7 +143,111 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
 
     return crops
 
+def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop, over, scale, show, save_crops=True, save_visualization=True, viz_path=''):
+    # V3 - mask carried in memory
+
+    # crop*scale is the size inside input image
+    # crop is the size of output image
+    frame_name = os.path.basename(frame_path)
+    frame_name = frame_name[0:-4]
+
+    if save_crops:
+        if not os.path.exists(out_folder+frame_name+"/"):
+            os.makedirs(out_folder+frame_name+"/")
+
+    if mask.mode is not "L":
+        mask = mask.convert("L")
+
+    width, height = img.size
+
+    if show or save_visualization:
+        fig, ax = plt.subplots()
+
+        plt.imshow(img)
+
+        plt.imshow(mask,alpha=0.4)
+
+        plt.xlim(-1 * (width / 10.0), width + 1 * (width / 10.0))
+        plt.ylim(-1 * (height / 10.0), height + 1 * (height / 10.0))
+        plt.gca().invert_yaxis()
+
+
+
+    w_crops = get_crops_parameters(width, crop, over, scale)
+    h_crops = get_crops_parameters(height, crop, over, scale)
+    N = len(w_crops) * len(h_crops)
+
+    if not save_visualization:
+        print(str((frame_name))+", ", end='', flush=True)
+    else:
+        print(str((frame_name)) + " ("+str(N)+" crops per frame), ", end='', flush=True)
+
+    crops = []
+    i = 0
+    for w_crop in w_crops:
+        for h_crop in h_crops:
+            area = (int(w_crop[0]), int(h_crop[0]), int(w_crop[0] + scale * crop), int(h_crop[0] + scale * crop))
+            cropped_img = img.crop(box=area)
+            cropped_img = cropped_img.resize((crop, crop), resample=Image.ANTIALIAS)
+            cropped_img.load()
+
+            cropped_mask = mask.crop(box=area)
+            cropped_mask = cropped_mask.resize((crop, crop), resample=Image.ANTIALIAS)
+            cropped_mask.load()
+
+            # four corners
+            a = cropped_mask.crop(box=(0, 0, crop*(1-over), crop*(1-over)))
+            b = cropped_mask.crop(box=(0, crop * (over), crop * (1 - over), crop * (1 - over)+ crop * (over)))
+            c = cropped_mask.crop(box=(crop * over, 0, crop * (1 - over) + crop*over, crop * (1 - over)))
+            d = cropped_mask.crop(box=(crop * over, crop * over, crop * (1 - over) + crop * over, crop * (1 - over)+crop * over))
+
+            corner_empty = False
+            for p in [a,b,c,d]:
+                p.load()
+                lum = np.sum(np.sum(p.getextrema(), 0))
+                #print(p.size, lum)
+                if lum == 0:
+                    corner_empty = True
+                    break
+
+            if corner_empty:
+                continue
+
+            extrema = cropped_mask.getextrema()
+            extrema_sum = np.sum(extrema,0)
+            #print("summed extrema", extrema_sum)
+
+            if extrema_sum == 0: # and extrema_sum[1] == 0:
+                continue
+
+            if show or save_visualization:
+                jitter = random.uniform(0, 1) * 15
+
+                ax.add_patch(
+                    patches.Rectangle(
+                        (w_crop[0] + jitter, h_crop[0] + jitter),
+                        scale * crop,
+                        scale * crop, fill=False, linewidth=2.0, color=np.random.rand(3, 1)  # color=cmap(i)
+                    )
+                )
+            file_name = frame_name + "/" + str(i).zfill(4) + ".jpg"
+            if save_crops:
+                cropped_img.save(out_folder + file_name)
+
+            i += 1
+
+            crops.append((file_name, area))
+    if show:
+        plt.show()
+    if save_visualization:
+        plt.savefig(viz_path+'crops_viz.png')
+        cropped_img.save(viz_path + '_sample_first_crop.jpg')
+
+    return crops
+
 def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, show, save_crops=True, save_visualization=True, mask_url='', viz_path=''):
+    # V2 - mask held in another file
+
     # crop*scale is the size inside input image
     # crop is the size of output image
     frame_name = os.path.basename(frame_path)
@@ -247,12 +351,13 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
     return crops
 
 def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
+    # V1 - no mask
     frame_image = Image.open(frame_path)
 
     frame_name = os.path.basename(frame_path)
     frame_name = frame_name[0:-4]
-    if not os.path.exists(mask_folder+frame_name+"/"):
-        os.makedirs(mask_folder+frame_name+"/")
+    #if not os.path.exists(mask_folder+frame_name+"/"):
+    #    os.makedirs(mask_folder+frame_name+"/")
 
     print(str((frame_name))+", ", end='', flush=True)
 

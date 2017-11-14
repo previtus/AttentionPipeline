@@ -84,6 +84,36 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
     if save:
         image.save(save_path, quality=90)
 
+def bboxes_to_mask(bboxes, image_size, scale, EXTEND_BY):
+    mask = Image.new("L", image_size, "black")
+
+    scaled_bboxes = []
+
+    for bbox in bboxes:
+        bbox_array = bbox[1]
+        scale_array = [a / scale for a in bbox_array]
+        scaled_bboxes.append([bbox[0], scale_array, bbox[2], bbox[3]])
+
+    for bbox in scaled_bboxes:
+        predicted_class = bbox[0]
+        if predicted_class is 'crop':
+            continue
+        box = bbox[1]
+        score = bbox[2]
+
+        draw = ImageDraw.Draw(mask)
+
+        top, left, bottom, right = box
+        top = max(0, np.floor(top + 0.5).astype('int32'))
+        left = max(0, np.floor(left + 0.5).astype('int32'))
+        bottom = min(image_size[1], np.floor(bottom + 0.5).astype('int32'))
+        right = min(image_size[0], np.floor(right + 0.5).astype('int32'))
+
+        draw.rectangle([left - EXTEND_BY, top - EXTEND_BY, right + EXTEND_BY, bottom + EXTEND_BY],outline="white", fill="white")
+
+        del draw
+    return mask
+
 def mask_from_evaluated_bboxes(image_path, save_path, bboxes, scale, EXTEND_BY, show=False, save=True):
     #print("bboxes",len(bboxes), bboxes)
     #print("scale",scale)

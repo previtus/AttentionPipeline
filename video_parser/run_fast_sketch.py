@@ -11,22 +11,24 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     from shutil import copyfile
 
     import numpy as np
-    from crop_functions import crop_from_one_frame, crop_from_one_frame_WITH_MASK, mask_from_one_frame
+    from crop_functions import crop_from_one_frame, crop_from_one_frame_WITH_MASK, mask_from_one_frame, crop_from_one_frame_WITH_MASK_in_mem
     from yolo_handler import run_yolo
-    from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_evaluated_bboxes
+    from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_evaluated_bboxes, bboxes_to_mask
     from visualize_time_measurement import visualize_time_measurements
     from nms import non_max_suppression_fast,non_max_suppression_tf
     from data_handler import save_string_to_file
     from pathlib import Path
     from timeit import default_timer as timer
+    from PIL import Image
 
     video_file_root_folder = str(Path(INPUT_FRAMES).parents[1])
+    output_frames_folder = video_file_root_folder + "/output" + RUN_NAME + "/frames/"
+    output_measurement_viz = video_file_root_folder + "/output" + RUN_NAME + "/graphs"
+
     mask_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/masks/"
-    mask_crop_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/mask_crops/"
-    crops_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/crops/"
-    output_frames_folder = video_file_root_folder + "/output"+RUN_NAME+"/frames/"
-    output_measurement_viz = video_file_root_folder + "/output"+RUN_NAME+"/graphs"
-    for folder in [crops_folder, mask_folder, output_frames_folder, mask_crop_folder]:
+    mask_crop_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/mask_crops/" # useless, but maybe for debug later
+    crops_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/crops/" # also useless, but maybe for debug later
+    for folder in [output_frames_folder]:
         if not os.path.exists(folder):
             os.makedirs(folder)
 
@@ -48,10 +50,10 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         mask_crops_per_frames = []
         scales_per_frames = []
         mask_crops_number_per_frames = []
-        for i in range(0, len(frame_files)):
+        for frame_i in range(0, len(frame_files)):
             start = timer()
 
-            frame_path = INPUT_FRAMES + frame_files[i]
+            frame_path = INPUT_FRAMES + frame_files[frame_i]
             mask_crops, scale_full_img = mask_from_one_frame(frame_path, SETTINGS, mask_crop_folder)
             mask_crops_per_frames.append(mask_crops)
             mask_crops_number_per_frames.append(len(mask_crops))
@@ -69,24 +71,30 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         #print(len(scales_per_frames), scales_per_frames)
 
         # 2 eval these
-        mask_tmp = video_file_root_folder + "/temporary" + RUN_NAME + "/mask_tmp/"
-        masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crop_folder, mask_tmp, mask_crops_number_per_frames, mask_crops_per_frames,1.0,SETTINGS["attention_crop"], INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0)
+        masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crops_number_per_frames, mask_crops_per_frames,1.0,SETTINGS["attention_crop"], INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0)
         #print("bboxes_per_frames", len(bboxes_per_frames), bboxes_per_frames )
         #print("mask evaluation", len(masks_evaluation_times), masks_evaluation_times )
 
         # 3 make mask images accordingly
+
+        tmp_mask_just_to_save_it_for_debug = mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[0], output_measurement_viz + frame_files[0],
+                                                bboxes_per_frames[0],scales_per_frames[0], SETTINGS["extend_mask_by"])
+
+        '''
         for frame_i in range(0,len(bboxes_per_frames)):
             start = timer()
 
             bboxes = bboxes_per_frames[frame_i]
             scale = scales_per_frames[frame_i]
+
+            # saving img
             mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[frame_i], mask_folder + frame_files[frame_i], bboxes, scale, SETTINGS["extend_mask_by"])
             mask_names.append(mask_folder + frame_files[frame_i])
 
             end = timer()
             time = (end - start)
             summed_mask_croping_time[frame_i] += time
-
+        '''
         #print(mask_names)
 
     print("################## Cropping frames ##################")
@@ -96,14 +104,26 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     summed_croping_time = []
 
     save_one_crop_vis = True
-    for i in range(0, len(frame_files)):
+    for frame_i in range(0, len(frame_files)):
         start = timer()
 
-        frame_path = INPUT_FRAMES + frame_files[i]
+        frame_path = INPUT_FRAMES + frame_files[frame_i]
 
         if attention_model:
-            mask = mask_names[i]
-            crops = crop_from_one_frame_WITH_MASK(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_crops=False, save_visualization=save_one_crop_vis, mask_url=mask, viz_path=output_measurement_viz)
+            # with file
+            #mask = mask_names[frame_i]
+            #crops = crop_from_one_frame_WITH_MASK(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_crops=False, save_visualization=save_one_crop_vis, mask_url=mask, viz_path=output_measurement_viz)
+
+            # without file
+            bboxes = bboxes_per_frames[frame_i]
+            scale = scales_per_frames[frame_i]
+            img = Image.open(frame_path)
+            mask = bboxes_to_mask(bboxes, img.size, scale, SETTINGS["extend_mask_by"])
+
+            crops = crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"],
+                                                 SETTINGS["scale"], show = False, save_crops=False, save_visualization=save_one_crop_vis,
+                                                 viz_path=output_measurement_viz)
+
         else:
             crops = crop_from_one_frame(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_visualization=save_one_crop_vis, save_crops=False, viz_path=output_measurement_viz)
 
@@ -127,9 +147,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     print("")
     print("################## Running Model ##################")
 
-    tmp = video_file_root_folder + "/temporary"+RUN_NAME+"/tmp/"
-
-    pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crops_folder, tmp, crop_number_per_frames, crop_per_frames, SETTINGS["scale"], SETTINGS["crop"], INPUT_FRAMES,frame_files)
+    pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crop_number_per_frames, crop_per_frames, SETTINGS["scale"], SETTINGS["crop"], INPUT_FRAMES,frame_files)
     num_frames = len(crop_number_per_frames)
     num_crops = len(crop_per_frames[0])
 
@@ -148,8 +166,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     import tensorflow as tf
     sess = tf.Session()
-    for i in range(0,len(frame_files)):
-        test_bboxes = bboxes_per_frames[i]
+    for frame_i in range(0,len(frame_files)):
+        test_bboxes = bboxes_per_frames[frame_i]
 
         arrays = []
         scores = []
@@ -163,7 +181,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         if len(arrays) == 0:
             # no bboxes found in there, still we should copy the frame img
-            copyfile(INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i])
+            copyfile(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i])
             continue
 
         person_id = 0
@@ -185,9 +203,9 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             test_bboxes = reduced_bboxes_2
 
         if print_first:
-            print("Annotating with bboxes of len: ", len(test_bboxes) ,"files in:", INPUT_FRAMES + frame_files[i], ", out:", output_frames_folder + frame_files[i])
+            print("Annotating with bboxes of len: ", len(test_bboxes) ,"files in:", INPUT_FRAMES + frame_files[frame_i], ", out:", output_frames_folder + frame_files[frame_i])
             print_first = False
-        annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[i], output_frames_folder + frame_files[i], test_bboxes,
+        annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i], test_bboxes,
                                            draw_text=False, save=True, show=False, thickness=SETTINGS["thickness"])
 
     sess.close()
@@ -298,10 +316,10 @@ if __name__ == '__main__':
     thickness = str(args.thickness).split(",")
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
 
-    #SETTINGS["crop"] = 1000
-    #SETTINGS["over"] = 0.65
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
-    #RUN_NAME = "_testWithoutSavingCrops_"+day+month
+    SETTINGS["crop"] = 1000
+    SETTINGS["over"] = 0.65
+    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
+    RUN_NAME = "_testDontSaveMask_"+day+month
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)

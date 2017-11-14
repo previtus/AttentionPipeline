@@ -5,8 +5,8 @@ from data_handler import use_path_which_exists, get_data_from_folder, get_data_f
 from visualize_time_measurement import visualize_time_measurements
 import numpy as np
 
-def run_yolo(frames_folder, output_folder, num_crops_per_frames, crop_per_frames, fixbb_scale, fixbb_crop, INPUT_FRAMES, frame_files, resize_frames=None, show_viz = False,
-             ground_truth_file = None, model_h5='yolo.h5', anchors_txt='yolo_anchors.txt', VERBOSE=1):
+def run_yolo(num_crops_per_frames, crop_per_frames, fixbb_scale, fixbb_crop, INPUT_FRAMES, frame_files, resize_frames=None, show_viz = False,
+             model_h5='yolo.h5', anchors_txt='yolo_anchors.txt', VERBOSE=1):
 
     yolo_paths = ["/home/ekmek/YAD2K/", "/home/vruzicka/storage_pylon2/YAD2K/"]
 
