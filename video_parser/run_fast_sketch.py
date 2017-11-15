@@ -38,6 +38,9 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     # Frames to crops
     frame_files = sorted(os.listdir(INPUT_FRAMES))
 
+    start_frame = SETTINGS["startframe"]
+    frame_files = frame_files[start_frame:]
+
     print("################## Mask generation ##################")
 
     summed_mask_croping_time = []
@@ -270,6 +273,8 @@ parser.add_argument('-name', help='run name - will output in this dir', default=
 parser.add_argument('-attention', help='use guidance of automatic attention model', default='True')
 parser.add_argument('-thickness', help='thickness', default='10,2')
 parser.add_argument('-extendmask', help='extend mask by', default='300')
+parser.add_argument('-startframe', help='start from frame index', default='0')
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -282,6 +287,7 @@ if __name__ == '__main__':
     SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
     SETTINGS["over"] = float(args.over)
     SETTINGS["scale"] = float(args.scale)
+    SETTINGS["startframe"] = int(args.startframe)
     SETTINGS["attention"] = (args.attention == 'True')
     SETTINGS["extend_mask_by"] = int(args.extendmask)
     thickness = str(args.thickness).split(",")
