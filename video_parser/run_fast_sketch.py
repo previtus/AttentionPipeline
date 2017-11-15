@@ -9,10 +9,9 @@ from pathlib import Path
 from timeit import default_timer as timer
 from PIL import Image
 
-from crop_functions import crop_from_one_frame, crop_from_one_frame_WITH_MASK, mask_from_one_frame, \
-    crop_from_one_frame_WITH_MASK_in_mem
+from crop_functions import crop_from_one_frame, mask_from_one_frame, crop_from_one_frame_WITH_MASK_in_mem
 from yolo_handler import run_yolo
-from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_evaluated_bboxes, bboxes_to_mask
+from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_evaluated_bboxes, bboxes_to_mask, annotate_prepare
 from visualize_time_measurement import visualize_time_measurements
 from nms import non_max_suppression_fast, non_max_suppression_tf
 from data_handler import save_string_to_file
@@ -40,7 +39,6 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     frame_files = sorted(os.listdir(INPUT_FRAMES))
 
     print("################## Mask generation ##################")
-    mask_names = []
 
     summed_mask_croping_time = []
 
@@ -48,7 +46,6 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         print("##", len(frame_files), "of frames")
 
         # 1 generate crops from full images
-
         mask_crops_per_frames = []
         scales_per_frames = []
         mask_crops_number_per_frames = []
@@ -65,39 +62,14 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             time = (end - start)
             summed_mask_croping_time.append(time)
 
-            # input img: frame_path
-            # scale stuff, eval bboxes, make mask, save temp
-            # masks[] = ...
         print("")
-        #print(len(mask_crops_per_frames), mask_crops_per_frames)
-        #print(len(scales_per_frames), scales_per_frames)
 
         # 2 eval these
         masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crops_number_per_frames, mask_crops_per_frames,1.0,SETTINGS["attention_crop"], INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0)
-        #print("bboxes_per_frames", len(bboxes_per_frames), bboxes_per_frames )
-        #print("mask evaluation", len(masks_evaluation_times), masks_evaluation_times )
 
         # 3 make mask images accordingly
-
         tmp_mask_just_to_save_it_for_debug = mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[0], output_measurement_viz + frame_files[0],
                                                 bboxes_per_frames[0],scales_per_frames[0], SETTINGS["extend_mask_by"])
-
-        '''
-        for frame_i in range(0,len(bboxes_per_frames)):
-            start = timer()
-
-            bboxes = bboxes_per_frames[frame_i]
-            scale = scales_per_frames[frame_i]
-
-            # saving img
-            mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[frame_i], mask_folder + frame_files[frame_i], bboxes, scale, SETTINGS["extend_mask_by"])
-            mask_names.append(mask_folder + frame_files[frame_i])
-
-            end = timer()
-            time = (end - start)
-            summed_mask_croping_time[frame_i] += time
-        '''
-        #print(mask_names)
 
     print("################## Cropping frames ##################")
     print("##",len(frame_files),"of frames")
@@ -112,10 +84,6 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         frame_path = INPUT_FRAMES + frame_files[frame_i]
 
         if attention_model:
-            # with file
-            #mask = mask_names[frame_i]
-            #crops = crop_from_one_frame_WITH_MASK(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_crops=False, save_visualization=save_one_crop_vis, mask_url=mask, viz_path=output_measurement_viz)
-
             # without file
             bboxes = bboxes_per_frames[frame_i]
             scale = scales_per_frames[frame_i]
@@ -142,9 +110,6 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                                 show=False, save_visualization=False, save_crops=False,viz_path='')
     max_number_of_crops_per_frame = len(tmp_crops)
 
-    #print("crop_per_frames ", len(crop_per_frames), crop_per_frames)
-    #print("crop_number_per_frames ", len(crop_number_per_frames), crop_number_per_frames)
-
     # Run YOLO on crops
     print("")
     print("################## Running Model ##################")
@@ -153,64 +118,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     num_frames = len(crop_number_per_frames)
     num_crops = len(crop_per_frames[0])
 
-    #bboxes_per_frames = sort_out_crop_coords_and_bboxes(crop_per_frames, bboxes)
+    print("################## Save Graphs ##################")
 
-    #print (len(bboxes_per_frames), bboxes_per_frames)
-    #print (len(bboxes_per_frames[0]), bboxes_per_frames[0])
-    #print (len(bboxes_per_frames[0][0]), bboxes_per_frames[0][0])
-
-    print("################## Annotating frames ##################")
-
-    iou_threshold = 0.5
-    limit_prob_lowest = 0 #0.70 # inside we limited for 0.3
-
-    print_first = True
-
-    import tensorflow as tf
-    sess = tf.Session()
-    for frame_i in range(0,len(frame_files)):
-        test_bboxes = bboxes_per_frames[frame_i]
-
-        arrays = []
-        scores = []
-        for j in range(0,len(test_bboxes)):
-            if test_bboxes[j][0] == 'person':
-                score = test_bboxes[j][2]
-                if score > limit_prob_lowest:
-                    arrays.append(list(test_bboxes[j][1]))
-                    scores.append(score)
-        arrays = np.array(arrays)
-
-        if len(arrays) == 0:
-            # no bboxes found in there, still we should copy the frame img
-            copyfile(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i])
-            continue
-
-        person_id = 0
-
-        DEBUG_TURN_OFF_NMS = False
-        if not DEBUG_TURN_OFF_NMS:
-            #nms_arrays = non_max_suppression_fast(arrays, iou_threshold)
-            #reduced_bboxes_1 = []
-            #for j in range(0,len(nms_arrays)):
-            #    a = ['person',nms_arrays[j],0.0,person_id]
-            #    reduced_bboxes_1.append(a)
-
-            nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,50,iou_threshold)
-            reduced_bboxes_2 = []
-            for j in range(0,len(nms_arrays)):
-                a = ['person',nms_arrays[j],scores[j],person_id]
-                reduced_bboxes_2.append(a)
-
-            test_bboxes = reduced_bboxes_2
-
-        if print_first:
-            print("Annotating with bboxes of len: ", len(test_bboxes) ,"files in:", INPUT_FRAMES + frame_files[frame_i], ", out:", output_frames_folder + frame_files[frame_i])
-            print_first = False
-        annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i], test_bboxes,
-                                           draw_text=False, save=True, show=False, thickness=SETTINGS["thickness"])
-
-    sess.close()
     print (len(pureEval_times),pureEval_times[0:3])
 
     #evaluation_times[0] = evaluation_times[1] # ignore first large value
@@ -218,7 +127,6 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     visualize_time_measurements([pureEval_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png',  y_min=0.0, y_max=0.5)
     visualize_time_measurements([pureEval_times], ["Evaluation"], "Time measurements all frames", show=False, save=True, save_path=output_measurement_viz+'_1.png',  y_min=0.0, y_max=0.0)
 
-    # crop_number_per_frames
     last = 0
     summed_frame_measurements = []
     for f in range(0,num_frames):
@@ -272,6 +180,67 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     avg_time_frame = np.mean(summed_frame_measurements[1:])
     strings = [RUN_NAME+" "+str(SETTINGS), INPUT_FRAMES, str(num_crops)+" crops per frame * "+ str(num_frames) + " frames", "Time:" + str(avg_time_crop) + " avg per crop, " + str(avg_time_frame) + " avg per frame."]
     save_string_to_file(strings, output_measurement_viz+'_settings.txt')
+
+
+
+    print("################## Annotating frames ##################")
+
+    iou_threshold = 0.5
+    limit_prob_lowest = 0 #0.70 # inside we limited for 0.3
+
+    print_first = True
+
+    import tensorflow as tf
+    sess = tf.Session()
+    colors = annotate_prepare()
+
+    for frame_i in range(0,len(frame_files)):
+        test_bboxes = bboxes_per_frames[frame_i]
+
+        arrays = []
+        scores = []
+        for j in range(0,len(test_bboxes)):
+            if test_bboxes[j][0] == 'person':
+                score = test_bboxes[j][2]
+                if score > limit_prob_lowest:
+                    arrays.append(list(test_bboxes[j][1]))
+                    scores.append(score)
+        arrays = np.array(arrays)
+
+        if len(arrays) == 0:
+            # no bboxes found in there, still we should copy the frame img
+            copyfile(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i])
+            continue
+
+        person_id = 0
+
+        DEBUG_TURN_OFF_NMS = False
+        if not DEBUG_TURN_OFF_NMS:
+            #nms_arrays = non_max_suppression_fast(arrays, iou_threshold)
+            #reduced_bboxes_1 = []
+            #for j in range(0,len(nms_arrays)):
+            #    a = ['person',nms_arrays[j],0.0,person_id]
+            #    reduced_bboxes_1.append(a)
+
+            nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,50,iou_threshold)
+            reduced_bboxes_2 = []
+            for j in range(0,len(nms_arrays)):
+                a = ['person',nms_arrays[j],scores[j],person_id]
+                reduced_bboxes_2.append(a)
+
+            test_bboxes = reduced_bboxes_2
+
+        if print_first:
+            print("Annotating with bboxes of len: ", len(test_bboxes) ,"files in:", INPUT_FRAMES + frame_files[frame_i], ", out:", output_frames_folder + frame_files[frame_i])
+            print_first = False
+
+        annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i], test_bboxes, colors,
+                                           draw_text=False, save=True, show=False, thickness=SETTINGS["thickness"])
+
+    sess.close()
+
+
+    print("################## Cleanup ##################")
 
     keep_temporary = True
     if not keep_temporary:

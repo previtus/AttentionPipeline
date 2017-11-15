@@ -7,8 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # CODE USED FROM YAD2K
 
-def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_crops_drawing=True, draw_text=True, show=False, save=True, thickness=[4.0,1.0]):
-
+def annotate_prepare():
     #print(image_path, save_path)
 
     tmp_len = 80
@@ -23,7 +22,13 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
     random.shuffle(colors)  # Shuffle colors to decorrelate adjacent classes.
     random.seed(None)  # Reset seed to default.
 
+
+    return colors
+
+def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ignore_crops_drawing=True, draw_text=True, show=False, save=True, thickness=[4.0,1.0]):
+
     image = Image.open(image_path)
+    draw = ImageDraw.Draw(image)
 
     for bbox in bboxes:
         #print (image.size, bbox)
@@ -32,7 +37,6 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
 
         if predicted_class is 'crop' and ignore_crops_drawing:
             continue
-
 
         box = bbox[1]
         score = bbox[2]
@@ -45,8 +49,6 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
         thickness_val = int( thickness[0] * score + thickness[1] )
 
         label = '{} {:.2f}'.format(predicted_class, score)
-
-        draw = ImageDraw.Draw(image)
         label_size = draw.textsize(label, font)
 
         top, left, bottom, right = box
@@ -72,7 +74,8 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, ignore_cro
                     [tuple(text_origin), tuple(text_origin + label_size)],
                     fill=colors[c])
             draw.text(text_origin, label, fill=(0, 0, 0), font=font)
-        del draw
+
+    del draw
 
     #resize_output = 0.5
     #if resize_output is not 1.0:
@@ -94,6 +97,7 @@ def bboxes_to_mask(bboxes, image_size, scale, EXTEND_BY):
         scale_array = [a / scale for a in bbox_array]
         scaled_bboxes.append([bbox[0], scale_array, bbox[2], bbox[3]])
 
+    draw = ImageDraw.Draw(mask)
     for bbox in scaled_bboxes:
         predicted_class = bbox[0]
         if predicted_class is 'crop':
@@ -101,7 +105,6 @@ def bboxes_to_mask(bboxes, image_size, scale, EXTEND_BY):
         box = bbox[1]
         score = bbox[2]
 
-        draw = ImageDraw.Draw(mask)
 
         top, left, bottom, right = box
         top = max(0, np.floor(top + 0.5).astype('int32'))
@@ -111,7 +114,7 @@ def bboxes_to_mask(bboxes, image_size, scale, EXTEND_BY):
 
         draw.rectangle([left - EXTEND_BY, top - EXTEND_BY, right + EXTEND_BY, bottom + EXTEND_BY],outline="white", fill="white")
 
-        del draw
+    del draw
     return mask
 
 def mask_from_evaluated_bboxes(image_path, save_path, bboxes, scale, EXTEND_BY, show=False, save=True):
