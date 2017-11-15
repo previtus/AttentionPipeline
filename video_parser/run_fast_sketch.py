@@ -19,7 +19,7 @@ from data_handler import save_string_to_file
 
 # input frames images
 # output marked frames images
-
+#@profile
 def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     video_file_root_folder = str(Path(INPUT_FRAMES).parents[1])

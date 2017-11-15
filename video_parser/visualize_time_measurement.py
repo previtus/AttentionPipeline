@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+#@profile
 def visualize_time_measurements(time_measurements, names, title, show=True, save=False, y_min=0.0, y_max=0.1, save_path='', ylabel='time (s)', xlabel='image'):
     # Visualize the results on kmeans
     # see: http://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_digits.html

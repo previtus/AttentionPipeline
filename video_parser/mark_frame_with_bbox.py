@@ -25,6 +25,19 @@ def annotate_prepare():
 
     return colors
 
+def draw_rectangle_into_numpy(rect, image, color):
+    print(image.shape)
+
+    # rect is (x1,y1, x2,y2)
+    # per line would be:
+    line = (rect[0], rect[1], rect[0], rect[3])
+    line = (rect[0], rect[1], rect[2], rect[1])
+    line = (rect[0], rect[3], rect[2], rect[3])
+    line = (rect[2], rect[1], rect[2], rect[3])
+
+    return 0
+
+#@profile
 def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ignore_crops_drawing=True, draw_text=True, show=False, save=True, thickness=[4.0,1.0]):
 
     image = Image.open(image_path)
@@ -42,14 +55,10 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ig
         score = bbox[2]
         c = bbox[3]
 
-        font = ImageFont.truetype(
-                font=('font/FiraMono-Medium.otf'),
-                size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
         #thickness_val = (image.size[0] + image.size[1]) // 600
         thickness_val = int( thickness[0] * score + thickness[1] )
 
         label = '{} {:.2f}'.format(predicted_class, score)
-        label_size = draw.textsize(label, font)
 
         top, left, bottom, right = box
         top = max(0, np.floor(top + 0.5).astype('int32'))
@@ -58,18 +67,26 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ig
         right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
         #print(label, (left, top), (right, bottom))
 
-        if top - label_size[1] >= 0:
-            text_origin = np.array([left, top - label_size[1]])
-        else:
-            text_origin = np.array([left, top + 1])
-
         # My kingdom for a good redistributable image drawing library.
         for i in range(thickness_val):
+            #rect = [left + i, top + i, right - i, bottom - i]
+            #color = colors[c]
+            #draw_rectangle_into_numpy(rect, image, color)
+
             draw.rectangle(
                     [left + i, top + i, right - i, bottom - i],
                     outline=colors[c])
 
         if draw_text:
+            font = ImageFont.truetype(
+                font=('font/FiraMono-Medium.otf'),
+                size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
+            label_size = draw.textsize(label, font)
+            if top - label_size[1] >= 0:
+                text_origin = np.array([left, top - label_size[1]])
+            else:
+                text_origin = np.array([left, top + 1])
+
             draw.rectangle(
                     [tuple(text_origin), tuple(text_origin + label_size)],
                     fill=colors[c])

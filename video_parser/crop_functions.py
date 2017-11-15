@@ -143,6 +143,7 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
 
     return crops
 
+#@profile
 def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop, over, scale, show, save_crops=True, save_visualization=True, viz_path=''):
     # V3 - mask carried in memory
 
@@ -227,7 +228,7 @@ def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop
                     patches.Rectangle(
                         (w_crop[0] + jitter, h_crop[0] + jitter),
                         scale * crop,
-                        scale * crop, fill=False, linewidth=2.0, color=np.random.rand(3, 1)  # color=cmap(i)
+                        scale * crop, fill=False, linewidth=2.0, color=np.random.rand(3, 1)[:,0]  # color=cmap(i)
                     )
                 )
             file_name = frame_name + "/" + str(i).zfill(4) + ".jpg"
@@ -350,6 +351,7 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
 
     return crops
 
+#@profile
 def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
     # V1 - no mask
     frame_image = Image.open(frame_path)

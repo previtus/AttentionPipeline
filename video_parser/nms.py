@@ -1,6 +1,7 @@
 # import the necessary packages
 import numpy as np
 
+#@profile
 def non_max_suppression_tf(session, boxes, scores, max_boxes, iou_threshold):
 	import tensorflow as tf
 	from keras import backend as K
