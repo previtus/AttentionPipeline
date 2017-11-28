@@ -38,7 +38,7 @@ def draw_rectangle_into_numpy(rect, image, color):
     return 0
 
 #@profile
-def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ignore_crops_drawing=True, draw_text=True, show=False, save=True, thickness=[4.0,1.0]):
+def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ignore_crops_drawing=True, draw_text=True, show=False, save=True, thickness=[4.0,1.0], resize_output = 1.0):
 
     image = Image.open(image_path)
     draw = ImageDraw.Draw(image)
@@ -94,15 +94,17 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ig
 
     del draw
 
-    #resize_output = 0.5
-    #if resize_output is not 1.0:
-    #    image = image.resize((int(resize_output*image.size[0]), int(resize_output*image.size[1])))
+
+    if resize_output is not 1.0:
+        image = image.resize((int(resize_output*image.size[0]), int(resize_output*image.size[1])))
 
     if show:
         image.show()
 
     if save:
         image.save(save_path, quality=90)
+
+    return image
 
 def bboxes_to_mask(bboxes, image_size, scale, EXTEND_BY):
     mask = Image.new("L", image_size, "black")

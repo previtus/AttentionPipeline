@@ -1,5 +1,5 @@
 # Server tricks with matplotlib plotting
-import matplotlib, os
+import matplotlib, os, glob, fnmatch
 if not('DISPLAY' in os.environ):
     matplotlib.use("Agg")
 
@@ -13,7 +13,7 @@ from crop_functions import crop_from_one_frame, mask_from_one_frame, crop_from_o
 from yolo_handler import run_yolo
 from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_evaluated_bboxes, bboxes_to_mask, annotate_prepare
 from visualize_time_measurement import visualize_time_measurements
-from nms import non_max_suppression_fast, non_max_suppression_tf
+from nms import py_cpu_nms, non_max_suppression_tf
 from data_handler import save_string_to_file
 
 
@@ -25,6 +25,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     video_file_root_folder = str(Path(INPUT_FRAMES).parents[1])
     output_frames_folder = video_file_root_folder + "/output" + RUN_NAME + "/frames/"
     output_measurement_viz = video_file_root_folder + "/output" + RUN_NAME + "/graphs"
+    output_annotation = video_file_root_folder + "/output" + RUN_NAME + "/annot"
 
     mask_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/masks/"
     mask_crop_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/mask_crops/" # useless, but maybe for debug later
@@ -37,7 +38,10 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     attention_spread_frames = SETTINGS["att_frame_spread"]
 
     # Frames to crops
-    frame_files = sorted(os.listdir(INPUT_FRAMES))
+    files = sorted(os.listdir(INPUT_FRAMES))
+    frame_files = fnmatch.filter(files, '*.jpg')
+    annotation_files = fnmatch.filter(files, '*.xml')
+    print(frame_files[0:2], annotation_files[0:2])
 
     start_frame = SETTINGS["startframe"]
     frame_files = frame_files[start_frame:]
@@ -203,6 +207,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     limit_prob_lowest = 0 #0.70 # inside we limited for 0.3
 
     print_first = True
+    annotations_names_saved = []
+    annotations_lines_saved = []
 
     import tensorflow as tf
     sess = tf.Session()
@@ -230,12 +236,13 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         DEBUG_TURN_OFF_NMS = False
         if not DEBUG_TURN_OFF_NMS:
-            #nms_arrays = non_max_suppression_fast(arrays, iou_threshold)
-            #reduced_bboxes_1 = []
-            #for j in range(0,len(nms_arrays)):
-            #    a = ['person',nms_arrays[j],0.0,person_id]
-            #    reduced_bboxes_1.append(a)
-
+            """
+            nms_arrays = py_cpu_nms(arrays, iou_threshold)
+            reduced_bboxes_1 = []
+            for j in range(0,len(nms_arrays)):
+                a = ['person',nms_arrays[j],0.0,person_id]
+                reduced_bboxes_1.append(a)
+            """
             nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,50,iou_threshold)
             reduced_bboxes_2 = []
             for j in range(0,len(nms_arrays)):
@@ -248,8 +255,45 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             print("Annotating with bboxes of len: ", len(test_bboxes) ,"files in:", INPUT_FRAMES + frame_files[frame_i], ", out:", output_frames_folder + frame_files[frame_i])
             print_first = False
 
-        annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i], test_bboxes, colors,
+        img = annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i], test_bboxes, colors,
                                            draw_text=False, save=True, show=False, thickness=SETTINGS["thickness"])
+        img_size = img.size()
+
+        if SETTINGS["annotate_frames_with_gt"]:
+            annotation_name = frame_files[frame_i][:-4]
+            annotation_path = annotation_name + ".xml"
+            if annotation_path in annotation_files:
+                # we have ground truth for this file, we would like to save the predicted annotations
+                # <image identifier> <confidence> <left> <top> <right> <bottom>
+
+                for bbox in test_bboxes:
+                    predicted_class = bbox[0]
+
+                    if predicted_class is 'crop':
+                        continue
+
+                    box = bbox[1]
+                    score = bbox[2]
+                    top, left, bottom, right = box
+                    top = max(0, np.floor(top + 0.5).astype('int32'))
+                    left = max(0, np.floor(left + 0.5).astype('int32'))
+                    bottom = min(img_size[1], np.floor(bottom + 0.5).astype('int32'))
+                    right = min(img_size[0], np.floor(right + 0.5).astype('int32'))
+
+                    line = str(annotation_name)+" "+str(score)+" "+str(left)+" "+str(top)+" "+str(right)+" "+str(bottom)
+
+                    annotations_lines_saved.append(line)
+                annotations_names_saved.append(str(annotation_name))
+
+    if SETTINGS["annotate_frames_with_gt"]:
+        print(len(annotations_lines_saved), annotations_lines_saved[0:3])
+
+        with open(output_annotation+'names.txt', 'w') as the_file:
+            for l in annotations_names_saved:
+                the_file.write(l+'\n')
+        with open(output_annotation+'bboxes.txt', 'w') as the_file:
+            for l in annotations_lines_saved:
+                the_file.write(l+'\n')
 
     sess.close()
 
@@ -286,6 +330,7 @@ parser.add_argument('-thickness', help='thickness', default='10,2')
 parser.add_argument('-extendmask', help='extend mask by', default='300')
 parser.add_argument('-startframe', help='start from frame index', default='0')
 parser.add_argument('-attframespread', help='look at attention map of this many nearby frames - minus and plus', default='0')
+parser.add_argument('-annotategt', help='annotate frames with ground truth', default='False')
 
 
 if __name__ == '__main__':
@@ -301,7 +346,9 @@ if __name__ == '__main__':
     SETTINGS["scale"] = float(args.scale)
     SETTINGS["startframe"] = int(args.startframe)
     SETTINGS["attention"] = (args.attention == 'True')
+    SETTINGS["annotate_frames_with_gt"] = (args.annotategt == 'True')
     SETTINGS["extend_mask_by"] = int(args.extendmask)
+    SETTINGS["att_frame_spread"] = int(args.attframespread)
     thickness = str(args.thickness).split(",")
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
 
