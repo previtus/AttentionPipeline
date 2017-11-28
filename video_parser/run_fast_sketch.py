@@ -34,6 +34,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             os.makedirs(folder)
 
     attention_model = SETTINGS["attention"]
+    attention_spread_frames = SETTINGS["att_frame_spread"]
 
     # Frames to crops
     frame_files = sorted(os.listdir(INPUT_FRAMES))
@@ -87,8 +88,18 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         frame_path = INPUT_FRAMES + frame_files[frame_i]
 
         if attention_model:
-            # without file
-            bboxes = bboxes_per_frames[frame_i]
+
+            if attention_spread_frames == 0:
+                bboxes = bboxes_per_frames[frame_i]
+                #print(len(bboxes), bboxes)
+
+            else:
+                from_frame = max([frame_i - attention_spread_frames, 0])
+                to_frame = min([frame_i + attention_spread_frames, len(frame_files)]) + 1
+
+                bboxes = [item for sublist in bboxes_per_frames[from_frame:to_frame] for item in sublist]
+                #print(from_frame,"to",to_frame-1,len(bboxes), bboxes)
+
             scale = scales_per_frames[frame_i]
             img = Image.open(frame_path)
             mask = bboxes_to_mask(bboxes, img.size, scale, SETTINGS["extend_mask_by"])
@@ -274,6 +285,7 @@ parser.add_argument('-attention', help='use guidance of automatic attention mode
 parser.add_argument('-thickness', help='thickness', default='10,2')
 parser.add_argument('-extendmask', help='extend mask by', default='300')
 parser.add_argument('-startframe', help='start from frame index', default='0')
+parser.add_argument('-attframespread', help='look at attention map of this many nearby frames - minus and plus', default='0')
 
 
 if __name__ == '__main__':
