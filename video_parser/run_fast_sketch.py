@@ -356,6 +356,7 @@ if __name__ == '__main__':
     #SETTINGS["over"] = 0.65
     #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
     #RUN_NAME = "_runPrjFix_"+day+month
+    SETTINGS["annotate_frames_with_gt"] = True
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
