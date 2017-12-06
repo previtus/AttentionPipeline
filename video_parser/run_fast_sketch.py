@@ -180,18 +180,20 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                                 show=False, save=True, save_path=output_measurement_viz+'_3.png')
 
     ## version b and c
-    arrs = [summed_frame_measurements, summed_mask_measurements,
-            ioPlusEval_times, masks_additional_times, estimated_max_time_per_frame]
-    names = ['image eval', 'mask eval', 'image eval+io', 'mask eval+io',
-             'estimated max']
-    visualize_time_measurements(arrs, names, "Time measurements per frame",xlabel='frame #',
-                                show=False, save=True, save_path=output_measurement_viz+'_3b.png')
+    if attention_model:
+
+        arrs = [summed_frame_measurements, summed_mask_measurements,
+                ioPlusEval_times, masks_additional_times, estimated_max_time_per_frame]
+        names = ['image eval', 'mask eval', 'image eval+io', 'mask eval+io',
+                 'estimated max']
+        visualize_time_measurements(arrs, names, "Time measurements per frame",xlabel='frame #',
+                                    show=False, save=True, save_path=output_measurement_viz+'_3b.png')
 
 
-    arrs = [summed_frame_measurements, summed_mask_measurements, estimated_max_time_per_frame]
-    names = ['image eval', 'mask eval', 'estimated max']
-    visualize_time_measurements(arrs, names, "Time measurements per frame",xlabel='frame #',
-                                show=False, save=True, save_path=output_measurement_viz+'_3c.png')
+        arrs = [summed_frame_measurements, summed_mask_measurements, estimated_max_time_per_frame]
+        names = ['image eval', 'mask eval', 'estimated max']
+        visualize_time_measurements(arrs, names, "Time measurements per frame",xlabel='frame #',
+                                    show=False, save=True, save_path=output_measurement_viz+'_3c.png')
 
 
     # save settings
@@ -257,7 +259,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         img = annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i], test_bboxes, colors,
                                            draw_text=False, save=True, show=False, thickness=SETTINGS["thickness"])
-        img_size = img.size()
+        img_size = img.size
 
         if SETTINGS["annotate_frames_with_gt"]:
             annotation_name = frame_files[frame_i][:-4]
