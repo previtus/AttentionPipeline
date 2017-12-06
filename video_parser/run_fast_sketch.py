@@ -73,7 +73,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         print("")
 
         # 2 eval these
-        masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crops_number_per_frames, mask_crops_per_frames,1.0,SETTINGS["attention_crop"], INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0)
+        masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crops_number_per_frames, mask_crops_per_frames,1.0,SETTINGS["attention_crop"], INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0, anchors_txt=SETTINGS["anchorfile"])
 
         # 3 make mask images accordingly
         tmp_mask_just_to_save_it_for_debug = mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[0], output_measurement_viz + frame_files[0],
@@ -132,7 +132,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     print("")
     print("################## Running Model ##################")
 
-    pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crop_number_per_frames, crop_per_frames, SETTINGS["scale"], SETTINGS["crop"], INPUT_FRAMES,frame_files)
+    pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crop_number_per_frames, crop_per_frames, SETTINGS["scale"], SETTINGS["crop"], INPUT_FRAMES,frame_files,anchors_txt=SETTINGS["anchorfile"])
     num_frames = len(crop_number_per_frames)
     num_crops = len(crop_per_frames[0])
 
@@ -334,6 +334,8 @@ parser.add_argument('-startframe', help='start from frame index', default='0')
 parser.add_argument('-attframespread', help='look at attention map of this many nearby frames - minus and plus', default='0')
 parser.add_argument('-annotategt', help='annotate frames with ground truth', default='False')
 
+parser.add_argument('-anchorf', help='anchor file', default='yolo_anchors.txt')
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -343,6 +345,7 @@ if __name__ == '__main__':
     SETTINGS = {}
     SETTINGS["attention_crop"] = float(args.attcrop)
     SETTINGS["attention_over"] = float(args.attover)
+    SETTINGS["anchorfile"] = args.anchorf
     SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
     SETTINGS["over"] = float(args.over)
     SETTINGS["scale"] = float(args.scale)
