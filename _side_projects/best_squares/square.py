@@ -1,4 +1,6 @@
 import math
+import random
+import numpy as np
 
 def best_squares(w,h,n_h):
     #print("err", int(h / n_h)-(h / n_h))
@@ -11,17 +13,17 @@ def best_squares(w,h,n_h):
         #row_list.append([i * crop, i * crop + crop])
         row_list.append([int(i * crop), int(i * crop + crop)])
 
-    areas = math.ceil(w / crop)
-    #print("areas", areas)
+    n_v = math.ceil(w / crop)
+    #print("n_v", n_v)
 
-    loc = (w - crop) / (areas - 1)
+    loc = (w - crop) / (n_v - 1)
     #print("loc", loc)
 
     column_list = []
 
     #print("first",0,crop)
     column_list.append([0,crop])
-    for i in range(1, areas-1):
+    for i in range(1, n_v-1):
         #print(i,"ndth", i*loc, i*loc+crop)
         #column_list.append([i*loc, i*loc+crop])
         column_list.append([int(i*loc), int(i*loc+crop)])
@@ -59,6 +61,7 @@ def redraw(plt, column_list, row_list):
         for col in column_list:
             #print("x,", col[0], "y", 0.1, "w", col[1] - col[0], "h", 0.5)
 
+            """
             ax.add_patch(
                 patches.Rectangle(
                     (col[0], row[0]),  # (x,y)
@@ -67,14 +70,34 @@ def redraw(plt, column_list, row_list):
                     fill=False
                 )
             )
+            """
+
+            #jitter = random.uniform(0, 1) * 25
+            jitter = 0
+            ax.add_patch(
+                patches.Rectangle(
+                    (col[0] + jitter, row[0] + jitter),
+                    col[1] - col[0],
+                    row[1] - row[0], fill=False, linewidth=1.0, color=np.random.rand(3, 1)[:, 0]
+                )
+            )
 
 w = 3840
 h = 2160
 
+"""
+n = 1
+column_list, row_list = best_squares(w, h, n)
+redraw(plt, column_list, row_list)
+plt.show()
+"""
+
+
 def animate(i):
+    print("with",(i+1),"horizontal boxes")
     ax.clear()
     column_list, row_list = best_squares(w, h, i+1)
     redraw(plt, column_list, row_list)
     #ax.plot(xar,yar)
-ani = animation.FuncAnimation(fig, animate, interval=2000, frames=5, repeat=True)
+ani = animation.FuncAnimation(fig, animate, interval=2000, frames=4, repeat=True)
 plt.show()
