@@ -77,8 +77,14 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crops_number_per_frames, mask_crops_per_frames,attention_crop_TMP_SIZE_FOR_MODEL, INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0, anchors_txt=SETTINGS["anchorfile"])
 
         # 3 make mask images accordingly
+        save_masks = SETTINGS["debug_save_masks"]
+        range_of_masks = []
+        if save_masks is "one":
+            range_of_masks = [0]
+        elif save_masks is "all":
+            range_of_masks = range(0,len(frame_files))
 
-        for i in [0]:
+        for i in range_of_masks:
         #for i in range(0,len(frame_files)):
             print(output_measurement_viz + frame_files[i])
             tmp_mask_just_to_save_it_for_debug = mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[i], output_measurement_viz + frame_files[i],
@@ -349,6 +355,9 @@ parser.add_argument('-startframe', help='start from frame index', default='0')
 parser.add_argument('-attframespread', help='look at attention map of this many nearby frames - minus and plus', default='0')
 parser.add_argument('-annotategt', help='annotate frames with ground truth', default='False')
 
+parser.add_argument('-debug_save_masks', help='DEBUG save masks? BW outlines of attention model. accepts "one" or "all"', default='one')
+parser.add_argument('-debug_save_crops', help='DEBUG save crops? Attention models crops. accepts "one" or "all"', default='False')
+
 parser.add_argument('-anchorf', help='anchor file', default='yolo_anchors.txt')
 
 
@@ -370,16 +379,23 @@ if __name__ == '__main__':
     thickness = str(args.thickness).split(",")
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
 
-    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/DrivingNY/input/frames_0.2fps_236/"
-    SETTINGS["att_frame_spread"] = 1 # should be cca +-1 sec - so 30 in 30fps video
+    SETTINGS["debug_save_masks"] = args.debug_save_masks
+    SETTINGS["debug_save_crops"] = (args.debug_save_crops == 'True')
 
-    RUN_NAME = "___NewTestsDELETE_full_"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/liverpool_station_8k/frames_4fps/"
+    #SETTINGS["att_frame_spread"] = 4 # should be cca +-1 sec - so 30 in 30fps video
+    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/input/annotated/"
+    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames_all/"
+    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/hand_annot/"
+    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/auto_annot/"
 
-    #SETTINGS["startframe"] = 230
+    RUN_NAME = "_annotation_results_small_auto"
+
     SETTINGS["attention"] = True
+    SETTINGS["annotate_frames_with_gt"] = True
 
     SETTINGS["attention_horizontal_splits"] = 1
-    SETTINGS["horizontal_splits"] = 2
+    SETTINGS["horizontal_splits"] = 1
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)

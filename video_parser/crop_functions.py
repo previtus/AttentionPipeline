@@ -364,9 +364,7 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
 
 #@profile
 def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
-    ## del attention_crop, attention_over,
-    ## instead attention_h_num
-
+    ## only in attention
 
     frame_image = Image.open(frame_path)
 
@@ -397,7 +395,7 @@ def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
 
     tmp = frame_image.resize((int(nw), int(nh)), Image.ANTIALIAS)
 
-    save_crops = True
+    save_crops = SETTINGS["debug_save_crops"]
 
     mask_crops, crop = crop_from_one_img(tmp, horizontal_splits, overlap_px, 1.0, folder_name=mask_folder, frame_name=frame_name+"/", save_crops=save_crops)
 
