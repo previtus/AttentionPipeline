@@ -8,8 +8,22 @@ Working with high resolution videos to locate certain objects. First pass serves
 # Instructions
 
 ## Installation
-With
-- python 3.6.1, tensorflow with gpu and cuda support, keras
+
+Sample workstation:
+- Ubuntu 16.04.3
+- CUDA 8.0 (cuda-repo-ubuntu1604-8-0-local-ga2_8.0.61-1_amd64.deb)
+- CUDNN 5.1 (cudnn-8.0-linux-x64-v5.1.tgz).
+
+Used Anaconda3 and these modules (likely also works with newer versions)
+- matplotlib 2.0.0
+- tensorflow-gpu 1.0.1
+- Theano 0.9.0
+- Keras 2.0.3
+- hdf5 1.8.17
+- pillow 4.1.0
+
+**Install**
+- python 3.6.1, tensorflow with gpu and cuda support, keras (see list above)
 - YAD2K, python YOLO v2 implementation: https://github.com/allanzelener/YAD2K (commit hash a42c760ef868bc115e596b56863dc25624d2e756)
 - put files from "__to-be-put-with-YAD2K" to YAD2K folder
 - make sure that there is correct path to the YAD2K folder in "yolo_handler.py" on line `yolo_paths = ["/home/<whatever>/YAD2K/","<more possible paths>"]`
