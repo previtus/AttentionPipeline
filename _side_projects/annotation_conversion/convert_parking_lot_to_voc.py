@@ -1,4 +1,7 @@
 """ Conversion between annotation formats """
+import os, fnmatch
+from PIL import Image
+
 
 """
 # FROM FORMAT
@@ -10,7 +13,7 @@ frameNumber - The frame number
 bodyLeft,bodyTop,bodyRight,bodyBottom - The body bounding box in pixels
 
 """
-input_file = "/home/ekmek/Downloads/datasets/crowds/PNNL ParkingLot/PL_Pizza_GT.txt"
+input_gt_file = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/PL_Pizza_GT.txt"
 
 """
 # TO FORMAT
@@ -42,9 +45,147 @@ where each image x.jpg is accompanied by annotation in x.xml
 			<ymax>1213</ymax>
 		</bndbox>
 	</object>
-	... # multiple objects
+	... # multiple objects <object> ... </object>
 
 </annotation>
 
 """
 output_folder = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
+
+
+def format_header(image_name, folder_name, path_to_input, w, h):
+    path = path_to_input+folder_name+"/"+image_name
+    width = str(w)
+    height = str(h)
+
+    string = """<annotation>
+	<folder>""" + folder_name + """</folder>
+	<filename>""" + image_name + """</filename>
+	<path>""" + path + """</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>""" + width + """</width>
+		<height>""" + height + """</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>"""
+
+    #print(string)
+    return string
+
+def format_object(xmin, ymin, xmax, ymax):
+    xmin = int(xmin)
+    ymin = int(ymin)
+    xmax = int(xmax)
+    ymax = int(ymax)
+    xmin = str(xmin)
+    ymin = str(ymin)
+    xmax = str(xmax)
+    ymax = str(ymax)
+
+    name = "person"
+
+    string = """
+    <object>
+		<name>"""+name+"""</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>"""+xmin+"""</xmin>
+			<ymin>"""+ymin+"""</ymin>
+			<xmax>"""+xmax+"""</xmax>
+			<ymax>"""+ymax+"""</ymax>
+		</bndbox>
+	</object>"""
+
+    # print(string)
+    return string
+
+def format_tail():
+    string = """
+</annotation>"""
+    # print(string)
+    return string
+
+### LOAD GT
+gt_lines = list(open(input_gt_file))
+gt_lines = [i.rstrip().split(' ') for i in gt_lines]
+gt_lines = [[float(j) for j in i] for i in gt_lines]
+print(gt_lines)
+
+gt_per_frames = {}
+for gt_line in gt_lines:
+    # [6.0, 1.0, 1012.15, 800.015, 1108.267, 1070.888]
+    # frameNumber, personNumber, bodyLeft, bodyTop, bodyRight, bodyBottom
+    # frameNumber, _, xmin, ymax, xmax, ymin
+    frame_num = int(gt_line[0])
+    if frame_num not in gt_per_frames.keys():
+        gt_per_frames[frame_num] = []
+    #gt_per_frames[frame_num].append( gt_line[2:5] )
+
+    xmin = gt_line[2]
+    ymax = gt_line[5]
+    xmax = gt_line[4]
+    ymin = gt_line[3]
+    #print("xmin, ymin, xmax, ymax", xmin, ymin, xmax, ymax)
+    gt_per_frames[frame_num].append([xmin, ymin, xmax, ymax])
+
+
+### TARGET FOLDER
+path = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames_all/"
+split_path = path.split('/')
+folder_name = split_path[-2]
+path_to_input = path[0:-(len(folder_name)+1)]
+
+print("path",path)
+print("folder_name",folder_name)
+print("path_to_input",path_to_input)
+
+# for image_name in image_names
+files = sorted(os.listdir(path))
+image_names = fnmatch.filter(files, '*.jpg')
+#print(image_names)
+
+# WIDTH AND HEIGHT is shared
+first_image = path+image_names[0]
+img = Image.open(first_image)
+w, h = img.size
+
+#format_header(image_name, folder_name, path_to_input, w, h)
+#format_object(xmin, ymin, xmax, ymax)
+#format_object()
+#format_tail()
+
+keys = list(gt_per_frames.keys())
+for key in keys: #[0:1]
+    print("frame", key, "(", len(gt_per_frames[key]),"): ",gt_per_frames[key])
+
+    objects_parameters = gt_per_frames[key] # list of [xmin, ymin, xmax, ymax]
+
+    # key "6" to jpg name "0005.jpg" (maybe)
+    # key "161" to jpg name "0160.jpg"
+    number = key - 1
+
+    name = str(number).zfill(4)
+    image_name = name + ".jpg"
+    xml_name = name + ".xml"
+    print(image_name)
+    #print(objects_parameters)
+
+    string = ""
+    string += format_header(image_name, folder_name, path_to_input, w, h)
+
+    for object in objects_parameters:
+        xmin, ymin, xmax, ymax = object
+        string += format_object(xmin, ymin, xmax, ymax)
+
+    string += format_tail()
+
+    # now safe into filename.xml
+    #print(string)
+
+    with open(path+xml_name, "w") as text_file:
+        text_file.write(string)
