@@ -9,7 +9,7 @@ from pathlib import Path
 from timeit import default_timer as timer
 from PIL import Image
 
-from crop_functions import crop_from_one_frame, mask_from_one_frame, crop_from_one_frame_WITH_MASK_in_mem
+from crop_functions import crop_from_one_frame, mask_from_one_frame, crop_from_one_frame_WITH_MASK_in_mem, get_number_of_crops_from_frame
 from yolo_handler import run_yolo
 from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_evaluated_bboxes, bboxes_to_mask, annotate_prepare
 from visualize_time_measurement import visualize_time_measurements
@@ -61,7 +61,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             start = timer()
 
             frame_path = INPUT_FRAMES + frame_files[frame_i]
-            mask_crops, scale_full_img, attention_crop_tmp = mask_from_one_frame(frame_path, SETTINGS, mask_crop_folder) ### <<< mask_crops
+            mask_crops, scale_full_img, attention_crop_TMP_SIZE_FOR_MODEL = mask_from_one_frame(frame_path, SETTINGS, mask_crop_folder) ### <<< mask_crops
             mask_crops_per_frames.append(mask_crops)
             mask_crops_number_per_frames.append(len(mask_crops))
             scales_per_frames.append(scale_full_img)
@@ -74,13 +74,15 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         # 2 eval these
         # calculate
-        SETTINGS["attention_crop"] = attention_crop_tmp
-        masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crops_number_per_frames, mask_crops_per_frames,1.0,SETTINGS["attention_crop"], INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0, anchors_txt=SETTINGS["anchorfile"])
+        masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crops_number_per_frames, mask_crops_per_frames,attention_crop_TMP_SIZE_FOR_MODEL, INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0, anchors_txt=SETTINGS["anchorfile"])
 
         # 3 make mask images accordingly
-        print(output_measurement_viz + frame_files[0])
-        tmp_mask_just_to_save_it_for_debug = mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[0], output_measurement_viz + frame_files[0],
-                                                bboxes_per_frames[0],scales_per_frames[0], SETTINGS["extend_mask_by"])
+
+        for i in [0]:
+        #for i in range(0,len(frame_files)):
+            print(output_measurement_viz + frame_files[i])
+            tmp_mask_just_to_save_it_for_debug = mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[i], output_measurement_viz + frame_files[i],
+                                                    bboxes_per_frames[i],scales_per_frames[i], 0) # SETTINGS["extend_mask_by"]
 
     print("################## Cropping frames ##################")
     print("##",len(frame_files),"of frames")
@@ -112,12 +114,17 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             mask = bboxes_to_mask(bboxes, img.size, scale, SETTINGS["extend_mask_by"])
 
             mask_over = 0.1 #SETTINGS["over"]
-            crops, crop_TMP = crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, crops_folder, SETTINGS["crop"], mask_over,
-                                                 SETTINGS["scale"], show = False, save_crops=False, save_visualization=save_one_crop_vis,
+            horizontal_splits = SETTINGS["horizontal_splits"]
+            overlap_px = SETTINGS["overlap_px"]
+            crops, crop_TMP = crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, crops_folder, horizontal_splits, overlap_px, mask_over,
+                                                 show = False, save_crops=False, save_visualization=save_one_crop_vis,
                                                  viz_path=output_measurement_viz)
 
         else:
-            crops, crop_TMP = crop_from_one_frame(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_visualization=save_one_crop_vis, save_crops=False, viz_path=output_measurement_viz)
+            horizontal_splits = SETTINGS["horizontal_splits"]
+            overlap_px = SETTINGS["overlap_px"]
+
+            crops, crop_TMP = crop_from_one_frame(frame_path, crops_folder, horizontal_splits,overlap_px, show=False, save_visualization=save_one_crop_vis, save_crops=False, viz_path=output_measurement_viz)
 
         crop_per_frames.append(crops)
         crop_number_per_frames.append(len(crops))
@@ -127,18 +134,22 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         time = (end - start)
         summed_croping_time.append(time)
 
-    SETTINGS["crop"] = crop_TMP
+    crop_TMP_SIZE_FOR_MODEL = crop_TMP
 
+    horizontal_splits = SETTINGS["horizontal_splits"]
+    overlap_px = SETTINGS["overlap_px"]
 
-    tmp_crops = crop_from_one_frame(INPUT_FRAMES + frame_files[0], crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"],
-                                show=False, save_visualization=False, save_crops=False,viz_path='')
-    max_number_of_crops_per_frame = len(tmp_crops)
+    max_number_of_crops_per_frame = get_number_of_crops_from_frame(INPUT_FRAMES + frame_files[0], horizontal_splits, overlap_px)
+    #print("max_number_of_crops_per_frame",max_number_of_crops_per_frame)
+    #tmp_crops,_ = crop_from_one_frame(INPUT_FRAMES + frame_files[0], crops_folder, horizontal_splits,overlap_px,
+    #                            show=False, save_visualization=False, save_crops=False,viz_path='')
+    #max_number_of_crops_per_frame = len(tmp_crops)
 
     # Run YOLO on crops
     print("")
     print("################## Running Model ##################")
 
-    pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crop_number_per_frames, crop_per_frames, SETTINGS["scale"], SETTINGS["crop"], INPUT_FRAMES,frame_files,anchors_txt=SETTINGS["anchorfile"])
+    pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crop_number_per_frames, crop_per_frames, crop_TMP_SIZE_FOR_MODEL, INPUT_FRAMES,frame_files,anchors_txt=SETTINGS["anchorfile"])
     num_frames = len(crop_number_per_frames)
     num_crops = len(crop_per_frames[0])
 
@@ -325,11 +336,9 @@ day = str(datetime.now().day)
 import argparse
 
 parser = argparse.ArgumentParser(description='Project: Find BBoxes in video.')
-parser.add_argument('-crop', help='size of crops, enter multiples of 32', default='544')
-parser.add_argument('-over', help='percentage of overlap, 0-1', default='0.6')
-parser.add_argument('-attcrop', help='size of crops for attention model', default='608')
-parser.add_argument('-attover', help='percentage of overlap for attention model', default='0.65')
-parser.add_argument('-scale', help='additional undersampling', default='1.0')
+parser.add_argument('-horizontal_splits', help='number or horizontal splits in image', default='2')
+parser.add_argument('-overlap_px', help='overlap in pixels', default='20')
+parser.add_argument('-atthorizontal_splits', help='number or horizontal splits in image for attention model', default='1')
 parser.add_argument('-input', help='path to folder full of frame images',
                     default="/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/")
 parser.add_argument('-name', help='run name - will output in this dir', default='_Test-'+day+month)
@@ -349,12 +358,10 @@ if __name__ == '__main__':
     INPUT_FRAMES = args.input
     RUN_NAME = args.name
     SETTINGS = {}
-    SETTINGS["attention_crop"] = float(args.attcrop)
-    SETTINGS["attention_over"] = float(args.attover)
+    SETTINGS["attention_horizontal_splits"] = float(args.atthorizontal_splits)
+    SETTINGS["overlap_px"] = int(args.overlap_px)
+    SETTINGS["horizontal_splits"] = int(args.horizontal_splits)
     SETTINGS["anchorfile"] = args.anchorf
-    SETTINGS["crop"] = float(args.crop)  ## crop_sizes_possible = [288,352,416,480,544] # multiples of 32
-    SETTINGS["over"] = float(args.over)
-    SETTINGS["scale"] = float(args.scale)
     SETTINGS["startframe"] = int(args.startframe)
     SETTINGS["attention"] = (args.attention == 'True')
     SETTINGS["annotate_frames_with_gt"] = (args.annotategt == 'True')
@@ -366,12 +373,13 @@ if __name__ == '__main__':
     INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/DrivingNY/input/frames_0.2fps_236/"
     SETTINGS["att_frame_spread"] = 1 # should be cca +-1 sec - so 30 in 30fps video
 
-    RUN_NAME = "___NewTestsDELETE_"
-    SETTINGS["crop"] = 1000
-    SETTINGS["over"] = 0.2
+    RUN_NAME = "___NewTestsDELETE_full_"
 
-    SETTINGS["startframe"] = 220
+    #SETTINGS["startframe"] = 230
     SETTINGS["attention"] = True
+
+    SETTINGS["attention_horizontal_splits"] = 1
+    SETTINGS["horizontal_splits"] = 2
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)

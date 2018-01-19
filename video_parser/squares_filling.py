@@ -22,15 +22,15 @@ def get_crops_parameters(w, crop=288, over=0.5, scale=1.0):
     return params
 
 
-def best_squares_overlap(w,h,n_h,overlap):
+def best_squares_overlap(w, h, horizontal_splits, overlap_px):
 
-    crop = int( (h + overlap * (n_h -1)) / n_h )
+    crop = int((h + overlap_px * (horizontal_splits - 1)) / horizontal_splits)
 
     row_list = []
-    for i in range(0, n_h):
-        row_list.append([int(i * (crop-overlap)), int(i * (crop-overlap) + crop)])
+    for i in range(0, horizontal_splits):
+        row_list.append([int(i * (crop - overlap_px)), int(i * (crop - overlap_px) + crop)])
 
-    n_v = math.ceil((w - crop) / (crop - overlap) + 1)
+    n_v = math.ceil((w - crop) / (crop - overlap_px) + 1)
     loc = (w - crop) / (n_v - 1)
 
 

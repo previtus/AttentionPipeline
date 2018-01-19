@@ -7,7 +7,7 @@ import matplotlib.patches as patches
 
 from squares_filling import get_crops_parameters, best_squares_overlap
 
-def crop_from_one_img(img, crop, over, scale, show=False, save_crops=True, folder_name='', frame_name=''):
+def crop_from_one_img(img, horizontal_splits, overlap_px, scale, show=False, save_crops=True, folder_name='', frame_name=''):
 
     width, height = img.size
 
@@ -19,20 +19,12 @@ def crop_from_one_img(img, crop, over, scale, show=False, save_crops=True, folde
         plt.ylim(-1 * (height / 10.0), height + 1 * (height / 10.0))
         plt.gca().invert_yaxis()
 
-    w_crops = get_crops_parameters(width, crop, over, scale)
-    h_crops = get_crops_parameters(height, crop, over, scale)
-    print("w_crops",w_crops)
-    print("h_crops",h_crops)
-    #w_crops = get_crops_parameters(width, crop, over, scale)
-    #h_crops = get_crops_parameters(height, crop, over, scale)
-    n_h = number_horizontal_splits = 1
-    overlap_px = 50
-    column_list, row_list = best_squares_overlap(width,height,n_h,overlap_px)
+    column_list, row_list = best_squares_overlap(width,height,horizontal_splits,overlap_px)
     crop = column_list[0][1] - column_list[0][0]
     w_crops = column_list
     h_crops = row_list
-    print("after w",w_crops)
-    print("after h",h_crops)
+    #print("after w",w_crops)
+    #print("after h",h_crops)
 
     N = len(w_crops) * len(h_crops)
 
@@ -71,7 +63,21 @@ def crop_from_one_img(img, crop, over, scale, show=False, save_crops=True, folde
 
     return crops, crop
 
-def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_crops=True, save_visualization=True, viz_path=''):
+def get_number_of_crops_from_frame(frame_path, horizontal_splits,overlap_px):
+    # crop*scale is the size inside input image
+    # crop is the size of output image
+
+    img = Image.open(frame_path)
+    width, height = img.size
+
+    column_list, row_list = best_squares_overlap(width,height,horizontal_splits,overlap_px)
+    w_crops = column_list
+    h_crops = row_list
+
+    N = len(w_crops) * len(h_crops)
+    return N
+
+def crop_from_one_frame(frame_path, out_folder, horizontal_splits,overlap_px, show, save_crops=True, save_visualization=True, viz_path=''):
     # crop*scale is the size inside input image
     # crop is the size of output image
 
@@ -95,9 +101,7 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
 
     #w_crops = get_crops_parameters(width, crop, over, scale)
     #h_crops = get_crops_parameters(height, crop, over, scale)
-    n_h = number_horizontal_splits = 3
-    overlap = 50
-    column_list, row_list = best_squares_overlap(width,height,n_h,overlap)
+    column_list, row_list = best_squares_overlap(width,height,horizontal_splits,overlap_px)
     crop = column_list[0][1] - column_list[0][0]
     w_crops = column_list
     h_crops = row_list
@@ -121,12 +125,12 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
                 ax.add_patch(
                     patches.Rectangle(
                         (w_crop[0] + jitter, h_crop[0] + jitter),
-                        scale * crop,
-                        scale * crop, fill=False, linewidth=2.0, color=np.random.rand(3, 1)  # color=cmap(i)
+                        crop,
+                        crop, fill=False, linewidth=2.0, color=np.random.rand(3, 1)  # color=cmap(i)
                     )
                 )
 
-            area = (int(w_crop[0]), int(h_crop[0]), int(w_crop[0] + scale * crop), int(h_crop[0] + scale * crop))
+            area = (int(w_crop[0]), int(h_crop[0]), int(w_crop[0] + crop), int(h_crop[0] + crop))
             cropped_img = img.crop(box=area)
             cropped_img = cropped_img.resize((crop, crop), resample=Image.ANTIALIAS)
             cropped_img.load()
@@ -148,7 +152,7 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
     return crops, crop
 
 #@profile
-def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop, mask_over, scale, show, save_crops=True, save_visualization=True, viz_path=''):
+def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, horizontal_splits, overlap_px, mask_over, show, save_crops=True, save_visualization=True, viz_path=''):
     # V3 - mask carried in memory
 
     # crop*scale is the size inside input image
@@ -178,9 +182,7 @@ def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop
 
     #w_crops = get_crops_parameters(width, crop, over, scale)
     #h_crops = get_crops_parameters(height, crop, over, scale)
-    n_h = number_horizontal_splits = 3
-    overlap = 50
-    column_list, row_list = best_squares_overlap(width,height,n_h,overlap)
+    column_list, row_list = best_squares_overlap(width,height,horizontal_splits,overlap_px)
     crop = column_list[0][1] - column_list[0][0]
     w_crops = column_list
     h_crops = row_list
@@ -196,7 +198,7 @@ def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop
     i = 0
     for w_crop in w_crops:
         for h_crop in h_crops:
-            area = (int(w_crop[0]), int(h_crop[0]), int(w_crop[0] + scale * crop), int(h_crop[0] + scale * crop))
+            area = (int(w_crop[0]), int(h_crop[0]), int(w_crop[0] + crop), int(h_crop[0] + crop))
             cropped_img = img.crop(box=area)
             cropped_img = cropped_img.resize((crop, crop), resample=Image.ANTIALIAS)
             cropped_img.load()
@@ -236,8 +238,8 @@ def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop
                 ax.add_patch(
                     patches.Rectangle(
                         (w_crop[0] + jitter, h_crop[0] + jitter),
-                        scale * crop,
-                        scale * crop, fill=False, linewidth=2.0, color=np.random.rand(3, 1)[:,0]  # color=cmap(i)
+                        crop,
+                        crop, fill=False, linewidth=2.0, color=np.random.rand(3, 1)[:,0]  # color=cmap(i)
                     )
                 )
             file_name = frame_name + "/" + str(i).zfill(4) + ".jpg"
@@ -379,17 +381,25 @@ def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
 
     # now we want to resize the image so we have height equal to crop size - create only one row of crops
     # we will have to reproject back the scales
-    crop = SETTINGS["attention_crop"]
+
+    horizontal_splits = SETTINGS["attention_horizontal_splits"]
+    overlap_px = 0
+    column_list, row_list = best_squares_overlap(ow,oh,horizontal_splits,overlap_px)
+    crop = 608 * horizontal_splits
+
+    #crop = 608 + (608 - overlap_px) * (horizontal_splits - 1)
+
+    #crop = SETTINGS["attention_crop"]
 
     nh = crop
     scale_full_img = nh / oh
     nw = ow * scale_full_img
-    over = SETTINGS["attention_over"]
 
     tmp = frame_image.resize((int(nw), int(nh)), Image.ANTIALIAS)
 
     save_crops = True
-    mask_crops, crop = crop_from_one_img(tmp, crop, over, 1.0, folder_name=mask_folder, frame_name=frame_name+"/", save_crops=save_crops)
+
+    mask_crops, crop = crop_from_one_img(tmp, horizontal_splits, overlap_px, 1.0, folder_name=mask_folder, frame_name=frame_name+"/", save_crops=save_crops)
 
     return mask_crops, scale_full_img, crop
 

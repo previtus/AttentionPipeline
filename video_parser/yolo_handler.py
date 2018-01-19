@@ -6,7 +6,7 @@ from visualize_time_measurement import visualize_time_measurements
 import numpy as np
 
 #@profile
-def run_yolo(num_crops_per_frames, crop_per_frames, fixbb_scale, fixbb_crop, INPUT_FRAMES, frame_files, resize_frames=None, show_viz = False,
+def run_yolo(num_crops_per_frames, crop_per_frames, fixbb_crop, INPUT_FRAMES, frame_files, resize_frames=None, show_viz = False,
              model_h5='yolo.h5', anchors_txt='yolo_anchors.txt', VERBOSE=1):
 
     yolo_paths = ["/home/ekmek/YAD2K/", "/home/vruzicka/storage_pylon2/YAD2K/"]
@@ -74,11 +74,11 @@ def run_yolo(num_crops_per_frames, crop_per_frames, fixbb_scale, fixbb_crop, INP
             fixed_bboxes = []
             for bbox in bboxes[index]:
                 bbox_array = bbox[1]
-                max_limit = fixbb_crop * fixbb_scale
+                max_limit = fixbb_crop
 
                 #bbox_aray = np.maximum(bbox_aray,[0,0,0,0])
                 #bbox_aray = np.minimum(bbox_aray,[max_limit,max_limit,max_limit,max_limit])
-                fix_array = bbox_array * fixbb_scale + [a_top, a_left, a_top, a_left]
+                fix_array = bbox_array + [a_top, a_left, a_top, a_left]
 
                 bboxes_per_frames[frame_index].append([bbox[0],fix_array,bbox[2],bbox[3]])
 
