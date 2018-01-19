@@ -10,7 +10,7 @@ Working with high resolution videos to locate certain objects. First pass serves
 ## Installation
 With
 - python 3.6.1, tensorflow with gpu and cuda support, keras
-- YAD2K, python YOLO v2 implementation: https://github.com/allanzelener/YAD2K
+- YAD2K, python YOLO v2 implementation: https://github.com/allanzelener/YAD2K (commit hash a42c760ef868bc115e596b56863dc25624d2e756)
 - put files from "__to-be-put-with-YAD2K" to YAD2K folder
 - make sure that there is correct path to the YAD2K folder in "yolo_handler.py" on line `yolo_paths = ["/home/<whatever>/YAD2K/","<more possible paths>"]`
 - prepare data *(see the ffmpeg commands bellow)* so it follows this hierarchy:
