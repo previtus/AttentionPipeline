@@ -104,6 +104,9 @@ def voc_eval_twoArrs(groundtruth,predictions,ovthresh=0.5,use_07_metric=False):
         ovmax = -np.inf
         BBGT = R['bbox'].astype(float)
 
+        #print("BB",BB)
+        #print("BBGT",BBGT)
+
         if BBGT.size > 0:
             # compute overlaps
             # intersection
@@ -119,6 +122,10 @@ def voc_eval_twoArrs(groundtruth,predictions,ovthresh=0.5,use_07_metric=False):
             uni = ((bb[2] - bb[0] + 1.) * (bb[3] - bb[1] + 1.) +
                    (BBGT[:, 2] - BBGT[:, 0] + 1.) *
                    (BBGT[:, 3] - BBGT[:, 1] + 1.) - inters)
+
+            #print("max intersection ",np.max(inters))
+            #print("inters",inters)
+            #print("uni",uni)
 
             overlaps = inters / uni
             ovmax = np.max(overlaps)
@@ -137,6 +144,8 @@ def voc_eval_twoArrs(groundtruth,predictions,ovthresh=0.5,use_07_metric=False):
     # compute precision recall
     fp = np.cumsum(fp)
     tp = np.cumsum(tp)
+
+    #print("fp, tp: ",fp, tp)
 
     npos = len(gtBB) # hack, none are marked as difficult
 
