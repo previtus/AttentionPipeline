@@ -39,7 +39,7 @@ We can convert the resulting annotated output frames back into video.
 - `python run_fast_sketch.py -horizontal_splits 2 -attention_horizontal_splits 1 -input "/<path>/PL_Pizza sample/input/frames/" -name "_ExampleRunNameHere"`
 - See the results in `/<path>/PL_Pizza sample/output_ExampleRunNameHere`
 
-## Annotation
+## (optional) Annotation
 When the python code is run with `-annotategt 'True'`, then the model will look for which frames have ground truth annotations accompanying them (in VOC style .xml file next to the .jpg). For these frames it then saves results into the output folder (into files `annotbboxes.txt` and `annotnames.txt`).
 
 Visualization tool can be then run (with paths to the input and output folder set correctly). For example set file "visualize_gt_prediction.py" with these paths:
@@ -50,6 +50,12 @@ output_model_predictions_folder = "/<path>/intership_project/_side_projects/anno
 As result we should see something like image in  *_side_projects/annotation_conversion/annotated examples/example_visualization_of_ap_measurement.jpg*
 
 - hand annotation possible with labelImg: https://github.com/tzutalin/labelImg
+
+## (optional) Time profiling
+
+I used kernprof from https://github.com/rkern/line_profiler#kernprof. Follow installation mentioned there (`pip install line_profiler`).
+- Put `@profile` before each function for profiling
+- Run `kernprof -l -v run_fast_sketch.py`
 
 
 
