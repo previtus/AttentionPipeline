@@ -41,7 +41,8 @@ def draw_rectangle_into_numpy(rect, image, color):
 def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ignore_crops_drawing=True, draw_text=True, show=False, save=True, thickness=[4.0,1.0], resize_output = 1.0):
 
     image = Image.open(image_path)
-    draw = ImageDraw.Draw(image)
+    #draw = ImageDraw.Draw(image)
+    draw = ImageDraw.Draw(image, 'RGBA')
 
     for bbox in bboxes:
         #print (image.size, bbox)
@@ -73,9 +74,10 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ig
             #color = colors[c]
             #draw_rectangle_into_numpy(rect, image, color)
 
+            color = colors[c]
             draw.rectangle(
                     [left + i, top + i, right - i, bottom - i],
-                    outline=colors[c])
+                    outline=color) #colors[c])
 
         if draw_text:
             font = ImageFont.truetype(
