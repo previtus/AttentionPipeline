@@ -64,6 +64,7 @@ output_model_predictions_folder = "/<path>/intership_project/_side_projects/anno
 As result we should see something like image in  *_side_projects/annotation_conversion/annotated examples/example_visualization_of_ap_measurement.jpg*
 
 - hand annotation possible with labelImg: https://github.com/tzutalin/labelImg
+- automatic annotation of the "PNNL ParkingLot Pizza" dataset with _side_projects/annotation_conversion/convert_parking_lot_to_voc.py
 
 ## (optional) Time profiling
 
