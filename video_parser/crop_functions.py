@@ -5,25 +5,7 @@ from PIL import Image, ImageChops
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-def get_crops_parameters(w, crop=288, over=0.5, scale=1.0):
-    crop = scale * crop
-
-    block = crop * (1.0 - over)
-    pocet = (w - (crop - block)) / block
-    pocet = max([pocet,1.0])
-    nastejne = (w - (crop - block)) / int(pocet)
-
-    offset = w - (int((int(pocet) - 1) * nastejne) + crop)
-    balance = offset / 2.0
-
-    params = []
-    for i in range(0, int(pocet)):
-        w_from = int(i * nastejne + balance)
-        w_to = int(w_from + crop)
-        params.append((w_from, w_to))
-
-    #print (w - w_to)
-    return params
+from squares_filling import get_crops_parameters, best_squares_overlap
 
 def crop_from_one_img(img, crop, over, scale, show=False, save_crops=True, folder_name='', frame_name=''):
 
@@ -39,6 +21,19 @@ def crop_from_one_img(img, crop, over, scale, show=False, save_crops=True, folde
 
     w_crops = get_crops_parameters(width, crop, over, scale)
     h_crops = get_crops_parameters(height, crop, over, scale)
+    print("w_crops",w_crops)
+    print("h_crops",h_crops)
+    #w_crops = get_crops_parameters(width, crop, over, scale)
+    #h_crops = get_crops_parameters(height, crop, over, scale)
+    n_h = number_horizontal_splits = 1
+    overlap_px = 50
+    column_list, row_list = best_squares_overlap(width,height,n_h,overlap_px)
+    crop = column_list[0][1] - column_list[0][0]
+    w_crops = column_list
+    h_crops = row_list
+    print("after w",w_crops)
+    print("after h",h_crops)
+
     N = len(w_crops) * len(h_crops)
 
     crops = []
@@ -63,6 +58,8 @@ def crop_from_one_img(img, crop, over, scale, show=False, save_crops=True, folde
 
             if save_crops:
                 file_name = frame_name + str(i).zfill(4) + ".jpg"
+                if not os.path.exists(folder_name + frame_name + "/"):
+                    os.makedirs(folder_name + frame_name + "/")
                 cropped_img.save(folder_name + file_name)
                 crops.append((file_name, area))
             else:
@@ -72,7 +69,7 @@ def crop_from_one_img(img, crop, over, scale, show=False, save_crops=True, folde
     if show:
         plt.show()
 
-    return crops
+    return crops, crop
 
 def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_crops=True, save_visualization=True, viz_path=''):
     # crop*scale is the size inside input image
@@ -96,8 +93,15 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
         plt.ylim(-1 * (height / 10.0), height + 1 * (height / 10.0))
         plt.gca().invert_yaxis()
 
-    w_crops = get_crops_parameters(width, crop, over, scale)
-    h_crops = get_crops_parameters(height, crop, over, scale)
+    #w_crops = get_crops_parameters(width, crop, over, scale)
+    #h_crops = get_crops_parameters(height, crop, over, scale)
+    n_h = number_horizontal_splits = 3
+    overlap = 50
+    column_list, row_list = best_squares_overlap(width,height,n_h,overlap)
+    crop = column_list[0][1] - column_list[0][0]
+    w_crops = column_list
+    h_crops = row_list
+
     N = len(w_crops) * len(h_crops)
 
     if not save_visualization:
@@ -141,10 +145,10 @@ def crop_from_one_frame(frame_path, out_folder, crop, over, scale, show, save_cr
         plt.savefig(viz_path+'crops_viz.png')
         cropped_img.save(viz_path + '_sample_first_crop.jpg')
 
-    return crops
+    return crops, crop
 
 #@profile
-def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop, over, scale, show, save_crops=True, save_visualization=True, viz_path=''):
+def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop, mask_over, scale, show, save_crops=True, save_visualization=True, viz_path=''):
     # V3 - mask carried in memory
 
     # crop*scale is the size inside input image
@@ -172,10 +176,15 @@ def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop
         plt.ylim(-1 * (height / 10.0), height + 1 * (height / 10.0))
         plt.gca().invert_yaxis()
 
+    #w_crops = get_crops_parameters(width, crop, over, scale)
+    #h_crops = get_crops_parameters(height, crop, over, scale)
+    n_h = number_horizontal_splits = 3
+    overlap = 50
+    column_list, row_list = best_squares_overlap(width,height,n_h,overlap)
+    crop = column_list[0][1] - column_list[0][0]
+    w_crops = column_list
+    h_crops = row_list
 
-
-    w_crops = get_crops_parameters(width, crop, over, scale)
-    h_crops = get_crops_parameters(height, crop, over, scale)
     N = len(w_crops) * len(h_crops)
 
     if not save_visualization:
@@ -197,10 +206,10 @@ def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop
             cropped_mask.load()
 
             # four corners
-            a = cropped_mask.crop(box=(0, 0, crop*(1-over), crop*(1-over)))
-            b = cropped_mask.crop(box=(0, crop * (over), crop * (1 - over), crop * (1 - over)+ crop * (over)))
-            c = cropped_mask.crop(box=(crop * over, 0, crop * (1 - over) + crop*over, crop * (1 - over)))
-            d = cropped_mask.crop(box=(crop * over, crop * over, crop * (1 - over) + crop * over, crop * (1 - over)+crop * over))
+            a = cropped_mask.crop(box=(0, 0, crop * (1 - mask_over), crop * (1 - mask_over)))
+            b = cropped_mask.crop(box=(0, crop * (mask_over), crop * (1 - mask_over), crop * (1 - mask_over) + crop * (mask_over)))
+            c = cropped_mask.crop(box=(crop * mask_over, 0, crop * (1 - mask_over) + crop * mask_over, crop * (1 - mask_over)))
+            d = cropped_mask.crop(box=(crop * mask_over, crop * mask_over, crop * (1 - mask_over) + crop * mask_over, crop * (1 - mask_over) + crop * mask_over))
 
             corner_empty = False
             for p in [a,b,c,d]:
@@ -244,7 +253,7 @@ def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, crop
         plt.savefig(viz_path+'crops_viz.png')
         cropped_img.save(viz_path + '_sample_first_crop.jpg')
 
-    return crops
+    return crops, crop
 
 def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, show, save_crops=True, save_visualization=True, mask_url='', viz_path=''):
     # V2 - mask held in another file
@@ -353,7 +362,10 @@ def crop_from_one_frame_WITH_MASK(frame_path, out_folder, crop, over, scale, sho
 
 #@profile
 def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
-    # V1 - no mask
+    ## del attention_crop, attention_over,
+    ## instead attention_h_num
+
+
     frame_image = Image.open(frame_path)
 
     frame_name = os.path.basename(frame_path)
@@ -376,8 +388,8 @@ def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
 
     tmp = frame_image.resize((int(nw), int(nh)), Image.ANTIALIAS)
 
-    save_crops = False
-    mask_crops = crop_from_one_img(tmp, crop, over, 1.0, folder_name=mask_folder, frame_name=frame_name+"/", save_crops=save_crops)
+    save_crops = True
+    mask_crops, crop = crop_from_one_img(tmp, crop, over, 1.0, folder_name=mask_folder, frame_name=frame_name+"/", save_crops=save_crops)
 
-    return mask_crops, scale_full_img
+    return mask_crops, scale_full_img, crop
 

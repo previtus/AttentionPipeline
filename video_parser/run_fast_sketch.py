@@ -41,7 +41,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     files = sorted(os.listdir(INPUT_FRAMES))
     frame_files = fnmatch.filter(files, '*.jpg')
     annotation_files = fnmatch.filter(files, '*.xml')
-    print(frame_files[0:2], annotation_files[0:2])
+    print("jpgs:",frame_files[0:2],"...","xmls:",annotation_files[0:2],"...")
 
     start_frame = SETTINGS["startframe"]
     frame_files = frame_files[start_frame:]
@@ -61,7 +61,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             start = timer()
 
             frame_path = INPUT_FRAMES + frame_files[frame_i]
-            mask_crops, scale_full_img = mask_from_one_frame(frame_path, SETTINGS, mask_crop_folder)
+            mask_crops, scale_full_img, attention_crop_tmp = mask_from_one_frame(frame_path, SETTINGS, mask_crop_folder) ### <<< mask_crops
             mask_crops_per_frames.append(mask_crops)
             mask_crops_number_per_frames.append(len(mask_crops))
             scales_per_frames.append(scale_full_img)
@@ -73,9 +73,12 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         print("")
 
         # 2 eval these
+        # calculate
+        SETTINGS["attention_crop"] = attention_crop_tmp
         masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crops_number_per_frames, mask_crops_per_frames,1.0,SETTINGS["attention_crop"], INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0, anchors_txt=SETTINGS["anchorfile"])
 
         # 3 make mask images accordingly
+        print(output_measurement_viz + frame_files[0])
         tmp_mask_just_to_save_it_for_debug = mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[0], output_measurement_viz + frame_files[0],
                                                 bboxes_per_frames[0],scales_per_frames[0], SETTINGS["extend_mask_by"])
 
@@ -108,12 +111,13 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
             img = Image.open(frame_path)
             mask = bboxes_to_mask(bboxes, img.size, scale, SETTINGS["extend_mask_by"])
 
-            crops = crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"],
+            mask_over = 0.1 #SETTINGS["over"]
+            crops, crop_TMP = crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, crops_folder, SETTINGS["crop"], mask_over,
                                                  SETTINGS["scale"], show = False, save_crops=False, save_visualization=save_one_crop_vis,
                                                  viz_path=output_measurement_viz)
 
         else:
-            crops = crop_from_one_frame(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_visualization=save_one_crop_vis, save_crops=False, viz_path=output_measurement_viz)
+            crops, crop_TMP = crop_from_one_frame(frame_path, crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"], show=False, save_visualization=save_one_crop_vis, save_crops=False, viz_path=output_measurement_viz)
 
         crop_per_frames.append(crops)
         crop_number_per_frames.append(len(crops))
@@ -122,6 +126,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         end = timer()
         time = (end - start)
         summed_croping_time.append(time)
+
+    SETTINGS["crop"] = crop_TMP
 
 
     tmp_crops = crop_from_one_frame(INPUT_FRAMES + frame_files[0], crops_folder, SETTINGS["crop"], SETTINGS["over"], SETTINGS["scale"],
@@ -357,12 +363,15 @@ if __name__ == '__main__':
     thickness = str(args.thickness).split(",")
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
 
-    #SETTINGS["crop"] = 1000
-    #SETTINGS["over"] = 0.65
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
-    #RUN_NAME = "_runPrjFix_"+day+month
-    SETTINGS["annotate_frames_with_gt"] = True
+    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/DrivingNY/input/frames_0.2fps_236/"
+    SETTINGS["att_frame_spread"] = 1 # should be cca +-1 sec - so 30 in 30fps video
+
+    RUN_NAME = "___NewTestsDELETE_"
+    SETTINGS["crop"] = 1000
+    SETTINGS["over"] = 0.2
+
+    SETTINGS["startframe"] = 220
+    SETTINGS["attention"] = True
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
-
