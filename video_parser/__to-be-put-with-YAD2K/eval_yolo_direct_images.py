@@ -15,7 +15,7 @@ from yad2k.models.keras_yolo import yolo_eval, yolo_head
 from timeit import default_timer as timer
 
 
-def _main(args, frames_paths, crops_bboxes, crop_value, resize_frames=None, verbose=1, person_only=True):
+def _main(args, frames_paths, crops_bboxes, crop_value, resize_frames=None, verbose=1, person_only=True, allowed_number_of_boxes=100):
     '''
 
     :param args: yolo model args like in YAD2K
@@ -89,13 +89,14 @@ def _main(args, frames_paths, crops_bboxes, crop_value, resize_frames=None, verb
         input_image_shape,
         score_threshold=args["score_threshold"],
         iou_threshold=args["iou_threshold"],
-        max_boxes=50)
+        max_boxes=allowed_number_of_boxes)
 
     pureEval_times = []
     ioPlusEval_times = []
     bboxes = []
 
     images_processed = 0
+    evaluation_time = 0
 
     ### PROCESS FILES
     for frame_i in range(0,len(frames_paths)):
@@ -125,7 +126,7 @@ def _main(args, frames_paths, crops_bboxes, crop_value, resize_frames=None, verb
 
             #area = (int(w_crop[0]), int(h_crop[0]), int(w_crop[0] + scale * crop), int(h_crop[0] + scale * crop))
             cropped_img = frame.crop(box=area)
-            cropped_img = cropped_img.resize((crop_value, crop_value), resample=Image.ANTIALIAS)
+            cropped_img = cropped_img.resize((int(crop_value), int(crop_value)), resample=Image.ANTIALIAS)
             cropped_img.load()
 
             image = cropped_img

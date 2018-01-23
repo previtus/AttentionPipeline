@@ -45,6 +45,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     start_frame = SETTINGS["startframe"]
     frame_files = frame_files[start_frame:]
+    allowed_number_of_boxes = SETTINGS["allowed_number_of_boxes"]
 
     print("################## Mask generation ##################")
 
@@ -74,7 +75,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         # 2 eval these
         # calculate
-        masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crops_number_per_frames, mask_crops_per_frames,attention_crop_TMP_SIZE_FOR_MODEL, INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, VERBOSE=0, anchors_txt=SETTINGS["anchorfile"])
+        masks_evaluation_times, masks_additional_times, bboxes_per_frames = run_yolo(mask_crops_number_per_frames, mask_crops_per_frames,attention_crop_TMP_SIZE_FOR_MODEL, INPUT_FRAMES,frame_files,resize_frames=scales_per_frames, allowed_number_of_boxes=allowed_number_of_boxes, VERBOSE=0, anchors_txt=SETTINGS["anchorfile"])
 
         # 3 make mask images accordingly
         save_masks = SETTINGS["debug_save_masks"]
@@ -155,7 +156,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     print("")
     print("################## Running Model ##################")
 
-    pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crop_number_per_frames, crop_per_frames, crop_TMP_SIZE_FOR_MODEL, INPUT_FRAMES,frame_files,anchors_txt=SETTINGS["anchorfile"])
+    pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crop_number_per_frames, crop_per_frames, crop_TMP_SIZE_FOR_MODEL, INPUT_FRAMES,frame_files,anchors_txt=SETTINGS["anchorfile"], allowed_number_of_boxes=allowed_number_of_boxes)
     num_frames = len(crop_number_per_frames)
     num_crops = len(crop_per_frames[0])
 
@@ -227,8 +228,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
 
     print("################## Annotating frames ##################")
-
-    iou_threshold = 0.5
+    iou_threshold = 0.5 # towards 0.01 its more drastic and deletes more bboxes which are overlapped
     limit_prob_lowest = 0 #0.70 # inside we limited for 0.3
 
     print_first = True
@@ -268,7 +268,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                 a = ['person',nms_arrays[j],0.0,person_id]
                 reduced_bboxes_1.append(a)
             """
-            nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,50,iou_threshold)
+            nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,allowed_number_of_boxes,iou_threshold)
             reduced_bboxes_2 = []
             for j in range(0,len(nms_arrays)):
                 a = ['person',nms_arrays[j],scores[j],person_id]
@@ -378,6 +378,7 @@ if __name__ == '__main__':
     SETTINGS["att_frame_spread"] = int(args.attframespread)
     thickness = str(args.thickness).split(",")
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
+    SETTINGS["allowed_number_of_boxes"] = 500
 
     SETTINGS["debug_save_masks"] = args.debug_save_masks
     SETTINGS["debug_save_crops"] = (args.debug_save_crops == 'True')

@@ -7,7 +7,7 @@ import numpy as np
 
 #@profile
 def run_yolo(num_crops_per_frames, crop_per_frames, fixbb_crop, INPUT_FRAMES, frame_files, resize_frames=None, show_viz = False,
-             model_h5='yolo.h5', anchors_txt='yolo_anchors.txt', VERBOSE=1):
+             model_h5='yolo.h5', anchors_txt='yolo_anchors.txt', allowed_number_of_boxes=100, VERBOSE=1):
 
     yolo_paths = ["/home/ekmek/YAD2K/", "/home/vruzicka/storage_pylon2/YAD2K/"]
 
@@ -42,7 +42,7 @@ def run_yolo(num_crops_per_frames, crop_per_frames, fixbb_crop, INPUT_FRAMES, fr
 
 
     full_path_frame_files = [INPUT_FRAMES + s for s in frame_files]
-    pureEval_times, ioPlusEval_times, bboxes = eval_yolo_direct_images._main(args, frames_paths=full_path_frame_files, crops_bboxes=crop_per_frames, crop_value=fixbb_crop, resize_frames=resize_frames, verbose=VERBOSE, person_only=True)
+    pureEval_times, ioPlusEval_times, bboxes = eval_yolo_direct_images._main(args, frames_paths=full_path_frame_files, crops_bboxes=crop_per_frames, crop_value=fixbb_crop, resize_frames=resize_frames, verbose=VERBOSE, person_only=True, allowed_number_of_boxes=allowed_number_of_boxes)
 
     bboxes_per_frames = []
     for i in range(0,num_frames):
