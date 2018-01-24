@@ -14,6 +14,7 @@ from yolo_handler import run_yolo
 from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_evaluated_bboxes, bboxes_to_mask, annotate_prepare
 from visualize_time_measurement import visualize_time_measurements
 from nms import py_cpu_nms, non_max_suppression_tf
+from bbox_postprocessing import postprocess_bboxes_by_splitlines
 from data_handler import save_string_to_file
 
 
@@ -155,6 +156,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     # Run YOLO on crops
     print("")
     print("################## Running Model ##################")
+    print("Crop size = ", crop_TMP_SIZE_FOR_MODEL)
 
     pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crop_number_per_frames, crop_per_frames, crop_TMP_SIZE_FOR_MODEL, INPUT_FRAMES,frame_files,anchors_txt=SETTINGS["anchorfile"], allowed_number_of_boxes=allowed_number_of_boxes)
     num_frames = len(crop_number_per_frames)
@@ -241,6 +243,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     for frame_i in range(0,len(frame_files)):
         test_bboxes = bboxes_per_frames[frame_i]
+        from_number = len(test_bboxes)
 
         arrays = []
         scores = []
@@ -275,6 +278,11 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                 reduced_bboxes_2.append(a)
 
             test_bboxes = reduced_bboxes_2
+
+        print("in frame", frame_i, "reduced from", from_number, "to", len(test_bboxes), "bounding boxes with NMS.")
+
+        add_test_bboxes = postprocess_bboxes_by_splitlines(crop_per_frames[frame_i], crop_size=crop_TMP_SIZE_FOR_MODEL, overlap_px_h=SETTINGS["overlap_px"])
+        test_bboxes += add_test_bboxes
 
         if print_first:
             print("Annotating with bboxes of len: ", len(test_bboxes) ,"files in:", INPUT_FRAMES + frame_files[frame_i], ", out:", output_frames_folder + frame_files[frame_i])
