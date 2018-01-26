@@ -166,5 +166,5 @@ venv.bak/
 *.txt
 *.npy
 *.mp4
-
+*.xml
 
