@@ -75,7 +75,7 @@ def vertical_splitline_between(a,b):
 
     return [left, middle, right, middle]
 
-def postprocess_bboxes_by_splitlines(cropboxes, crop_size, overlap_px_h):
+def get_splitlines(cropboxes):
     # structure of bounding box = top, left, bottom, right, (top < bottom), (left < right)
     # structure of crop = left, bottom, right, top, (bottom < top),(left < bottom)
 
@@ -130,11 +130,105 @@ def postprocess_bboxes_by_splitlines(cropboxes, crop_size, overlap_px_h):
     #print("pre splitlines", len(final_list), final_list)
     #final_list = set(tuple(i) for i in final_list)
 
-    splitlines = final_list
     print("final splitlines", len(splitlines), splitlines)
+    splitlines = final_list
+    return splitlines
+
+def process_bboxes_near_splitlines(splitlines, bboxes, crop_size, overlap_px_h, threshold_for_ratio):
+    # for each suspicious line
+    debug = []
+
+    for splitline in splitlines:
+        print("splitline", splitline)
+        # find all bboxes above and bellow with distance < overlap
+        split_height = splitline[1]
+
+        bellow_bboxes = []
+        allowed_bellow = []
+        above_bboxes = []
+        allowed_above = []
+
+        for bbox in bboxes:
+            print(bbox)
+            # bounding box = top, left, bottom, right
+            # distance between bbox <> splitline
+            top = bbox[1][0]
+            bottom = bbox[1][2]
+            d1 = abs(top - split_height)
+            d2 = abs(bottom - split_height)
+            d = min(d1,d2)
+
+            if d < overlap_px_h:
+                # eliminate those with wrong aspect ratio
+                w = abs(bbox[1][1] - bbox[1][3])
+                h = abs(bbox[1][0] - bbox[1][2])
+
+                #print("h,w,h/w",h,w,(h/w))
+
+                half = (top + bottom) / 2.0
+                side = split_height - half
+                print("side", side)
+
+                # sign of side -> negative: bellow, positive: above
+                condition = ((h / w) > threshold_for_ratio)
+
+                if side < 0.0:
+                    bellow_bboxes.append(bbox)
+                    allowed_bellow.append(not condition)
+                else:
+                    above_bboxes.append(bbox)
+                    allowed_above.append(not condition)
+
+        close_bboxes = []
+        # for each couple <above>, <bellow> we see if they are close and at least one is allowed
+        for a, above in enumerate(above_bboxes):
+            for b, bellow in enumerate(bellow_bboxes):
+                if allowed_above[a] or allowed_bellow[b]:
+                    # if these two are close enough - vertically + horizontally
+
+                    # bounding box = top, left, bottom, right
+                    h1 = abs(above[1][0] - bellow[1][2])  # top1 - bottom2
+                    h2 = abs(above[1][2] - bellow[1][0])  # bottom1 - top2
+                    h = min(h1, h2)
+
+                    l = abs(above[1][1] - bellow[1][1])  # left1 - left2
+                    r = abs(above[1][3] - bellow[1][3])  # right1 - right2
+
+                    ### THRESHOLDs
+                    # h < L*overlap_px_h
+                    # l + r < K*overlap_px_h
+                    H_multiple = 2.0
+                    W_multiple = 4.0
+
+                    if h < H_multiple * overlap_px_h:
+                        if (l+r) < W_multiple * overlap_px_h:
+
+                            # top, left, bottom, right (bottom < top),(left < bottom)
+                            top = min(above[1][0], bellow[1][0])
+                            left = min(above[1][1], bellow[1][1])
+                            bottom = max(above[1][2], bellow[1][2])
+                            right = max(above[1][3], bellow[1][3])
+                            location_merge = [top,left,bottom,right]
+                            probability_merge = (above[2] + bellow[2]) / 2.0 # IDK
+                            merged_bbox = ['person', location_merge, probability_merge, 9]
+
+                            close_bboxes.append(above)
+                            close_bboxes.append(bellow)
+                            close_bboxes.append(merged_bbox)
+
+        debug += close_bboxes
+    return debug
+
+def postprocess_bboxes_by_splitlines(cropboxes, bboxes, crop_size, overlap_px_h):
+    # structure of bounding box = top, left, bottom, right, (top < bottom), (left < right)
+    # structure of crop = left, bottom, right, top, (bottom < top),(left < bottom)
+    threshold_for_ratio = 2.0
+
+    splitlines = get_splitlines(cropboxes)
+
+    close_bboxes = process_bboxes_near_splitlines(splitlines, bboxes, crop_size, overlap_px_h, threshold_for_ratio)
 
     debug_add = []
-
     for splitline in splitlines:
 
         left = splitline[0]
@@ -144,4 +238,4 @@ def postprocess_bboxes_by_splitlines(cropboxes, crop_size, overlap_px_h):
 
         debug_add.append(['person', [top, left, bottom, right], 1.0, 6])
 
-    return debug_add
+    return close_bboxes+debug_add

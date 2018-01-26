@@ -1,4 +1,13 @@
 import os
+import numpy as np
+
+def saveDict(dict, filename):
+    to_be_saved = data = {'S': dict}
+    np.save(open(filename, 'wb'), to_be_saved)
+
+def loadDict(filename):
+    loaded = np.load(open(filename, 'rb'))
+    return loaded[()]['S']
 
 def save_string_to_file(strings, file):
     text_file = open(file, "w")
