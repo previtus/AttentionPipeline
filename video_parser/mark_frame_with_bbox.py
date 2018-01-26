@@ -68,7 +68,6 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ig
         right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
         #print(label, (left, top), (right, bottom))
 
-        # My kingdom for a good redistributable image drawing library.
         for i in range(thickness_val):
             #rect = [left + i, top + i, right - i, bottom - i]
             #color = colors[c]
