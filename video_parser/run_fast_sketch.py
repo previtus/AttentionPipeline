@@ -22,14 +22,14 @@ from data_handler import save_string_to_file, saveDict, loadDict
 #@profile
 def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     video_file_root_folder = str(Path(INPUT_FRAMES).parents[1])
-    output_frames_folder = video_file_root_folder + "/output" + RUN_NAME + "/frames/"
-    output_measurement_viz = video_file_root_folder + "/output" + RUN_NAME + "/graphs"
-    output_annotation = video_file_root_folder + "/output" + RUN_NAME + "/annot"
-    output_savedLastExp = video_file_root_folder + "/output" + RUN_NAME + "/_lastExpiment.npy"
+    output_frames_folder = video_file_root_folder + "/output/" + RUN_NAME + "/frames/"
+    output_measurement_viz = video_file_root_folder + "/output/" + RUN_NAME + "/graphs"
+    output_annotation = video_file_root_folder + "/output/" + RUN_NAME + "/annot"
+    output_savedLastExp = video_file_root_folder + "/output/" + RUN_NAME + "/_lastExpiment.npy"
 
-    mask_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/masks/"
-    mask_crop_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/mask_crops/" # useless, but maybe for debug later
-    crops_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/crops/" # also useless, but maybe for debug later
+    mask_folder = video_file_root_folder + "/temporary/"+RUN_NAME+"/masks/"
+    mask_crop_folder = video_file_root_folder + "/temporary/"+RUN_NAME+"/mask_crops/" # useless, but maybe for debug later
+    crops_folder = video_file_root_folder + "/temporary/"+RUN_NAME+"/crops/" # also useless, but maybe for debug later
     for folder in [output_frames_folder]:
         if not os.path.exists(folder):
             os.makedirs(folder)
