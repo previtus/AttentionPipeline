@@ -9,13 +9,9 @@ output_model_predictions_folder = '/home/ekmek/intership_project/video_parser/_v
 gt_path_folder = '/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames_all/'
 output_model_predictions_folder = '/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/output_annotation_results/'
 
-#HAND
-#gt_path_folder = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/hand_annot/"
-#output_model_predictions_folder = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/output_annotation_results_small/"
-
-#AUTO
-#gt_path_folder = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/auto_annot/"
-#output_model_predictions_folder = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/output_annotation_results_small_auto/"
+# EXAMPLE
+gt_path_folder = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/input/auto_annot/"
+output_model_predictions_folder = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/output_annotation_results/"
 
 
 imagesetfile = output_model_predictions_folder+"annotnames.txt"

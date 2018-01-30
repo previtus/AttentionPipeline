@@ -80,9 +80,11 @@ def redraw(plt, column_list, row_list):
 
 w = 3840
 h = 2160
-overlap = 0
+w = 7680
+h = 4320
+overlap = 20
 
-n = 2
+n = 6
 column_list, row_list = best_squares_overlap(w, h, n, overlap)
 
 print(column_list)
