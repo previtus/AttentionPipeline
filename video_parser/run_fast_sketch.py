@@ -414,7 +414,7 @@ if __name__ == '__main__':
     INPUT_FRAMES = args.input
     RUN_NAME = args.name
     SETTINGS = {}
-    SETTINGS["attention_horizontal_splits"] = float(args.atthorizontal_splits)
+    SETTINGS["attention_horizontal_splits"] = int(args.atthorizontal_splits)
     SETTINGS["overlap_px"] = int(args.overlap_px)
     SETTINGS["horizontal_splits"] = int(args.horizontal_splits)
     SETTINGS["anchorfile"] = args.anchorf
