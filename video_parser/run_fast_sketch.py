@@ -444,20 +444,21 @@ if __name__ == '__main__':
     #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames_all/"
     #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/hand_annot/"
     #INPUT_FRAMES = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/input/auto_annot/"
-    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/test_nms/input/frames3/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/input/frames_29b/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/test_nms/input/frames/"
+    #SETTINGS["debug_color_postprocessed_bboxes"] = True
 
-    RUN_NAME = "_testNMSworking_v3"
-    #RUN_NAME = "_variableResolution_2att_6high_allow500bboxes"
+    #RUN_NAME = "___testSavingNpyDEL"
 
-    SETTINGS["attention"] = True
+    #SETTINGS["attention"] = True
     #SETTINGS["attention"] = False
     #SETTINGS["annotate_frames_with_gt"] = True
 
-    SETTINGS["attention_horizontal_splits"] = 2
-    SETTINGS["horizontal_splits"] = 6
+    #SETTINGS["attention_horizontal_splits"] = 2
+    #SETTINGS["horizontal_splits"] = 4
     #SETTINGS["overlap_px"] = 20
 
-    SETTINGS["reuse_last_experiment"] = True
+    #SETTINGS["reuse_last_experiment"] = True
 
     print(RUN_NAME, SETTINGS)
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)

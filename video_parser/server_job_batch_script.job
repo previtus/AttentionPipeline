@@ -11,17 +11,16 @@ module load keras/2.0.6_anaconda
 source activate $KERAS_ENV
 cd /home/vruzicka/intership_project/video_parser
 
-NAME = _NYStreet_testingBatchCode
-INPUT = "$PROJECT/_videos_files/DrivingNY/input/frames_0.2fps_236/"
-OUTPUT = "$PROJECT/_videos_files/DrivingNY/output/$NAME/"
+NAME=_NYStreet_testingBatchCode
+INPUT="$PROJECT/_videos_files/DrivingNY/input/frames_0.2fps_236/"
+OUTPUT="$PROJECT/_videos_files/DrivingNY/output/$NAME/"
 
 #copy files to fast storage
-cd $SCRATCH
 mkdir -p $SCRATCH/input/
 cp -R $INPUT $SCRATCH/input/
 
 #run program
-python run_fast_sketch.py -attention_horizontal_splits 2 -horizontal_splits 4 -input $INPUT -name $NAME
+python run_fast_sketch.py -atthorizontal_splits 2 -horizontal_splits 4 -input $INPUT -name $NAME
 
 #copy results back to permanent storage
 cp -R $SCRATCH/output/$NAME/ $OUTPUT
