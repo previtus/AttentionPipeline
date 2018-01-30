@@ -130,26 +130,30 @@ def get_splitlines(cropboxes):
     #print("pre splitlines", len(final_list), final_list)
     #final_list = set(tuple(i) for i in final_list)
 
-    print("final splitlines", len(splitlines), splitlines)
+    #print("final splitlines", len(splitlines), splitlines)
     splitlines = final_list
     return splitlines
 
-def process_bboxes_near_splitlines(splitlines, bboxes, crop_size, overlap_px_h, threshold_for_ratio):
+def process_bboxes_near_splitlines(splitlines, bboxes, overlap_px_h, threshold_for_ratio, DEBUG_POSTPROCESS_COLOR):
     # for each suspicious line
+    new_bounding_boxes = []
+    indices_to_cancel = []
     debug = []
 
     for splitline in splitlines:
-        print("splitline", splitline)
+        #print("splitline", splitline)
         # find all bboxes above and bellow with distance < overlap
         split_height = splitline[1]
 
         bellow_bboxes = []
         allowed_bellow = []
+        bellow_indices = []
         above_bboxes = []
         allowed_above = []
+        above_indices = []
 
-        for bbox in bboxes:
-            print(bbox)
+        for i, bbox in enumerate(bboxes):
+            #print(bbox)
             # bounding box = top, left, bottom, right
             # distance between bbox <> splitline
             top = bbox[1][0]
@@ -167,16 +171,18 @@ def process_bboxes_near_splitlines(splitlines, bboxes, crop_size, overlap_px_h, 
 
                 half = (top + bottom) / 2.0
                 side = split_height - half
-                print("side", side)
+                #print("side", side)
 
                 # sign of side -> negative: bellow, positive: above
                 condition = ((h / w) > threshold_for_ratio)
 
                 if side < 0.0:
                     bellow_bboxes.append(bbox)
+                    bellow_indices.append(i)
                     allowed_bellow.append(not condition)
                 else:
                     above_bboxes.append(bbox)
+                    above_indices.append(i)
                     allowed_above.append(not condition)
 
         close_bboxes = []
@@ -209,33 +215,48 @@ def process_bboxes_near_splitlines(splitlines, bboxes, crop_size, overlap_px_h, 
                             bottom = max(above[1][2], bellow[1][2])
                             right = max(above[1][3], bellow[1][3])
                             location_merge = [top,left,bottom,right]
-                            probability_merge = (above[2] + bellow[2]) / 2.0 # IDK
-                            merged_bbox = ['person', location_merge, probability_merge, 9]
+                            #probability_merge = (above[2] + bellow[2]) / 2.0 # Average
+                            probability_merge = max(above[2],bellow[2]) # Max
+                            color = 0
+                            if DEBUG_POSTPROCESS_COLOR:
+                                color = 9
+                            merged_bbox = ['person', location_merge, probability_merge, color]
 
                             close_bboxes.append(above)
                             close_bboxes.append(bellow)
-                            close_bboxes.append(merged_bbox)
+                            new_bounding_boxes.append(merged_bbox)
+                            i = above_indices[a]
+                            j = bellow_indices[b]
+                            indices_to_cancel.append(i)
+                            indices_to_cancel.append(j)
 
         debug += close_bboxes
-    return debug
 
-def postprocess_bboxes_by_splitlines(cropboxes, bboxes, crop_size, overlap_px_h):
+    keep_bboxes = []
+    for i, bbox in enumerate(bboxes):
+        if i not in indices_to_cancel:
+            keep_bboxes.append(bbox)
+
+    return new_bounding_boxes, keep_bboxes
+
+def postprocess_bboxes_by_splitlines(cropboxes, bboxes, overlap_px_h, DEBUG_POSTPROCESS_COLOR, DEBUG_SHOW_LINES=False):
     # structure of bounding box = top, left, bottom, right, (top < bottom), (left < right)
     # structure of crop = left, bottom, right, top, (bottom < top),(left < bottom)
     threshold_for_ratio = 2.0
 
     splitlines = get_splitlines(cropboxes)
 
-    close_bboxes = process_bboxes_near_splitlines(splitlines, bboxes, crop_size, overlap_px_h, threshold_for_ratio)
+    new_bounding_boxes, keep_bboxes = process_bboxes_near_splitlines(splitlines, bboxes, overlap_px_h, threshold_for_ratio, DEBUG_POSTPROCESS_COLOR)
 
     debug_add = []
-    for splitline in splitlines:
+    if DEBUG_SHOW_LINES:
+        for splitline in splitlines:
 
-        left = splitline[0]
-        bottom = splitline[1]
-        right = splitline[2]
-        top = splitline[3]
+            left = splitline[0]
+            bottom = splitline[1]
+            right = splitline[2]
+            top = splitline[3]
 
-        debug_add.append(['person', [top, left, bottom, right], 1.0, 6])
+            debug_add.append(['person', [top, left, bottom, right], 1.0, 6])
 
-    return close_bboxes+debug_add
+    return new_bounding_boxes+keep_bboxes+debug_add

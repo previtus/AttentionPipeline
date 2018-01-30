@@ -25,6 +25,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     output_frames_folder = video_file_root_folder + "/output" + RUN_NAME + "/frames/"
     output_measurement_viz = video_file_root_folder + "/output" + RUN_NAME + "/graphs"
     output_annotation = video_file_root_folder + "/output" + RUN_NAME + "/annot"
+    output_savedLastExp = video_file_root_folder + "/output" + RUN_NAME + "/_lastExpiment.npy"
 
     mask_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/masks/"
     mask_crop_folder = video_file_root_folder + "/temporary"+RUN_NAME+"/mask_crops/" # useless, but maybe for debug later
@@ -247,12 +248,13 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         dict["bboxes_per_frames"] = bboxes_per_frames
         dict["crop_per_frames"] = crop_per_frames
         dict["crop_TMP_SIZE_FOR_MODEL"] = crop_TMP_SIZE_FOR_MODEL
-        saveDict(dict,"_lastExpiment.npy")
+        saveDict(dict,output_savedLastExp)
         #saveDict, loadDict
 
-    else:
+    else: # reuse_last_experiment is True
+        print("#!!!!!!!!!!!!!!# WARNING, reusing last experiment #!!!!!!!!!!!!!!#")
         print("################## Loading Last Experiment info ##################")
-        dict = loadDict("_lastExpiment.npy")
+        dict = loadDict(output_savedLastExp)
         bboxes_per_frames = dict["bboxes_per_frames"]
         crop_per_frames = dict["crop_per_frames"]
         crop_TMP_SIZE_FOR_MODEL = dict["crop_TMP_SIZE_FOR_MODEL"]
@@ -313,9 +315,10 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
         print("in frame", frame_i, "reduced from", from_number, "to", len(test_bboxes), "bounding boxes with NMS.")
 
-        add_test_bboxes = postprocess_bboxes_by_splitlines(crop_per_frames[frame_i], test_bboxes, crop_size=crop_TMP_SIZE_FOR_MODEL, overlap_px_h=SETTINGS["overlap_px"])
-        #test_bboxes += add_test_bboxes
-        test_bboxes = add_test_bboxes
+        if SETTINGS["postprocess_merge_splitline_bboxes"]:
+            replace_test_bboxes = postprocess_bboxes_by_splitlines(crop_per_frames[frame_i], test_bboxes, overlap_px_h=SETTINGS["overlap_px"], DEBUG_POSTPROCESS_COLOR=SETTINGS["debug_color_postprocessed_bboxes"])
+            #test_bboxes += replace_test_bboxes
+            test_bboxes = replace_test_bboxes
 
         if print_first:
             print("Annotating with bboxes of len: ", len(test_bboxes) ,"files in:", INPUT_FRAMES + frame_files[frame_i], ", out:", output_frames_folder + frame_files[frame_i])
@@ -396,9 +399,11 @@ parser.add_argument('-startframe', help='start from frame index', default='0')
 parser.add_argument('-attframespread', help='look at attention map of this many nearby frames - minus and plus', default='0')
 parser.add_argument('-annotategt', help='annotate frames with ground truth', default='False')
 parser.add_argument('-reuse_last_experiment', help='Reuse last experiments bounding boxes? Skips the whole evaluation part.', default='False')
+parser.add_argument('-postprocess_merge_splitline_bboxes', help='PostProcessing merging closeby bounding boxes found on the edges of crops.', default='True')
 
 parser.add_argument('-debug_save_masks', help='DEBUG save masks? BW outlines of attention model. accepts "one" or "all"', default='one')
 parser.add_argument('-debug_save_crops', help='DEBUG save crops? Attention models crops. accepts "one" or "all"', default='False')
+parser.add_argument('-debug_color_postprocessed_bboxes', help='DEBUG color postprocessed bounding boxes?', default='False')
 
 parser.add_argument('-anchorf', help='anchor file', default='yolo_anchors.txt')
 
@@ -422,9 +427,11 @@ if __name__ == '__main__':
     SETTINGS["thickness"] = [float(thickness[0]), float(thickness[1])]
     SETTINGS["allowed_number_of_boxes"] = 500
     SETTINGS["reuse_last_experiment"] = (args.reuse_last_experiment == 'True')
+    SETTINGS["postprocess_merge_splitline_bboxes"] = (args.postprocess_merge_splitline_bboxes == 'True')
 
     SETTINGS["debug_save_masks"] = args.debug_save_masks
     SETTINGS["debug_save_crops"] = (args.debug_save_crops == 'True')
+    SETTINGS["debug_color_postprocessed_bboxes"] = (args.debug_color_postprocessed_bboxes == 'True')
 
     #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/liverpool_station_8k/input/frames_24fps/"
     #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/hall_london_8k/inputs/frames_24fps/"
