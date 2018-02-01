@@ -41,7 +41,7 @@ Works with high resolution videos, respectively with the individual frames saved
 We can convert the resulting annotated output frames back into video.
 
 **[Video to frames]** 30 images every second (30 fps, can be changed), named frames/0001.jpg, frames/0002.jpg, ...
-- `ffmpeg -i VIDEO.mp4 -vf fps=30 frames/%04d.jpg`
+- `ffmpeg -i VIDEO.mp4 -qscale:v 5 -vf fps=30 frames/%04d.jpg`
 
 **[Frames to video]** Keep the same framerate
 - `ffmpeg -r 30/1 -pattern_type glob -i 'frames/*.jpg' -c:v libx264 -vf fps=30 -pix_fmt yuv420p out_30fps.mp4`
@@ -63,7 +63,7 @@ output_model_predictions_folder = "/<path>/intership_project/_side_projects/anno
 
 As result we should see something like image in  *_side_projects/annotation_conversion/annotated examples/example_visualization_of_ap_measurement.jpg*
 
-- hand annotation possible with labelImg: https://github.com/tzutalin/labelImg
+- hand annotation possible with labelImg: https://github.com/tzutalin/labelImg (install with `pip install labelImg`)
 - automatic annotation of the "PNNL ParkingLot Pizza" dataset with _side_projects/annotation_conversion/convert_parking_lot_to_voc.py
 
 ## (optional) Time profiling
@@ -71,6 +71,5 @@ As result we should see something like image in  *_side_projects/annotation_conv
 I used kernprof from https://github.com/rkern/line_profiler#kernprof. Follow installation mentioned there (`pip install line_profiler`).
 - Put `@profile` before each function for profiling
 - Run `kernprof -l -v run_fast_sketch.py`
-
 
 
