@@ -11,8 +11,10 @@ module load keras/2.0.6_anaconda
 source activate $KERAS_ENV
 cd /home/vruzicka/intership_project/video_parser
 
-FOLDER=DrivingNY
-FRAMES=frames_0.2fps_236
+
+NAME=S1000040_5fps_2to4
+FOLDER=RuzickaDataset
+FRAMES=S1000040_5fps
 
 INPUT="$PROJECT/_videos_files/$FOLDER/input/$FRAMES/"
 INPUT_S="$SCRATCH/input/$FRAMES/"
@@ -26,7 +28,7 @@ cp -R $INPUT $SCRATCH/input/
 python run_fast_sketch.py -atthorizontal_splits 2 -horizontal_splits 4 -input $INPUT_S -name $NAME
 
 #copy results back to permanent storage
-cp -R $SCRATCH/output/$NAME/ $OUTPUT
+cp -R $SCRATCH/output/$NAME $OUTPUT
 
 # run this with: sbatch server_job_batch_script.job
 
