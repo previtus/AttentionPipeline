@@ -12,7 +12,7 @@ from PIL import Image
 from crop_functions import crop_from_one_frame, mask_from_one_frame, crop_from_one_frame_WITH_MASK_in_mem, get_number_of_crops_from_frame
 from yolo_handler import run_yolo
 from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_evaluated_bboxes, bboxes_to_mask, annotate_prepare
-from visualize_time_measurement import visualize_time_measurements
+from visualize_time_measurement import visualize_time_measurements, visualize_as_histogram
 from nms import py_cpu_nms, non_max_suppression_tf
 from bbox_postprocessing import postprocess_bboxes_by_splitlines
 from data_handler import save_string_to_file, saveDict, loadDict
@@ -47,6 +47,10 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     frame_files = frame_files[start_frame:]
     allowed_number_of_boxes = SETTINGS["allowed_number_of_boxes"]
 
+    # fill these in code, later print them for statistics
+    number_of_crops_attention = []
+    number_of_crops_evaluation = []
+
     if not SETTINGS["reuse_last_experiment"]:
         print("################## Mask generation ##################")
 
@@ -63,6 +67,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                 start = timer()
 
                 frame_path = INPUT_FRAMES + frame_files[frame_i]
+                # working with many large files - relatively slow
                 mask_crops, scale_full_img, attention_crop_TMP_SIZE_FOR_MODEL = mask_from_one_frame(frame_path,
                               SETTINGS, mask_crop_folder)  ### <<< mask_crops
                 mask_crops_per_frames.append(mask_crops)
@@ -74,6 +79,8 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                 summed_mask_croping_time.append(time)
 
             print("")
+
+            number_of_crops_attention = mask_crops_number_per_frames
 
             # 2 eval these
             # calculate
@@ -96,7 +103,7 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                 tmp_mask_just_to_save_it_for_debug = mask_from_evaluated_bboxes(INPUT_FRAMES + frame_files[i],
                       output_measurement_viz + frame_files[i], bboxes_per_frames[i], scales_per_frames[i], 0)  # SETTINGS["extend_mask_by"]
 
-        print("################## Cropping frames ##################")
+        print("################## Cropping frames : extracting crops from images ##################")
         print("##", len(frame_files), "of frames")
         crop_per_frames = []
         crop_number_per_frames = []
@@ -159,97 +166,113 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         #                            show=False, save_visualization=False, save_crops=False,viz_path='')
         # max_number_of_crops_per_frame = len(tmp_crops)
 
-        # Run YOLO on crops
-        print("")
-        print("################## Running Model ##################")
-        print("Crop size = ", crop_TMP_SIZE_FOR_MODEL)
+        number_of_crops_evaluation = crop_number_per_frames
 
-        pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crop_number_per_frames, crop_per_frames,
-                                                                       crop_TMP_SIZE_FOR_MODEL, INPUT_FRAMES,
-                                                                       frame_files, anchors_txt=SETTINGS["anchorfile"],
-                                                                       allowed_number_of_boxes=allowed_number_of_boxes)
-        num_frames = len(crop_number_per_frames)
-        num_crops = len(crop_per_frames[0])
+        if not SETTINGS["debug_just_count_hist"]:
+            # Run YOLO on crops
+            print("")
+            print("################## Running Model ##################")
+            print("Crop size = ", crop_TMP_SIZE_FOR_MODEL)
 
-        print("################## Save Graphs ##################")
+            pureEval_times, ioPlusEval_times, bboxes_per_frames = run_yolo(crop_number_per_frames, crop_per_frames,
+                                                                           crop_TMP_SIZE_FOR_MODEL, INPUT_FRAMES,
+                                                                           frame_files, anchors_txt=SETTINGS["anchorfile"],
+                                                                           allowed_number_of_boxes=allowed_number_of_boxes)
+            num_frames = len(crop_number_per_frames)
+            num_crops = len(crop_per_frames[0])
 
-        print(len(pureEval_times), pureEval_times[0:3])
+            print("################## Save Graphs ##################")
 
-        # evaluation_times[0] = evaluation_times[1] # ignore first large value
-        # masks_evaluation_times[0] = masks_evaluation_times[1] # ignore first large value
-        visualize_time_measurements([pureEval_times], ["Evaluation"], "Time measurements all frames", show=False,
-                                    save=True, save_path=output_measurement_viz + '_1.png', y_min=0.0, y_max=0.5)
-        visualize_time_measurements([pureEval_times], ["Evaluation"], "Time measurements all frames", show=False,
-                                    save=True, save_path=output_measurement_viz + '_1.png', y_min=0.0, y_max=0.0)
+            print(len(pureEval_times), pureEval_times[0:3])
 
-        last = 0
-        summed_frame_measurements = []
-        for f in range(0, num_frames):
-            till = crop_number_per_frames[f]
-            sub = pureEval_times[last:last + till]
-            summed_frame_measurements.append(sum(sub))
-            # print(last,till,sum(sub))
-            last = till
+            # evaluation_times[0] = evaluation_times[1] # ignore first large value
+            # masks_evaluation_times[0] = masks_evaluation_times[1] # ignore first large value
+            visualize_time_measurements([pureEval_times], ["Evaluation"], "Time measurements all frames", show=False,
+                                        save=True, save_path=output_measurement_viz + '_1.png', y_min=0.0, y_max=0.5)
+            visualize_time_measurements([pureEval_times], ["Evaluation"], "Time measurements all frames", show=False,
+                                        save=True, save_path=output_measurement_viz + '_1.png', y_min=0.0, y_max=0.0)
 
-        if attention_model:
             last = 0
-            summed_mask_measurements = []
+            summed_frame_measurements = []
             for f in range(0, num_frames):
-                till = mask_crops_number_per_frames[f]
-                sub = masks_evaluation_times[last:last + till]
-                summed_mask_measurements.append(sum(sub))
+                till = crop_number_per_frames[f]
+                sub = pureEval_times[last:last + till]
+                summed_frame_measurements.append(sum(sub))
                 # print(last,till,sum(sub))
                 last = till
 
-        avg_time_crop = np.mean(pureEval_times[1:])
-        max_time_per_frame_estimate = max_number_of_crops_per_frame * avg_time_crop
-        estimated_max_time_per_frame = [max_time_per_frame_estimate] * num_frames
+            if attention_model:
+                last = 0
+                summed_mask_measurements = []
+                for f in range(0, num_frames):
+                    till = mask_crops_number_per_frames[f]
+                    sub = masks_evaluation_times[last:last + till]
+                    summed_mask_measurements.append(sum(sub))
+                    # print(last,till,sum(sub))
+                    last = till
 
-        if attention_model:
-            arrs = [summed_frame_measurements, summed_mask_measurements, summed_croping_time, summed_mask_croping_time,
-                    ioPlusEval_times, masks_additional_times, estimated_max_time_per_frame]
-            names = ['image eval', 'mask eval', 'cropping image', 'cropping mask', 'image eval+io', 'mask eval+io',
-                     'estimated max']
-        else:
-            arrs = [summed_frame_measurements, summed_croping_time, ioPlusEval_times]
-            names = ['image eval', 'cropping image', 'image eval+io']
+            avg_time_crop = np.mean(pureEval_times[1:])
+            max_time_per_frame_estimate = max_number_of_crops_per_frame * avg_time_crop
+            estimated_max_time_per_frame = [max_time_per_frame_estimate] * num_frames
 
-        visualize_time_measurements(arrs, names, "Time measurements per frame", xlabel='frame #',
-                                    show=False, save=True, save_path=output_measurement_viz + '_3.png')
+            if attention_model:
+                arrs = [summed_frame_measurements, summed_mask_measurements, summed_croping_time, summed_mask_croping_time,
+                        ioPlusEval_times, masks_additional_times, estimated_max_time_per_frame]
+                names = ['image eval', 'mask eval', 'cropping image', 'cropping mask', 'image eval+io', 'mask eval+io',
+                         'estimated max']
+            else:
+                arrs = [summed_frame_measurements, summed_croping_time, ioPlusEval_times]
+                names = ['image eval', 'cropping image', 'image eval+io']
 
-        ## version b and c
-        if attention_model:
-            arrs = [summed_frame_measurements, summed_mask_measurements,
-                    ioPlusEval_times, masks_additional_times, estimated_max_time_per_frame]
-            names = ['image eval', 'mask eval', 'image eval+io', 'mask eval+io',
-                     'estimated max']
             visualize_time_measurements(arrs, names, "Time measurements per frame", xlabel='frame #',
-                                        show=False, save=True, save_path=output_measurement_viz + '_3b.png')
+                                        show=False, save=True, save_path=output_measurement_viz + '_3.png')
 
-            arrs = [summed_frame_measurements, summed_mask_measurements, estimated_max_time_per_frame]
-            names = ['image eval', 'mask eval', 'estimated max']
-            visualize_time_measurements(arrs, names, "Time measurements per frame", xlabel='frame #',
-                                        show=False, save=True, save_path=output_measurement_viz + '_3c.png')
+            ## save simpler graphs - versions b and c
+            if attention_model:
+                arrs = [summed_frame_measurements, summed_mask_measurements,
+                        ioPlusEval_times, masks_additional_times, estimated_max_time_per_frame]
+                names = ['image eval', 'mask eval', 'image eval+io', 'mask eval+io',
+                         'estimated max']
+                visualize_time_measurements(arrs, names, "Time measurements per frame", xlabel='frame #',
+                                            show=False, save=True, save_path=output_measurement_viz + '_3b.png')
 
-        # save settings
-        avg_time_frame = np.mean(summed_frame_measurements[1:])
-        strings = [RUN_NAME + " " + str(SETTINGS), INPUT_FRAMES,
-                   str(num_crops) + " crops per frame * " + str(num_frames) + " frames",
-                   "Time:" + str(avg_time_crop) + " avg per crop, " + str(avg_time_frame) + " avg per frame.",
-                   "Crop size in px was:" + str(crop_TMP_SIZE_FOR_MODEL) + "px."]
-        save_string_to_file(strings, output_measurement_viz + '_settings.txt')
+                arrs = [summed_frame_measurements, summed_mask_measurements, estimated_max_time_per_frame]
+                names = ['image eval', 'mask eval', 'estimated max']
+                visualize_time_measurements(arrs, names, "Time measurements per frame", xlabel='frame #',
+                                            show=False, save=True, save_path=output_measurement_viz + '_3c.png')
 
-        print("################## Saving Last Experiment info ##################")
-        print("bboxes_per_frames array", len(bboxes_per_frames[0]))
-        print("crop_per_frames array", len(crop_per_frames[0]))
-        print("crop_TMP_SIZE_FOR_MODEL", crop_TMP_SIZE_FOR_MODEL)
+            # save settings
+            avg_time_frame = np.mean(summed_frame_measurements[1:])
+            strings = [RUN_NAME + " " + str(SETTINGS), INPUT_FRAMES,
+                       str(num_crops) + " crops per frame * " + str(num_frames) + " frames",
+                       "Time:" + str(avg_time_crop) + " avg per crop, " + str(avg_time_frame) + " avg per frame.",
+                       "Crop size in px was:" + str(crop_TMP_SIZE_FOR_MODEL) + "px."]
+            save_string_to_file(strings, output_measurement_viz + '_settings.txt')
 
-        dict = {}
-        dict["bboxes_per_frames"] = bboxes_per_frames
-        dict["crop_per_frames"] = crop_per_frames
-        dict["crop_TMP_SIZE_FOR_MODEL"] = crop_TMP_SIZE_FOR_MODEL
-        saveDict(dict,output_savedLastExp)
-        #saveDict, loadDict
+            print("################## Saving Last Experiment info ##################")
+            print("bboxes_per_frames array", len(bboxes_per_frames[0]))
+            print("crop_per_frames array", len(crop_per_frames[0]))
+            print("crop_TMP_SIZE_FOR_MODEL", crop_TMP_SIZE_FOR_MODEL)
+
+            dict = {}
+            dict["bboxes_per_frames"] = bboxes_per_frames
+            dict["crop_per_frames"] = crop_per_frames
+            dict["crop_TMP_SIZE_FOR_MODEL"] = crop_TMP_SIZE_FOR_MODEL
+            saveDict(dict,output_savedLastExp)
+            #saveDict, loadDict
+
+        print("################## Save #Crops Histogram data ##################")
+        reasonable_i = min(5,len(number_of_crops_attention))
+        print("Crops per frames:")
+        print("number_of_crops_attention:", number_of_crops_attention[0:reasonable_i])
+        print("number_of_crops_evaluation:", number_of_crops_evaluation[0:reasonable_i])
+        print("max crops out of max possible crops:", max(number_of_crops_evaluation), "out of", max_number_of_crops_per_frame)
+        strings = [RUN_NAME+"_attention;"+";".join(str(x) for x in number_of_crops_attention),
+                   RUN_NAME+"_evaluation;"+";".join(str(x) for x in number_of_crops_evaluation),
+                   RUN_NAME+"_max_evaluation;"+str(max_number_of_crops_per_frame)]
+        save_string_to_file(strings, output_measurement_viz + '_'+RUN_NAME+'_histogram.csv')
+        visualize_as_histogram([number_of_crops_attention, number_of_crops_evaluation], ["Attention model number of crops", "Evaluation model number of crops"], "Histogram of active crops", xlabel='number of crops active',
+                                    show=False, save=True, save_path=output_measurement_viz + '_Hist.png')
 
     else: # reuse_last_experiment is True
         print("#!!!!!!!!!!!!!!# WARNING, reusing last experiment #!!!!!!!!!!!!!!#")
@@ -262,109 +285,109 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         print("crop_per_frames array", len(crop_per_frames[0]))
         print("crop_TMP_SIZE_FOR_MODEL", crop_TMP_SIZE_FOR_MODEL)
 
+    if not SETTINGS["debug_just_count_hist"]:
+        print("################## Annotating frames ##################")
+        iou_threshold = 0.5 # towards 0.01 its more drastic and deletes more bboxes which are overlapped
+        limit_prob_lowest = 0 #0.70 # inside we limited for 0.3
 
-    print("################## Annotating frames ##################")
-    iou_threshold = 0.5 # towards 0.01 its more drastic and deletes more bboxes which are overlapped
-    limit_prob_lowest = 0 #0.70 # inside we limited for 0.3
+        print_first = True
+        annotations_names_saved = []
+        annotations_lines_saved = []
 
-    print_first = True
-    annotations_names_saved = []
-    annotations_lines_saved = []
+        import tensorflow as tf
+        sess = tf.Session()
+        colors = annotate_prepare()
 
-    import tensorflow as tf
-    sess = tf.Session()
-    colors = annotate_prepare()
+        for frame_i in range(0,len(frame_files)):
+            test_bboxes = bboxes_per_frames[frame_i]
+            from_number = len(test_bboxes)
 
-    for frame_i in range(0,len(frame_files)):
-        test_bboxes = bboxes_per_frames[frame_i]
-        from_number = len(test_bboxes)
+            arrays = []
+            scores = []
+            for j in range(0,len(test_bboxes)):
+                if test_bboxes[j][0] == 'person':
+                    score = test_bboxes[j][2]
+                    if score > limit_prob_lowest:
+                        arrays.append(list(test_bboxes[j][1]))
+                        scores.append(score)
+            arrays = np.array(arrays)
 
-        arrays = []
-        scores = []
-        for j in range(0,len(test_bboxes)):
-            if test_bboxes[j][0] == 'person':
-                score = test_bboxes[j][2]
-                if score > limit_prob_lowest:
-                    arrays.append(list(test_bboxes[j][1]))
-                    scores.append(score)
-        arrays = np.array(arrays)
+            if len(arrays) == 0:
+                # no bboxes found in there, still we should copy the frame img
+                copyfile(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i])
+                continue
 
-        if len(arrays) == 0:
-            # no bboxes found in there, still we should copy the frame img
-            copyfile(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i])
-            continue
+            person_id = 0
 
-        person_id = 0
+            DEBUG_TURN_OFF_NMS = False
+            if not DEBUG_TURN_OFF_NMS:
+                """
+                nms_arrays = py_cpu_nms(arrays, iou_threshold)
+                reduced_bboxes_1 = []
+                for j in range(0,len(nms_arrays)):
+                    a = ['person',nms_arrays[j],0.0,person_id]
+                    reduced_bboxes_1.append(a)
+                """
+                nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,allowed_number_of_boxes,iou_threshold)
+                reduced_bboxes_2 = []
+                for j in range(0,len(nms_arrays)):
+                    a = ['person',nms_arrays[j],scores[j],person_id]
+                    reduced_bboxes_2.append(a)
 
-        DEBUG_TURN_OFF_NMS = False
-        if not DEBUG_TURN_OFF_NMS:
-            """
-            nms_arrays = py_cpu_nms(arrays, iou_threshold)
-            reduced_bboxes_1 = []
-            for j in range(0,len(nms_arrays)):
-                a = ['person',nms_arrays[j],0.0,person_id]
-                reduced_bboxes_1.append(a)
-            """
-            nms_arrays, scores = non_max_suppression_tf(sess, arrays,scores,allowed_number_of_boxes,iou_threshold)
-            reduced_bboxes_2 = []
-            for j in range(0,len(nms_arrays)):
-                a = ['person',nms_arrays[j],scores[j],person_id]
-                reduced_bboxes_2.append(a)
+                test_bboxes = reduced_bboxes_2
 
-            test_bboxes = reduced_bboxes_2
+            print("in frame", frame_i, "reduced from", from_number, "to", len(test_bboxes), "bounding boxes with NMS.")
 
-        print("in frame", frame_i, "reduced from", from_number, "to", len(test_bboxes), "bounding boxes with NMS.")
+            if SETTINGS["postprocess_merge_splitline_bboxes"]:
+                replace_test_bboxes = postprocess_bboxes_by_splitlines(crop_per_frames[frame_i], test_bboxes, overlap_px_h=SETTINGS["overlap_px"], DEBUG_POSTPROCESS_COLOR=SETTINGS["debug_color_postprocessed_bboxes"])
+                #test_bboxes += replace_test_bboxes
+                test_bboxes = replace_test_bboxes
 
-        if SETTINGS["postprocess_merge_splitline_bboxes"]:
-            replace_test_bboxes = postprocess_bboxes_by_splitlines(crop_per_frames[frame_i], test_bboxes, overlap_px_h=SETTINGS["overlap_px"], DEBUG_POSTPROCESS_COLOR=SETTINGS["debug_color_postprocessed_bboxes"])
-            #test_bboxes += replace_test_bboxes
-            test_bboxes = replace_test_bboxes
+            if print_first:
+                print("Annotating with bboxes of len: ", len(test_bboxes) ,"files in:", INPUT_FRAMES + frame_files[frame_i], ", out:", output_frames_folder + frame_files[frame_i])
+                print_first = False
 
-        if print_first:
-            print("Annotating with bboxes of len: ", len(test_bboxes) ,"files in:", INPUT_FRAMES + frame_files[frame_i], ", out:", output_frames_folder + frame_files[frame_i])
-            print_first = False
+            img = annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i], test_bboxes, colors,
+                                               draw_text=False, save=True, show=False, thickness=SETTINGS["thickness"])
+            img_size = img.size
 
-        img = annotate_image_with_bounding_boxes(INPUT_FRAMES + frame_files[frame_i], output_frames_folder + frame_files[frame_i], test_bboxes, colors,
-                                           draw_text=False, save=True, show=False, thickness=SETTINGS["thickness"])
-        img_size = img.size
+            if SETTINGS["annotate_frames_with_gt"]:
+                annotation_name = frame_files[frame_i][:-4]
+                annotation_path = annotation_name + ".xml"
+                if annotation_path in annotation_files:
+                    # we have ground truth for this file, we would like to save the predicted annotations
+                    # <image identifier> <confidence> <left> <top> <right> <bottom>
+
+                    for bbox in test_bboxes:
+                        predicted_class = bbox[0]
+
+                        if predicted_class is 'crop':
+                            continue
+
+                        box = bbox[1]
+                        score = bbox[2]
+                        top, left, bottom, right = box
+                        top = max(0, np.floor(top + 0.5).astype('int32'))
+                        left = max(0, np.floor(left + 0.5).astype('int32'))
+                        bottom = min(img_size[1], np.floor(bottom + 0.5).astype('int32'))
+                        right = min(img_size[0], np.floor(right + 0.5).astype('int32'))
+
+                        line = str(annotation_name)+" "+str(score)+" "+str(left)+" "+str(top)+" "+str(right)+" "+str(bottom)
+
+                        annotations_lines_saved.append(line)
+                    annotations_names_saved.append(str(annotation_name))
 
         if SETTINGS["annotate_frames_with_gt"]:
-            annotation_name = frame_files[frame_i][:-4]
-            annotation_path = annotation_name + ".xml"
-            if annotation_path in annotation_files:
-                # we have ground truth for this file, we would like to save the predicted annotations
-                # <image identifier> <confidence> <left> <top> <right> <bottom>
+            print(len(annotations_lines_saved), annotations_lines_saved[0:3])
 
-                for bbox in test_bboxes:
-                    predicted_class = bbox[0]
+            with open(output_annotation+'names.txt', 'w') as the_file:
+                for l in annotations_names_saved:
+                    the_file.write(l+'\n')
+            with open(output_annotation+'bboxes.txt', 'w') as the_file:
+                for l in annotations_lines_saved:
+                    the_file.write(l+'\n')
 
-                    if predicted_class is 'crop':
-                        continue
-
-                    box = bbox[1]
-                    score = bbox[2]
-                    top, left, bottom, right = box
-                    top = max(0, np.floor(top + 0.5).astype('int32'))
-                    left = max(0, np.floor(left + 0.5).astype('int32'))
-                    bottom = min(img_size[1], np.floor(bottom + 0.5).astype('int32'))
-                    right = min(img_size[0], np.floor(right + 0.5).astype('int32'))
-
-                    line = str(annotation_name)+" "+str(score)+" "+str(left)+" "+str(top)+" "+str(right)+" "+str(bottom)
-
-                    annotations_lines_saved.append(line)
-                annotations_names_saved.append(str(annotation_name))
-
-    if SETTINGS["annotate_frames_with_gt"]:
-        print(len(annotations_lines_saved), annotations_lines_saved[0:3])
-
-        with open(output_annotation+'names.txt', 'w') as the_file:
-            for l in annotations_names_saved:
-                the_file.write(l+'\n')
-        with open(output_annotation+'bboxes.txt', 'w') as the_file:
-            for l in annotations_lines_saved:
-                the_file.write(l+'\n')
-
-    sess.close()
+        sess.close()
 
 
     print("################## Cleanup ##################")
@@ -375,6 +398,11 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
         temp_dir_del = video_file_root_folder + "/temporary" + RUN_NAME
         if os.path.exists(temp_dir_del):
             shutil.rmtree(temp_dir_del)
+
+    if SETTINGS["debug_just_count_hist"]:
+        print("DEBUG debug_just_count_hist WAS USED")
+    if SETTINGS["reuse_last_experiment"]:
+        print("DEBUG reuse_last_experiment WAS USED")
 
 
 from datetime import *
@@ -404,6 +432,7 @@ parser.add_argument('-postprocess_merge_splitline_bboxes', help='PostProcessing 
 parser.add_argument('-debug_save_masks', help='DEBUG save masks? BW outlines of attention model. accepts "one" or "all"', default='one')
 parser.add_argument('-debug_save_crops', help='DEBUG save crops? Attention models crops. accepts "one" or "all"', default='False')
 parser.add_argument('-debug_color_postprocessed_bboxes', help='DEBUG color postprocessed bounding boxes?', default='False')
+parser.add_argument('-debug_just_count_hist', help='DEBUG just count histograms of numbers of used crops from each video do not evaluate the outside of attention model.', default='False')
 
 parser.add_argument('-anchorf', help='anchor file', default='yolo_anchors.txt')
 
@@ -432,6 +461,7 @@ if __name__ == '__main__':
     SETTINGS["debug_save_masks"] = args.debug_save_masks
     SETTINGS["debug_save_crops"] = (args.debug_save_crops == 'True')
     SETTINGS["debug_color_postprocessed_bboxes"] = (args.debug_color_postprocessed_bboxes == 'True')
+    SETTINGS["debug_just_count_hist"] = (args.debug_just_count_hist == 'True')
 
     #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/liverpool_station_8k/input/frames_24fps/"
     #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/hall_london_8k/inputs/frames_24fps/"
