@@ -8,6 +8,7 @@ import numpy as np
 from pathlib import Path
 from timeit import default_timer as timer
 from PIL import Image
+import sys
 
 from crop_functions import crop_from_one_frame, mask_from_one_frame, crop_from_one_frame_WITH_MASK_in_mem, get_number_of_crops_from_frame
 from yolo_handler import run_yolo
@@ -271,8 +272,9 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
                    RUN_NAME+"_evaluation;"+";".join(str(x) for x in number_of_crops_evaluation),
                    RUN_NAME+"_max_evaluation;"+str(max_number_of_crops_per_frame)]
         save_string_to_file(strings, output_measurement_viz + '_'+RUN_NAME+'_histogram.csv')
+        # join with: cat *.csv >> output.csv
         visualize_as_histogram([number_of_crops_attention, number_of_crops_evaluation], ["Attention model number of crops", "Evaluation model number of crops"], "Histogram of active crops", xlabel='number of crops active',
-                                    show=False, save=True, save_path=output_measurement_viz + '_Hist.png')
+                                    show=False, save=True, save_path=output_measurement_viz +'_'+RUN_NAME + '_Hist.png')
 
     else: # reuse_last_experiment is True
         print("#!!!!!!!!!!!!!!# WARNING, reusing last experiment #!!!!!!!!!!!!!!#")

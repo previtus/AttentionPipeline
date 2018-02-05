@@ -1,4 +1,4 @@
-import os
+import os, sys
 import numpy as np
 import random
 from PIL import Image, ImageChops
@@ -190,10 +190,14 @@ def crop_from_one_frame_WITH_MASK_in_mem(img, mask, frame_path, out_folder, hori
     N = len(w_crops) * len(h_crops)
 
     if not save_visualization:
-        print(str((frame_name))+", ", end='', flush=True)
-    else:
-        print(str((frame_name)) + " ("+str(N)+" crops per frame), ", end='', flush=True)
+        #print(str((frame_name))+", ", end='', flush=True)
+        sys.stdout.write("\r" + str((frame_name)))
+        sys.stdout.flush()
 
+    else:
+        #print(str((frame_name)) + " ("+str(N)+" crops per frame), ", end='', flush=True)
+        sys.stdout.write("\r" + str((frame_name)) + " ("+str(N)+" crops per frame)")
+        sys.stdout.flush()
     crops = []
     i = 0
     for w_crop in w_crops:
@@ -373,7 +377,9 @@ def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
     #if not os.path.exists(mask_folder+frame_name+"/"):
     #    os.makedirs(mask_folder+frame_name+"/")
 
-    print(str((frame_name))+", ", end='', flush=True)
+    #print(str((frame_name))+", ", end='', flush=True)
+    sys.stdout.write("\r" + str((frame_name)))
+    sys.stdout.flush()
 
     ow, oh = frame_image.size
 

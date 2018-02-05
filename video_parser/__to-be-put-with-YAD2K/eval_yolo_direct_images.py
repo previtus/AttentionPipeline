@@ -4,6 +4,7 @@ import colorsys
 import imghdr
 import os
 import random
+import sys
 
 import numpy as np
 from keras import backend as K
@@ -118,7 +119,9 @@ def _main(args, frames_paths, crops_bboxes, crop_value, resize_frames=None, verb
             frame = frame.resize((int(nw), int(nh)), Image.ANTIALIAS)
 
         crops_in_frame = crops_bboxes[frame_i]
-        print("Frame", frame_i, " with ", len(crops_in_frame), " crops.")
+        #print("Frame", frame_i, " with ", len(crops_in_frame), " crops.")
+        sys.stdout.write("\rFrame " + str(frame_i) + " with " + str(len(crops_in_frame)) + " crops.")
+        sys.stdout.flush()
 
         for crop_i in range(0, len(crops_in_frame)):
             crop = crops_in_frame[crop_i]
