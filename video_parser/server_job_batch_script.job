@@ -28,6 +28,8 @@ cp -R $INPUT $SCRATCH/input/
 python run_fast_sketch.py -atthorizontal_splits 2 -horizontal_splits 4 -input $INPUT_S -name $NAME
 
 #copy results back to permanent storage
+mkdir $SCRATCH/output/
+mkdir $SCRATCH/output/$NAME
 cp -R $SCRATCH/output/$NAME $OUTPUT
 
 # run this with: sbatch server_job_batch_script.job
