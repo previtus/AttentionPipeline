@@ -45,7 +45,13 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
     print("jpgs:",frame_files[0:2],"...","xmls:",annotation_files[0:2],"...")
 
     start_frame = SETTINGS["startframe"]
-    frame_files = frame_files[start_frame:]
+    end_frame = SETTINGS["endframe"]
+
+    if end_frame is not -1:
+        frame_files = frame_files[start_frame:end_frame]
+    else:
+        frame_files = frame_files[start_frame:]
+
     allowed_number_of_boxes = SETTINGS["allowed_number_of_boxes"]
 
     # fill these in code, later print them for statistics
@@ -426,6 +432,7 @@ parser.add_argument('-attention', help='use guidance of automatic attention mode
 parser.add_argument('-thickness', help='thickness', default='10,2')
 parser.add_argument('-extendmask', help='extend mask by', default='300')
 parser.add_argument('-startframe', help='start from frame index', default='0')
+parser.add_argument('-endframe', help='end with frame index', default='-1')
 parser.add_argument('-attframespread', help='look at attention map of this many nearby frames - minus and plus', default='0')
 parser.add_argument('-annotategt', help='annotate frames with ground truth', default='False')
 parser.add_argument('-reuse_last_experiment', help='Reuse last experiments bounding boxes? Skips the whole evaluation part.', default='False')
@@ -450,6 +457,7 @@ if __name__ == '__main__':
     SETTINGS["horizontal_splits"] = int(args.horizontal_splits)
     SETTINGS["anchorfile"] = args.anchorf
     SETTINGS["startframe"] = int(args.startframe)
+    SETTINGS["endframe"] = int(args.endframe)
     SETTINGS["attention"] = (args.attention == 'True')
     SETTINGS["annotate_frames_with_gt"] = (args.annotategt == 'True')
     SETTINGS["extend_mask_by"] = int(args.extendmask)
