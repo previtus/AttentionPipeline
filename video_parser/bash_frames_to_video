@@ -14,7 +14,7 @@ ffmpeg -r 30/1 -pattern_type glob -i 'frames/*.jpg' -c:v libx264 -vf fps=30 -pix
 # convert img to the right size - ps put it there in multiple copies, to be properly visible
 convert -resize 3840x2160! 0000intro.jpg 0000intro4k.jpg
 
-# merge two videos
+# merge two videos, multiview: LEFT and RIGHT
 ffmpeg \
   -i without.mp4 \
   -i with.mp4 \
@@ -26,3 +26,8 @@ ffmpeg \
   output.mp4
 
   # crf = quality, sane range is 18-28. Consider 18 to be visually lossless or nearly so
+
+# Join two videos timewise
+ffmpeg -i input1.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts intermediate1.ts
+ffmpeg -i input2.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts intermediate2.ts
+ffmpeg -i "concat:intermediate1.ts|intermediate2.ts" -c copy -bsf:a aac_adtstoasc output.mp4
