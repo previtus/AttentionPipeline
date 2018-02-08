@@ -16,7 +16,7 @@ from mark_frame_with_bbox import annotate_image_with_bounding_boxes, mask_from_e
 from visualize_time_measurement import visualize_time_measurements, visualize_as_histogram
 from nms import py_cpu_nms, non_max_suppression_tf
 from bbox_postprocessing import postprocess_bboxes_by_splitlines
-from data_handler import save_string_to_file, saveDict, loadDict
+from data_handler import save_string_to_file, saveDict, loadDict, is_non_zero_file
 
 # input frames images
 # output marked frames images
@@ -40,6 +40,9 @@ def main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS):
 
     # Frames to crops
     files = sorted(os.listdir(INPUT_FRAMES))
+    #print("files",len(files), files[0:10])
+    files = [path for path in files if is_non_zero_file(INPUT_FRAMES+path)]
+    #print("files", len(files), files[0:10])
     frame_files = fnmatch.filter(files, '*.jpg')
     annotation_files = fnmatch.filter(files, '*.xml')
     print("jpgs:",frame_files[0:2],"...","xmls:",annotation_files[0:2],"...")
