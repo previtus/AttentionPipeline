@@ -22,6 +22,8 @@ Used Anaconda3 and these modules (likely also works with newer versions)
 - hdf5 1.8.17
 - pillow 4.1.0
 
+_ps: useful to install on server with restricted access: `python setup.py install --user`_
+
 **Install**
 - python 3.6.1, tensorflow with gpu and cuda support, keras (see list above)
 - YAD2K, python YOLO v2 implementation: https://github.com/allanzelener/YAD2K (commit hash a42c760ef868bc115e596b56863dc25624d2e756)
@@ -71,5 +73,6 @@ As result we should see something like image in  *_side_projects/annotation_conv
 I used kernprof from https://github.com/rkern/line_profiler#kernprof. Follow installation mentioned there (`pip install line_profiler`).
 - Put `@profile` before each function for profiling
 - Run `kernprof -l -v run_fast_sketch.py`
+
 
 
