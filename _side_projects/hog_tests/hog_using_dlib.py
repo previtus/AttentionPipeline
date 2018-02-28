@@ -6,7 +6,7 @@ from timeit import default_timer as timer
 
 # (563, 511, 3)   total time: 0.433351890999802
 #file_name = "/home/ekmek/intership_project/hog_tests/face_example.jpg"
-file_name = '/home/ekmek/intership_project/video_parser/_videos_to_test/small_dataset/input/frames/s0216.jpg'
+file_name = '/home/ekmek/intership_project/video_parser_v1/_videos_to_test/small_dataset/input/frames/s0216.jpg'
 
 show = True
 

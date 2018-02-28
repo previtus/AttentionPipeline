@@ -101,7 +101,7 @@ def get_vector_of_crop_numbers(include_evaluations, include_attentions, datasets
 
     return accumulated_vector, max_possible
 
-path = "/home/ekmek/intership_project/video_parser/_videos_to_test/RuzickaDataset/output/Histograms/"
+path = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/output/Histograms/"
 crop_numbers_object = load_from_csv(path)
 
 ##################### VISUALIZATION METHODS

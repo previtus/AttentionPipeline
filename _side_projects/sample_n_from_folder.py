@@ -46,8 +46,8 @@ def sample_N_from_folderS(path_base, folders, N, target_folder):
         p = path_base + f
         sample_N_from_folder(p, N, target_folder)
 
-path_base = "/home/ekmek/intership_project/video_parser/_videos_to_test/RuzickaDataset/input/"
+path_base = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/input/"
 folders = ["S1000025_5fps","S1000039_5fps","S1000051_5fps","S1000010_5fps","S1000028_5fps","S1000040_5fps","S1000044_5fps","S1000021_5fps","S1000038_5fps","S1000041_5fps","S1000046_5fps"]
-samples_folder = "/home/ekmek/intership_project/video_parser/_videos_to_test/RuzickaDataset/samples/"
+samples_folder = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/samples/"
 
 sample_N_from_folderS(path_base, folders, 10, samples_folder)

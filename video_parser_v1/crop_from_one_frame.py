@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from crop_functions import get_crops_parameters
 
-img_path = "/home/ekmek/intership_project/video_parser/PL_Pizza/0000.jpg"
-save_crops_folder = "/home/ekmek/intership_project/video_parser/crops_test/"
+img_path = "/home/ekmek/intership_project/video_parser_v1/PL_Pizza/0000.jpg"
+save_crops_folder = "/home/ekmek/intership_project/video_parser_v1/crops_test/"
 if not os.path.exists(save_crops_folder):
     os.makedirs(save_crops_folder)
 

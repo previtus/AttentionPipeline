@@ -11,8 +11,8 @@ eye_cascade = cv2.CascadeClassifier(folder+'haarcascade_eye.xml')
 body_cascade = cv2.CascadeClassifier(folder+'haarcascade_fullbody.xml')
 upperbody_cascade = cv2.CascadeClassifier(folder+'haarcascade_upperbody.xml')
 
-IMG_PATH = '/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/0001.jpg'
-IMG_PATH = '/home/ekmek/intership_project/video_parser/_videos_to_test/small_dataset/input/frames/s0216.jpg'
+IMG_PATH = '/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PL_Pizza sample/input/frames/0001.jpg'
+IMG_PATH = '/home/ekmek/intership_project/video_parser_v1/_videos_to_test/small_dataset/input/frames/s0216.jpg'
 #img = cv2.imread('/home/ekmek/intership_project/hog_tests/s0216/0022.jpg')
 #img = cv2.imread('/home/ekmek/intership_project/hog_tests/face_example.jpg')
 img = cv2.imread(IMG_PATH)

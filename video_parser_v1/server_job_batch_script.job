@@ -9,7 +9,7 @@ set -x
 #move to working directory
 module load keras/2.0.6_anaconda
 source activate $KERAS_ENV
-cd /home/vruzicka/intership_project/video_parser
+cd /home/vruzicka/intership_project/video_parser_v1
 
 
 NAME=S1000040_5fps_2to4

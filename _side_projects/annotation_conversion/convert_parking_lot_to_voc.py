@@ -13,7 +13,7 @@ frameNumber - The frame number
 bodyLeft,bodyTop,bodyRight,bodyBottom - The body bounding box in pixels
 
 """
-input_gt_file = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/PL_Pizza_GT.txt"
+input_gt_file = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PL_Pizza sample/input/PL_Pizza_GT.txt"
 
 """
 # TO FORMAT
@@ -22,7 +22,7 @@ where each image x.jpg is accompanied by annotation in x.xml
 <annotation>
 	<folder>frames_20171126</folder>
 	<filename>0001.jpg</filename>
-	<path>/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/input/frames_20171126/0001.jpg</path>
+	<path>/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PittsMine/input/frames_20171126/0001.jpg</path>
 	<source>
 		<database>Unknown</database>
 	</source>
@@ -50,7 +50,7 @@ where each image x.jpg is accompanied by annotation in x.xml
 </annotation>
 
 """
-output_folder = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/"
+output_folder = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PL_Pizza sample/input/frames/"
 
 
 def format_header(image_name, folder_name, path_to_input, w, h):
@@ -135,7 +135,7 @@ for gt_line in gt_lines:
 
 
 ### TARGET FOLDER
-path = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames_all/"
+path = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PL_Pizza sample/input/frames_all/"
 split_path = path.split('/')
 folder_name = split_path[-2]
 path_to_input = path[0:-(len(folder_name)+1)]

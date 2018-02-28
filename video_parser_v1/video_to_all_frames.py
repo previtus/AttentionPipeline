@@ -61,7 +61,7 @@ def video2frames(pathIn, pathOut, toFrame=-1):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pathIn", default="/home/ekmek/video_parser/big_buck_bunny_720p_5mb.mp4")
+    parser.add_argument("--pathIn", default="/home/ekmek/video_parser_v1/big_buck_bunny_720p_5mb.mp4")
     parser.add_argument("--pathOut", default="test/")
     parser.add_argument("--toFrame", default="-1")
     args = parser.parse_args()

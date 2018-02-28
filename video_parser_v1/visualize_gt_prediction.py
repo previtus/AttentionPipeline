@@ -3,8 +3,8 @@ from mark_frame_with_bbox import annotate_image_with_bounding_boxes
 import matplotlib.pyplot as plt
 import numpy as np
 
-gt_path_folder = "/home/ekmek/intership_project/video_parser/_videos_to_test/RuzickaDataset/samples/_S1000040_5fps/"
-output_model_predictions_folder = '/home/ekmek/intership_project/video_parser/_videos_to_test/RuzickaDataset/output/Annot_S1000040_5fps_Splits2to4/'
+gt_path_folder = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/samples/_S1000040_5fps/"
+output_model_predictions_folder = '/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/output/Annot_S1000040_5fps_Splits2to4/'
 
 # EXAMPLE
 #gt_path_folder = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/input/auto_annot/"

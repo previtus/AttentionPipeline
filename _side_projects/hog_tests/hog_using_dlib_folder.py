@@ -5,7 +5,7 @@ import numpy as np
 from timeit import default_timer as timer
 
 images_folder = "/home/ekmek/intership_project/hog_tests/s0216/"
-images_folder = "/home/ekmek/intership_project/video_parser/_videos_to_test/small_dataset/temporary_small_test4_diffModelSize_544_384x384/crops/s0216/"
+images_folder = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/small_dataset/temporary_small_test4_diffModelSize_544_384x384/crops/s0216/"
 show = False
 
 image_files = os.listdir(images_folder)

@@ -429,7 +429,7 @@ parser.add_argument('-horizontal_splits', help='number or horizontal splits in i
 parser.add_argument('-overlap_px', help='overlap in pixels', default='20')
 parser.add_argument('-atthorizontal_splits', help='number or horizontal splits in image for attention model', default='1')
 parser.add_argument('-input', help='path to folder full of frame images',
-                    default="/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames/")
+                    default="/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PL_Pizza sample/input/frames/")
 parser.add_argument('-name', help='run name - will output in this dir', default='_Test-'+day+month)
 parser.add_argument('-attention', help='use guidance of automatic attention model', default='True')
 parser.add_argument('-thickness', help='thickness', default='10,2')
@@ -476,32 +476,46 @@ if __name__ == '__main__':
     SETTINGS["debug_color_postprocessed_bboxes"] = (args.debug_color_postprocessed_bboxes == 'True')
     SETTINGS["debug_just_count_hist"] = (args.debug_just_count_hist == 'True')
 
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/liverpool_station_8k/input/frames_24fps/"
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/hall_london_8k/inputs/frames_24fps/"
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/input/frames_4fps_frombridge/"
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/input/frames_29b/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/liverpool_station_8k/input/frames_24fps/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/hall_london_8k/inputs/frames_24fps/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PittsMine/input/frames_4fps_frombridge/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PittsMine/input/frames_29b/"
     #SETTINGS["startframe"] = 1
 
     #SETTINGS["att_frame_spread"] = 4 # should be cca +-1 sec - so 30 in 30fps video
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/input/annotated/"
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/frames_all/"
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PL_Pizza sample/input/hand_annot/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PittsMine/input/annotated/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PL_Pizza sample/input/frames_all/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PL_Pizza sample/input/hand_annot/"
     #INPUT_FRAMES = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/input/auto_annot/"
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/input/frames_29b/"
-    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser/_videos_to_test/test_nms/input/frames/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PittsMine/input/frames_29b/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/test_nms/input/frames/"
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/input/S1000044_5fps/"
+    INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/samples/_S1000040_5fps/"
     #SETTINGS["debug_color_postprocessed_bboxes"] = True
 
-    #RUN_NAME = "___testSavingNpyDEL"
+    #SETTINGS["debug_just_count_hist"] = True
 
-    #SETTINGS["attention"] = True
-    #SETTINGS["attention"] = False
-    #SETTINGS["annotate_frames_with_gt"] = True
-
-    #SETTINGS["attention_horizontal_splits"] = 2
-    #SETTINGS["horizontal_splits"] = 4
     #SETTINGS["overlap_px"] = 20
-
     #SETTINGS["reuse_last_experiment"] = True
 
-    print(RUN_NAME, SETTINGS)
+    #folder_name = "S1000010_5fps" # 10, 21, 25, 28, 38, 39, 40, 41, 44, 46
+    #INPUT_FRAMES = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/input/"+folder_name+"/"
+
+    SETTINGS["annotate_frames_with_gt"] = True
+    SETTINGS["endframe"] = 10
+
+    start = timer()
+
+    #RUN_NAME = folder_name+"_Splits2to4_first50"
+    RUN_NAME = "Annot_S1000040_5fps_Splits2to4"
+    RUN_NAME = "debugruns"
+    SETTINGS["attention_horizontal_splits"] = 2
+    SETTINGS["horizontal_splits"] = 4
     main_sketch_run(INPUT_FRAMES, RUN_NAME, SETTINGS)
+
+    end = timer()
+    time = (end - start)
+    print("This run took "+str(time)+"s ("+str(time/60.0)+"min)")
+
+
+

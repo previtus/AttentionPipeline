@@ -319,15 +319,15 @@ def voc_eval(detpath,
     return rec, prec, ap
 
 """
-gt = '/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/input/annotated/0013.xml'
+gt = '/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PittsMine/input/annotated/0013.xml'
 obj = parse_rec(gt)
 print(len(obj), obj)
 
 
-gt_path = '/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/input/annotated/'
+gt_path = '/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PittsMine/input/annotated/'
 
-imagesetfile = "/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/output_tmptests/annotnames.txt"
-predictions  = "/home/ekmek/intership_project/video_parser/_videos_to_test/PittsMine/output_tmptests/annotbboxes.txt"
+imagesetfile = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PittsMine/output_tmptests/annotnames.txt"
+predictions  = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PittsMine/output_tmptests/annotbboxes.txt"
 rec, prec, ap = voc_eval(predictions,gt_path,imagesetfile,'person')
 
 print("rec", rec)
