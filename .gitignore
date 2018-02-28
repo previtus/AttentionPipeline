@@ -168,4 +168,6 @@ venv.bak/
 *.mp4
 *.xml
 *.csv
-
+*.MP4
+*.lvix
+*.pdf
