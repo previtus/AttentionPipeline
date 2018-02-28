@@ -9,6 +9,14 @@ import numpy as np
 def run_yolo(num_crops_per_frames, crop_per_frames, fixbb_crop, INPUT_FRAMES, frame_files, resize_frames=None, show_viz = False,
              model_h5='yolo.h5', anchors_txt='yolo_anchors.txt', allowed_number_of_boxes=100, VERBOSE=1):
 
+    """
+    print("num_crops_per_frames", num_crops_per_frames)
+    print("crop_per_frames", crop_per_frames)
+    print("fixbb_crop", fixbb_crop)
+    print("INPUT_FRAMES", INPUT_FRAMES)
+    print("frame_files", frame_files)
+    """
+
     yolo_paths = ["/home/ekmek/YAD2K/", "/home/vruzicka/storage_pylon2/YAD2K/"]
 
     path_to_yolo = use_path_which_exists(yolo_paths)
