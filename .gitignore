@@ -171,3 +171,5 @@ venv.bak/
 *.MP4
 *.lvix
 *.pdf
+!project_illustration.jpg
+

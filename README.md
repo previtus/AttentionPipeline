@@ -1,7 +1,7 @@
 # intership_project
 internship project at CMU, 2017-2018
 
-![Illustration image](https://github.com/previtus/intership_project/blob/master/video_parser_v1/project_illustration.jpg)
+![Illustration image](https://github.com/previtus/intership_project/blob/master/project_illustration.jpg)
 
 Working with high resolution videos to locate certain objects. First pass serves as attention selection on low res version / fast check, second pass then checks more thoroughly on selected areas.
 
