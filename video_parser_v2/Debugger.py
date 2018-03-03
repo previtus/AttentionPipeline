@@ -136,3 +136,10 @@ class Debugger(object):
         else:
             image.save(name)
 
+    def label_to_color(self,label):
+        if label == 'person':
+            return "white"
+        elif label == 'car':
+            return "blue"
+        else:
+            return "yellow"

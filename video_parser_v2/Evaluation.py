@@ -20,6 +20,7 @@ class Evaluation(object):
 
 
     def evaluate(self, crops_coordinates, frame, type):
+        print("Evaluation of stage",type)
         if self.local:
             return self.evaluate_local(crops_coordinates, frame, type)
         else:

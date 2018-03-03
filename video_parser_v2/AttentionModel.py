@@ -17,12 +17,12 @@ class AttentionModel(object):
         mask_image = self.mask_image(projected_evaluation, extend_mask_by)
         # mask starts in original image space - as were the bboxes in projected_evaluation
 
-        self.settings.debugger.debug_attention_mask(mask_image, frame[1], projected_evaluation)
+        #self.settings.debugger.debug_attention_mask(mask_image, frame[1], projected_evaluation)
 
         # now project the mask into dimensions of the evaluation image
         mask_image = self.evaluation.imageprocessing.scale_image(mask_image, self.cropscoordinates.scale_ratio_of_evaluation_crop)
 
-        self.settings.debugger.debug_attention_mask(mask_image, custom_name="smallerProjectedIntoWhatCoordsAre")
+        #self.settings.debugger.debug_attention_mask(mask_image, custom_name="smallerProjectedIntoWhatCoordsAre")
 
         # both mask_image and evaluation_coordinates are in the same space
         active_coordinates = self.active_coordinates_in_mask(mask_image, evaluation_coordinates)
@@ -30,11 +30,11 @@ class AttentionModel(object):
         return active_coordinates
 
     def active_coordinates_in_mask(self, mask_image, coordinates):
-        print("coordinates", coordinates)
+        #print("coordinates", coordinates)
 
         crop_size = self.cropscoordinates.crop_size_in_evaluation
         mask_over = 0.1
-        print("crop_size", crop_size)
+        #print("crop_size", crop_size)
 
         active_coordinates = []
         for crop_coordinates in coordinates:

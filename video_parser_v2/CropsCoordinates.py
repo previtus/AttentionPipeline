@@ -22,7 +22,6 @@ class CropsCoordinates(object):
 
     def get_crops_coordinates(self, type):
         crops_coords, scale_full_img, crop_size = self.crop_from_one_img(type)
-        print("crops_coords, scale_full_img, crop_size", crops_coords, scale_full_img, crop_size)
 
         if type == 'attention':
             self.scale_ratio_of_attention_crop = scale_full_img
@@ -44,6 +43,21 @@ class CropsCoordinates(object):
             bboxes_in_img = self.project_back_to_original_image(id, bboxes, type)
             projected_evaluation += bboxes_in_img
         return projected_evaluation
+
+    def project_coordinates_back(self, coordinates, type):
+        # coordinates come in array of [[id, (0, 0, 608, 608)], ... ]
+        # just / scale to each value
+        projected_coordinates = []
+        for id, coordinate in coordinates:
+            if type == 'attention':
+                scale = self.scale_ratio_of_attention_crop
+            elif type == 'evaluation':
+                scale = self.scale_ratio_of_evaluation_crop
+
+            projected_coordinate = [int(i / scale) for i in coordinate]
+
+            projected_coordinates.append([id,projected_coordinate])
+        return projected_coordinates
 
     def project_back_to_original_image(self,id,bboxes,type):
         # bboxes is array of dictionaries like:
@@ -69,10 +83,8 @@ class CropsCoordinates(object):
             bbox["bottomright"]["y"] = (area[1] + bbox["bottomright"]["y"]) / scale
 
         return bboxes
-        return ["what would we want?"]
 
     ## could be better:
-
     def best_squares_overlap(self, w, h, horizontal_splits, overlap_px):
         #print("called best_squares_overlap, with [w, h, horizontal_splits, overlap_px]:", w, h, horizontal_splits, overlap_px)
 
