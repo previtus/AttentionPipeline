@@ -1,3 +1,5 @@
+from PIL import Image
+from keras.preprocessing.image import img_to_array
 
 class ImageProcessing(object):
     """
@@ -8,6 +10,21 @@ class ImageProcessing(object):
     def __init__(self, settings):
         self.settings = settings
 
-    def get_crop(self, coordinates, frame):
+    def get_crop(self, coordinates, img):
+        cropped_img = img.crop(box=coordinates)
+        if cropped_img.size[0] != 608 or cropped_img.size[1] != 608:
+            print("Careful, needed to resize the crop in Evaluation->ImageProcessing. It was", cropped_img.size)
+            cropped_img = cropped_img.resize((608, 608), resample=Image.ANTIALIAS)
+        cropped_img.load()
 
-        return 0
+        cropped_img = img_to_array(cropped_img) ### SHOULD BE WITH LOADER IN VIDEOCAPTURE
+        return cropped_img
+
+    def scale_image(self, image, scale):
+
+        ow, oh = image.size
+
+        nw = ow * scale
+        nh = oh * scale
+
+        return image.resize((int(nw), int(nh)), Image.ANTIALIAS)

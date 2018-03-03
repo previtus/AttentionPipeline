@@ -44,6 +44,15 @@ if __name__ == '__main__':
 
     start = timer()
 
+    #args.input = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/samples/_S1000040_5fps/"
+    args.input = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/DrivingNY/input/frames_0.2fps_236/"
+    #args.input = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/input/S1000051_5fps/"
+    args.endframe = '1'
+    args.atthorizontal_splits = 1
+    args.horizontal_splits = 2
+
+    # later >> attention should have separated overflow px setting
+
     main_loop(args)
 
     end = timer()

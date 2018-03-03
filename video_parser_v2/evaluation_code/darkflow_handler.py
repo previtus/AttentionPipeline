@@ -8,7 +8,7 @@ def load_model(gpuname=1.0):
                #"load": "bin/yolo.weights",
                "pbLoad": "built_graph/yolo.pb",
                "metaLoad": "built_graph/yolo.meta",
-               "threshold": 0.1,
+               "threshold": 0.2,
                "gpu": gpuname}
     #self.define('pbLoad', '', 'path to .pb protobuf file (metaLoad must also be specified)')
     #self.define('metaLoad', '', 'path to .meta file generated during --savepb that corresponds to .pb file')
@@ -29,6 +29,7 @@ def run_on_image(image_object, model):
 
     result = model.return_predict(image_object)
     result = convert_numpy_floats(result)
+
 
     return result
 

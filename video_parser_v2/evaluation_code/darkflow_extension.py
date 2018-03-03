@@ -10,7 +10,7 @@ pool = ThreadPool()
 # - input_images is array of loaded images (via cv2.imread(file) )
 # - batch_size is optional setting of batch size
 
-def predict_extend(tfnet, input_images, batch_size=-1):
+def predict_extend(tfnet, input_images, batch_size=-1, verbal=0):
     h, w, _ = input_images[0].shape
     if batch_size == -1:
         batch_size = tfnet.FLAGS.batch
@@ -33,15 +33,18 @@ def predict_extend(tfnet, input_images, batch_size=-1):
 
         # Feed to the net
         feed_dict = {tfnet.inp : np.concatenate(inp_feed, 0)}
-        tfnet.say('Forwarding {} inputs ...'.format(len(inp_feed)))
+        if verbal>0:
+            tfnet.say('Forwarding {} inputs ...'.format(len(inp_feed)))
         start = time.time()
         out = tfnet.sess.run(tfnet.out, feed_dict)
         stop = time.time(); last = stop - start
-        tfnet.say('Eval time = {}s / {} inps = {} ips'.format(
+        if verbal > 0:
+            tfnet.say('Eval time = {}s / {} inps = {} ips'.format(
             last, len(inp_feed), last / len(inp_feed)))
 
         # Post processing
-        tfnet.say('Post processing {} inputs ...'.format(len(inp_feed)))
+        if verbal > 0:
+            tfnet.say('Post processing {} inputs ...'.format(len(inp_feed)))
 
         for i, net_out in enumerate(out):
             #image index [from_idx + i]

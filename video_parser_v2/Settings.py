@@ -30,4 +30,13 @@ class Settings(object):
         self.RUN_NAME = args.name
 
 
+        ### w and h
+        self.w = 0
+        self.h = 0
 
+    def set_w_h(self,w,h):
+        self.w = w
+        self.h = h
+
+    def set_debugger(self,debugger):
+        self.debugger = debugger
