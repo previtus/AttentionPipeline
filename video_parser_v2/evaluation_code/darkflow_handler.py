@@ -8,7 +8,7 @@ def load_model(gpuname=1.0):
                #"load": "bin/yolo.weights",
                "pbLoad": "built_graph/yolo.pb",
                "metaLoad": "built_graph/yolo.meta",
-               "threshold": 0.2,
+               "threshold": 0.3, #yad2k default "score_threshold" 0.3, "iou_threshold" 0.5
                "gpu": gpuname}
     #self.define('pbLoad', '', 'path to .pb protobuf file (metaLoad must also be specified)')
     #self.define('metaLoad', '', 'path to .meta file generated during --savepb that corresponds to .pb file')
@@ -37,7 +37,7 @@ def run_on_images(image_objects, model):
 
     results = predict_extend(model, image_objects)
 
-    print("len(results)",len(results))
+    #print("len(results)",len(results))
     for i in range(0,len(results)):
         results[i] = convert_numpy_floats(results[i])
 

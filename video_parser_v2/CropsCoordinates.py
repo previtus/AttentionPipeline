@@ -29,6 +29,9 @@ class CropsCoordinates(object):
         elif type == 'evaluation':
             self.scale_ratio_of_evaluation_crop = scale_full_img
             self.crop_size_in_evaluation = crop_size
+
+        if self.settings.verbosity >= 3:
+            print("Crop coordinates for stage `"+type+"` generated with one crop sized",crop_size)
         return crops_coords
 
     def project_evaluation_back(self, attention_evaluation, type):

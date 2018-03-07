@@ -8,8 +8,9 @@ class VideoCapture(object):
     Generates individual frames from video file or from stream of connected camera. Provides image when asked for.
     """
 
-    def __init__(self, settings):
+    def __init__(self, settings, history):
         self.settings = settings
+        self.history = history
 
         self.path = settings.INPUT_FRAMES
         self.init_frames_from_folder(self.path)
@@ -22,7 +23,8 @@ class VideoCapture(object):
 
         self.frame_files = fnmatch.filter(files, '*.jpg')
         self.annotation_files = fnmatch.filter(files, '*.xml')
-        print("jpgs:", self.frame_files[0:2], "...", "xmls:", self.annotation_files[0:2], "...")
+        if self.settings.verbosity >= 2:
+            print("VideoCapture init, from folder: jpgs:", self.frame_files[0:2], "...", "xmls:", self.annotation_files[0:2], "...")
 
         start_frame = self.settings.startframe
         end_frame = self.settings.endframe
@@ -46,4 +48,10 @@ class VideoCapture(object):
             image = Image.open(path)
             #### should really be here image = img_to_array(image)
 
-            yield (path, image)
+            if self.settings.verbosity >= 2:
+                print("\-------------")
+                print("")
+            if self.settings.verbosity >= 1:
+                print("#"+str(i)+":", self.frame_files[i], image.size)
+
+            yield (path, image, self.frame_files[i])

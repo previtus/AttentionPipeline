@@ -122,8 +122,8 @@ class Debugger(object):
 
             for i in range(thickness):
                 draw.rectangle([left - EXTEND_BY + i, top - EXTEND_BY + i, right + EXTEND_BY - i, bottom + EXTEND_BY - i],
-                               outline="white", fill=(255, 255, 255, 127))
-                draw_orig.rectangle([left - EXTEND_BY + i, top - EXTEND_BY + i, right + EXTEND_BY - i, bottom + EXTEND_BY - i], outline="white")
+                               outline="red", fill=(255, 255, 255, 30))
+                draw_orig.rectangle([left - EXTEND_BY + i, top - EXTEND_BY + i, right + EXTEND_BY - i, bottom + EXTEND_BY - i], outline="red")
 
             #print("draw rect", [left - EXTEND_BY, top - EXTEND_BY, right + EXTEND_BY, bottom + EXTEND_BY])
 

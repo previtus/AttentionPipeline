@@ -29,10 +29,17 @@ class Settings(object):
         self.INPUT_FRAMES = args.input
         self.RUN_NAME = args.name
 
-
         ### w and h
         self.w = 0
         self.h = 0
+
+        self.set_verbosity(2)
+
+        # Renderer
+        self.render_files_into_folder = True
+        self.render_folder_name = "__Renders/"+self.RUN_NAME+"/"
+
+
 
     def set_w_h(self,w,h):
         self.w = w
@@ -40,3 +47,15 @@ class Settings(object):
 
     def set_debugger(self,debugger):
         self.debugger = debugger
+
+    def set_verbosity(self, verbosity):
+        messages= ["0 = Muted",
+        "1 = Minimal verbosity, frame name and speed only",
+        "2 = Talkative state, each module will report what it is doing and what are the results",
+        "3+ = Printing specially targeted messages, close to debugging"]
+
+        str = "Setting project verbosity to: " + messages[min(verbosity, len(messages)-1)]
+
+        print(str)
+
+        self.verbosity = verbosity

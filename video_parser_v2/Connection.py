@@ -8,6 +8,6 @@ class Connection(object):
         self.settings = settings
 
     def handshake(self):
-        print("Handshaking with server")
-        print("[!!!] No server connected now, first faking it on local.")
+        if self.settings.verbosity >= 2:
+            print("Connection init, (here will be handshake with server... now local)")
 

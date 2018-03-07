@@ -7,20 +7,22 @@ class Evaluation(object):
     Handles evaluation. Possibly with a server through Connection.
     """
 
-    def __init__(self, settings, connection, cropscoordinates):
+    def __init__(self, settings, connection, cropscoordinates, history):
         self.settings = settings
         self.connection = connection
         self.cropscoordinates = cropscoordinates
+        self.history = history
 
         self.imageprocessing = ImageProcessing.ImageProcessing(settings)
 
         self.local = True
         if self.local:
+            if self.settings.verbosity >= 2:
+                print("Evaluation init, local model of Darkflow")
             self.local_model = self.init_local()
 
 
     def evaluate(self, crops_coordinates, frame, type):
-        print("Evaluation of stage",type)
         if self.local:
             return self.evaluate_local(crops_coordinates, frame, type)
         else:
@@ -35,16 +37,15 @@ class Evaluation(object):
         return local_model
 
     def evaluate_local(self, crops_coordinates, frame, type):
+
         frame_path = frame[0]
         frame_image_original = frame[1]
 
         if type == 'attention':
             frame_image = self.imageprocessing.scale_image(frame_image_original, self.cropscoordinates.scale_ratio_of_attention_crop)
-            print("attention scaled size to", frame_image.size)
 
         elif type == 'evaluation':
             frame_image = self.imageprocessing.scale_image(frame_image_original, self.cropscoordinates.scale_ratio_of_evaluation_crop)
-            print("evaluation scaled size to", frame_image.size)
 
         ids_of_crops = []
         crops = []
@@ -60,6 +61,11 @@ class Evaluation(object):
         evaluation = [[ids_of_crops[i], eval] for i,eval in enumerate(evaluation)]
 
         evaluation = self.filter_evaluations(evaluation)
+
+        if self.settings.verbosity >= 2:
+            counts = [len(in_one_crop[1]) for in_one_crop in evaluation]
+            print("Evaluation of stage `"+type+"`, image scaled size to", frame_image.size, " bboxes in crops", counts)
+
 
         # Returns evaluation in format:
         # array of crops in order by coordinates_id

@@ -7,10 +7,11 @@ class AttentionModel(object):
     should produce a rough estimation where we should look, this class determines which crops are active from it.
     """
 
-    def __init__(self, settings, cropscoordinates, evaluation):
+    def __init__(self, settings, cropscoordinates, evaluation, history):
         self.settings = settings
         self.cropscoordinates = cropscoordinates
         self.evaluation = evaluation
+        self.history = history
 
     def get_active_crops(self, projected_evaluation, evaluation_coordinates, frame):
         extend_mask_by = self.settings.extend_mask_by
@@ -26,6 +27,9 @@ class AttentionModel(object):
 
         # both mask_image and evaluation_coordinates are in the same space
         active_coordinates = self.active_coordinates_in_mask(mask_image, evaluation_coordinates)
+
+        if self.settings.verbosity > 2:
+            print("Attention model found",len(active_coordinates),"active crops in the image (out of",len(evaluation_coordinates),")")
 
         return active_coordinates
 
