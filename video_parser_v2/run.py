@@ -54,6 +54,8 @@ if __name__ == '__main__':
 
     # later >> attention should have separated overflow px setting
 
+    args.name = "TestWithServer"
+
     main_loop(args)
 
     end = timer()

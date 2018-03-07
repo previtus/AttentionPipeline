@@ -6,7 +6,7 @@ def main_loop(args):
     settings = Settings.Settings(args)
     history = History.History(settings)
     connection = Connection.Connection(settings)
-    connection.handshake()
+    #if connection.failed: return -1
 
     cropscoordinates = CropsCoordinates.CropsCoordinates(settings)
     videocapture = VideoCapture.VideoCapture(settings, history)

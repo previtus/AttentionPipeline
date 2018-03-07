@@ -15,7 +15,7 @@ class Evaluation(object):
 
         self.imageprocessing = ImageProcessing.ImageProcessing(settings)
 
-        self.local = True
+        self.local = not (self.settings.client_server)
         if self.local:
             if self.settings.verbosity >= 2:
                 print("Evaluation init, local model of Darkflow")
@@ -23,21 +23,6 @@ class Evaluation(object):
 
 
     def evaluate(self, crops_coordinates, frame, type):
-        if self.local:
-            return self.evaluate_local(crops_coordinates, frame, type)
-        else:
-            return 0
-
-
-    # Assuming there is no server via Connection, lets evaluate it here on local machine
-    def init_local(self):
-
-        local_model = darkflow_handler.load_model()
-
-        return local_model
-
-    def evaluate_local(self, crops_coordinates, frame, type):
-
         frame_path = frame[0]
         frame_image_original = frame[1]
 
@@ -57,19 +42,38 @@ class Evaluation(object):
             crops.append(crop)
             ids_of_crops.append(coordinates_id)
 
-        evaluation = darkflow_handler.run_on_images(crops, self.local_model)
-        evaluation = [[ids_of_crops[i], eval] for i,eval in enumerate(evaluation)]
+
+        if self.local:
+            evaluation = self.evaluate_local(crops, ids_of_crops)
+        else:
+            evaluation = self.evaluate_on_server(crops, ids_of_crops)
 
         evaluation = self.filter_evaluations(evaluation)
 
         if self.settings.verbosity >= 2:
             counts = [len(in_one_crop[1]) for in_one_crop in evaluation]
-            print("Evaluation of stage `"+type+"`, image scaled size to", frame_image.size, " bboxes in crops", counts)
-
+            print("Evaluation (server) of stage `"+type+"`, bboxes in crops", counts)
 
         # Returns evaluation in format:
         # array of crops in order by coordinates_id
         # each holds id and array of dictionaries for each bbox {} keys label, confidence, topleft, bottomright
+        return evaluation
+
+    # Assuming there is no server via Connection, lets evaluate it here on local machine
+    def init_local(self):
+
+        local_model = darkflow_handler.load_model()
+
+        return local_model
+
+    def evaluate_local(self, crops, ids_of_crops):
+        evaluation = darkflow_handler.run_on_images(crops, self.local_model)
+        evaluation = [[ids_of_crops[i], eval] for i,eval in enumerate(evaluation)]
+
+        return evaluation
+
+    def evaluate_on_server(self, crops, ids_of_crops):
+        evaluation = self.connection.evaluate_crops_on_server(crops, ids_of_crops)
         return evaluation
 
     def filter_evaluations(self, evaluation):
