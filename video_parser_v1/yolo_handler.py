@@ -48,7 +48,6 @@ def run_yolo(num_crops_per_frames, crop_per_frames, fixbb_crop, INPUT_FRAMES, fr
     #evaluation_times, additional_times, bboxes = eval_yolo._main(args, input_paths, ground_truths, output_paths, num_frames, num_crops_per_frames,
     #                                                             save_annotated_images=False, verbose=VERBOSE, person_only=True)
 
-
     full_path_frame_files = [INPUT_FRAMES + s for s in frame_files]
     pureEval_times, ioPlusEval_times, bboxes = eval_yolo_direct_images._main(args, frames_paths=full_path_frame_files, crops_bboxes=crop_per_frames, crop_value=fixbb_crop, resize_frames=resize_frames, verbose=VERBOSE, person_only=True, allowed_number_of_boxes=allowed_number_of_boxes)
 
@@ -82,12 +81,11 @@ def run_yolo(num_crops_per_frames, crop_per_frames, fixbb_crop, INPUT_FRAMES, fr
             fixed_bboxes = []
             for bbox in bboxes[index]:
                 bbox_array = bbox[1]
-                max_limit = fixbb_crop
+                #max_limit = fixbb_crop
 
                 #bbox_aray = np.maximum(bbox_aray,[0,0,0,0])
                 #bbox_aray = np.minimum(bbox_aray,[max_limit,max_limit,max_limit,max_limit])
                 fix_array = bbox_array + [a_top, a_left, a_top, a_left]
-
                 bboxes_per_frames[frame_index].append([bbox[0],fix_array,bbox[2],bbox[3]])
 
             bboxes_per_frames[frame_index] += fixed_bboxes

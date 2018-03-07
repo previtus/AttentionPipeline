@@ -132,6 +132,15 @@ def _main(args, frames_paths, crops_bboxes, crop_value, resize_frames=None, verb
             cropped_img = cropped_img.resize((int(crop_value), int(crop_value)), resample=Image.ANTIALIAS)
             cropped_img.load()
 
+            """
+            print("////////////////////////////////////////////////")
+            print("area",area)
+            print("crop_value",crop_value)
+            print("cropped_img", cropped_img.size)
+            cropped_img.show()
+            print("////////////////////////////////////////////////")
+            """
+
             image = cropped_img
 
             """

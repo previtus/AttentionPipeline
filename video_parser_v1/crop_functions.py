@@ -388,7 +388,7 @@ def mask_from_one_frame(frame_path, SETTINGS, mask_folder):
 
     horizontal_splits = SETTINGS["attention_horizontal_splits"]
     overlap_px = 0
-    column_list, row_list = best_squares_overlap(ow,oh,horizontal_splits,overlap_px)
+    #column_list, row_list = best_squares_overlap(ow,oh,horizontal_splits,overlap_px)
     crop = 608 * horizontal_splits
 
     #crop = 608 + (608 - overlap_px) * (horizontal_splits - 1)
