@@ -17,7 +17,7 @@ class ImageProcessing(object):
             cropped_img = cropped_img.resize((608, 608), resample=Image.ANTIALIAS)
         cropped_img.load()
 
-        cropped_img = img_to_array(cropped_img) ### SHOULD BE WITH LOADER IN VIDEOCAPTURE
+        ### cropped_img = img_to_array(cropped_img) ### SHOULD BE WITH LOADER IN VIDEOCAPTURE
         return cropped_img
 
     def scale_image(self, image, scale):

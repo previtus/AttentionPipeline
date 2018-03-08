@@ -1,7 +1,7 @@
 import requests
 from timeit import default_timer as timer
-from evaluation_code.encoding import base64_encode_image
 from multiprocessing.pool import ThreadPool
+from io import BytesIO
 
 # del
 from timeit import default_timer as timer
@@ -77,17 +77,22 @@ class Connection(object):
 
         #t1 = timer()
 
-        encoded_images = self.pool.map(lambda img: (
-            base64_encode_image(img)
-        ), crops)
+        #encoded_images = self.pool.map(lambda img: (
+        #    base64_encode_image(img)
+        #), crops)
 
 
         for i in range(number_of_images):
-            #image = crops[i]
+            image = crops[i]
+
+            memory_file = BytesIO()
+            image.save(memory_file, "JPEG")
+            memory_file.seek(0)
+
             #image = base64_encode_image(image)
-            image = encoded_images[i]
+            #image = encoded_images[i]
             id = ids_of_crops[i]
-            payload[str(id)] = image
+            payload[str(id)] = memory_file
 
         #t2 = timer()
         #self.times_del.append((t2-t1))

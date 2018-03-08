@@ -42,7 +42,7 @@ class Server(object):
 
         app.run()
         # On server:
-        #self.app.run(host='0.0.0.0', port=8123)
+        #app.run(host='0.0.0.0', port=8123)
 
     def mem_monitor_deamon(self, frequency_sec):
         import subprocess
@@ -92,6 +92,9 @@ def evaluate_image_batch():
 
         for key in flask.request.files:
             image = flask.request.files[key].read()
+            image = Image.open(io.BytesIO(image))
+            image = img_to_array(image) # maybe
+
             #image = image.decode("utf-8")
 
             #image = base64_decode_image(image,dtype="float32",shape=(1, 608, 608,3))
@@ -102,14 +105,14 @@ def evaluate_image_batch():
             images.append(image)
             uids.append(key)
 
-        decoded_images = pool.map(lambda img: (
-            base64_decode_image(img.decode("utf-8"), dtype="float32", shape=(1, 608, 608, 3))
-        ), images)
-        images = [img[0] for img in decoded_images]
         t2 = timer()
         times_del.append((t2-t1))
-        print("avg new encoding parallel ", numpy.mean(times_del))
+        print("avg reading ", numpy.mean(times_del))
 
+        #decoded_images = pool.map(lambda img: (
+        #    base64_decode_image(img.decode("utf-8"), dtype="float32", shape=(1, 608, 608, 3))
+        #), images)
+        #images = [img[0] for img in decoded_images]
 
         print("Received",len(images),"images.", uids, [i.shape for i in images])
 

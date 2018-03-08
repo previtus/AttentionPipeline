@@ -44,6 +44,10 @@ class Evaluation(object):
 
 
         if self.local:
+            # should we even have this?
+            from keras.preprocessing.image import img_to_array
+            crops = [img_to_array(crop) for crop in crops]
+
             evaluation = self.evaluate_local(crops, ids_of_crops)
         else:
             evaluation = self.evaluate_on_server(crops, ids_of_crops)

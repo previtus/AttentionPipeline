@@ -42,7 +42,7 @@ class Settings(object):
 
         # Connection handling
         self.client_server = True
-        self.server_ports_list = ["5000", "9999"]
+        self.server_ports_list = ["5000", "9998", "9999"]
 
     def set_w_h(self,w,h):
         self.w = w
