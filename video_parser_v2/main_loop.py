@@ -36,7 +36,9 @@ def main_loop(args):
         # so that we can cut crops of 608x608 from it easily)
         #debugger.debug_coordinates_in_frame(evaluation_coordinates, frame[1], 'evaluation')
 
-        active_coordinates = attentionmodel.get_active_crops(projected_evaluation, evaluation_coordinates, frame)
+        #active_coordinates = attentionmodel.get_active_crops(projected_evaluation, evaluation_coordinates, frame)
+        active_coordinates = attentionmodel.get_active_crops_faster(projected_evaluation, evaluation_coordinates, frame)
+
         #debugger.debug_coordinates_in_frame(active_coordinates, frame[1], 'evaluation', 'activeonly')
         # active_coordinates are in evaluation space
 

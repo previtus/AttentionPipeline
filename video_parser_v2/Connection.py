@@ -1,6 +1,11 @@
 import requests
 from timeit import default_timer as timer
 from evaluation_code.encoding import base64_encode_image
+from multiprocessing.pool import ThreadPool
+
+# del
+from timeit import default_timer as timer
+import numpy
 
 class Connection(object):
     """
@@ -19,6 +24,11 @@ class Connection(object):
             self.number_of_server_machines = 0
 
             self.handshake()
+
+        self.pool = ThreadPool()
+
+
+        self.times_del = []
 
     def handshake(self):
         if self.settings.verbosity >= 2:
@@ -64,11 +74,25 @@ class Connection(object):
 
         start = timer()
         payload = {}
+
+        #t1 = timer()
+
+        encoded_images = self.pool.map(lambda img: (
+            base64_encode_image(img)
+        ), crops)
+
+
         for i in range(number_of_images):
-            image = crops[i]
-            image = base64_encode_image(image)
+            #image = crops[i]
+            #image = base64_encode_image(image)
+            image = encoded_images[i]
             id = ids_of_crops[i]
             payload[str(id)] = image
+
+        #t2 = timer()
+        #self.times_del.append((t2-t1))
+        #print("avg new encoding parallel ", numpy.mean(self.times_del))
+
 
         # submit the request
         r = requests.post(EVALUATE_API_URL, files=payload).json()

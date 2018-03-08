@@ -10,12 +10,19 @@ import flask
 import io
 import os
 from timeit import default_timer as timer
+from multiprocessing.pool import ThreadPool
 
 # Thanks to the tutorial at: https://blog.keras.io/building-a-simple-keras-deep-learning-rest-api.html
 
 app = flask.Flask(__name__)
 darkflow_model = None
+pool = ThreadPool()
 
+# del
+from timeit import default_timer as timer
+import numpy
+
+times_del = []
 
 class Server(object):
     """
@@ -81,21 +88,28 @@ def evaluate_image_batch():
         images = []
         uids = []
 
+        t1 = timer()
+
         for key in flask.request.files:
             image = flask.request.files[key].read()
-            image = image.decode("utf-8")
+            #image = image.decode("utf-8")
 
-            IMAGE_WIDTH = 608
-            IMAGE_HEIGHT = 608
-            IMAGE_CHANS = 3
-            IMAGE_DTYPE = "float32"
-            image = base64_decode_image(image,IMAGE_DTYPE,(1, IMAGE_HEIGHT, IMAGE_WIDTH,IMAGE_CHANS))
-            if image.shape[0] != 1:
-                print("CAREFUL, i made wrong assumption about image.shape", image.shape, "its not 1")
-            image = image[0]
+            #image = base64_decode_image(image,dtype="float32",shape=(1, 608, 608,3))
+            #if image.shape[0] != 1:
+            #    print("CAREFUL, i made wrong assumption about image.shape", image.shape, "its not 1")
+            #image = image[0]
 
             images.append(image)
             uids.append(key)
+
+        decoded_images = pool.map(lambda img: (
+            base64_decode_image(img.decode("utf-8"), dtype="float32", shape=(1, 608, 608, 3))
+        ), images)
+        images = [img[0] for img in decoded_images]
+        t2 = timer()
+        times_del.append((t2-t1))
+        print("avg new encoding parallel ", numpy.mean(times_del))
+
 
         print("Received",len(images),"images.", uids, [i.shape for i in images])
 

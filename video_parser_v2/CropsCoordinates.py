@@ -47,6 +47,20 @@ class CropsCoordinates(object):
             projected_evaluation += bboxes_in_img
         return projected_evaluation
 
+    def project_evaluation_to(self, evaluation_one_array, variant):
+        """
+        [Maybe to be rewritten ?]
+        Converts only with scale (we already have well behaving bboxes)
+        """
+
+        if variant == 'original_image_to_evaluation_space':
+            scale = 1.0/self.scale_ratio_of_evaluation_crop # what are we dividing every bbox with
+            crop1 = [0,[0,0,0,0]] # what are we adding to every bbox
+
+        projected_evaluation = self.project_back_to_original_image(0, evaluation_one_array, 'special_manual', [crop1, scale])
+        return projected_evaluation
+
+
     def project_coordinates_back(self, coordinates, type):
         # coordinates come in array of [[id, (0, 0, 608, 608)], ... ]
         # just / scale to each value
@@ -62,7 +76,8 @@ class CropsCoordinates(object):
             projected_coordinates.append([id,projected_coordinate])
         return projected_coordinates
 
-    def project_back_to_original_image(self,id,bboxes,type):
+    def project_back_to_original_image(self,id,bboxes,type,special=[]):
+        # evaluation -> bboxes
         # bboxes is array of dictionaries like:
         # {'label': 'person', 'confidence': 0.19, 'topleft': {'x': 141, 'y': 301}, 'bottomright': {'x': 153, 'y': 331}}
 
@@ -75,6 +90,10 @@ class CropsCoordinates(object):
         elif type == 'evaluation':
             crops = self.last_evalutaion_crops[id]
             scale = self.scale_ratio_of_evaluation_crop
+        elif type == 'special_manual':
+            crops = special[0] # [0,0,0,0]
+            scale = special[1]
+
 
         area = crops[1] # area in (0, 0, 608, 608), (472, 0, 1080, 608), ...
         # area is LEFT, TOP, RIGHT, BOTTOM
