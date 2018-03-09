@@ -26,6 +26,8 @@ class Settings(object):
         self.debug_color_postprocessed_bboxes = (args.debug_color_postprocessed_bboxes == 'True')
         self.debug_just_count_hist = (args.debug_just_count_hist == 'True')
 
+        self.render_history_every_k_frames = 20
+
         self.INPUT_FRAMES = args.input
         self.RUN_NAME = args.name
 
@@ -41,8 +43,8 @@ class Settings(object):
 
 
         # Connection handling
-        self.client_server = True
-        self.server_ports_list = ["5000", "9998", "9999"]
+        self.client_server = False
+        self.server_ports_list = ["5000", "9999", "9998", "9997"]
 
     def set_w_h(self,w,h):
         self.w = w

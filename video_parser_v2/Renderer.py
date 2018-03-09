@@ -5,8 +5,9 @@ class Renderer(object):
     Draw final image with bboxes to a screen or file.
     """
 
-    def __init__(self, settings):
+    def __init__(self, settings, history):
         self.settings = settings
+        self.history = history
 
         self.render_files_into_folder = self.settings.render_files_into_folder
         self.render_folder_name = self.settings.render_folder_name
@@ -14,6 +15,8 @@ class Renderer(object):
             make_folder(self.render_folder_name)
 
     def render(self, final_evaluation, frame):
+
+
         if self.render_files_into_folder:
             self.render_into_folder(final_evaluation, frame)
 

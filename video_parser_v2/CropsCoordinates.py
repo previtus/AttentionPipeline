@@ -7,8 +7,9 @@ class CropsCoordinates(object):
     function: get_crops_coordinates
     """
 
-    def __init__(self, settings):
+    def __init__(self, settings, history):
         self.settings = settings
+        self.history = history
 
         #self.scale_ratio_of_attention_crop = 1.0
         #self.crop_size_in_attention = 0
@@ -26,6 +27,9 @@ class CropsCoordinates(object):
         if type == 'attention':
             self.scale_ratio_of_attention_crop = scale_full_img
             self.crop_size_in_attention = crop_size
+
+            number_of_attention_crops = len(crops_coords)
+            self.history.report_crops_in_attention_evaluation(number_of_attention_crops)
         elif type == 'evaluation':
             self.scale_ratio_of_evaluation_crop = scale_full_img
             self.crop_size_in_evaluation = crop_size

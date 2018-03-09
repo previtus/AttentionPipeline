@@ -1,5 +1,6 @@
 import evaluation_code.darkflow_handler as darkflow_handler
 import ImageProcessing
+from timeit import default_timer as timer
 
 
 class Evaluation(object):
@@ -23,6 +24,7 @@ class Evaluation(object):
 
 
     def evaluate(self, crops_coordinates, frame, type):
+        t1 = timer()
         frame_path = frame[0]
         frame_image_original = frame[1]
 
@@ -56,7 +58,12 @@ class Evaluation(object):
 
         if self.settings.verbosity >= 2:
             counts = [len(in_one_crop[1]) for in_one_crop in evaluation]
-            print("Evaluation (server) of stage `"+type+"`, bboxes in crops", counts)
+            where = 'local'
+            if self.settings.client_server: where = 'server'
+            print("Evaluation ("+where+") of stage `"+type+"`, bboxes in crops", counts)
+
+        t = timer() - t1
+        self.history.report_evaluation_whole_function(type, t)
 
         # Returns evaluation in format:
         # array of crops in order by coordinates_id

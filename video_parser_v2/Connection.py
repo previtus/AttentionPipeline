@@ -75,13 +75,6 @@ class Connection(object):
         start = timer()
         payload = {}
 
-        #t1 = timer()
-
-        #encoded_images = self.pool.map(lambda img: (
-        #    base64_encode_image(img)
-        #), crops)
-
-
         for i in range(number_of_images):
             image = crops[i]
 
@@ -89,18 +82,14 @@ class Connection(object):
             image.save(memory_file, "JPEG")
             memory_file.seek(0)
 
-            #image = base64_encode_image(image)
-            #image = encoded_images[i]
             id = ids_of_crops[i]
             payload[str(id)] = memory_file
 
-        #t2 = timer()
-        #self.times_del.append((t2-t1))
-        #print("avg new encoding parallel ", numpy.mean(self.times_del))
-
-
         # submit the request
-        r = requests.post(EVALUATE_API_URL, files=payload).json()
+        try:
+            r = requests.post(EVALUATE_API_URL, files=payload).json()
+        except Exception:
+            print("CONNECTION TO SERVER FAILED - return to backup local evaluation?")
 
         end = timer()
         t = end - start

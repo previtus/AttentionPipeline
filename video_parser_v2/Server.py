@@ -95,24 +95,12 @@ def evaluate_image_batch():
             image = Image.open(io.BytesIO(image))
             image = img_to_array(image) # maybe
 
-            #image = image.decode("utf-8")
-
-            #image = base64_decode_image(image,dtype="float32",shape=(1, 608, 608,3))
-            #if image.shape[0] != 1:
-            #    print("CAREFUL, i made wrong assumption about image.shape", image.shape, "its not 1")
-            #image = image[0]
-
             images.append(image)
             uids.append(key)
 
         t2 = timer()
         times_del.append((t2-t1))
         print("avg reading ", numpy.mean(times_del))
-
-        #decoded_images = pool.map(lambda img: (
-        #    base64_decode_image(img.decode("utf-8"), dtype="float32", shape=(1, 608, 608, 3))
-        #), images)
-        #images = [img[0] for img in decoded_images]
 
         print("Received",len(images),"images.", uids, [i.shape for i in images])
 

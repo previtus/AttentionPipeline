@@ -8,13 +8,13 @@ def main_loop(args):
     connection = Connection.Connection(settings)
     #if connection.failed: return -1
 
-    cropscoordinates = CropsCoordinates.CropsCoordinates(settings)
+    cropscoordinates = CropsCoordinates.CropsCoordinates(settings, history)
     videocapture = VideoCapture.VideoCapture(settings, history)
     evaluation = Evaluation.Evaluation(settings, connection, cropscoordinates, history)
     attentionmodel = AttentionModel.AttentionModel(settings, cropscoordinates, evaluation, history)
     postprocess = Postprocess.Postprocess(settings)
 
-    renderer = Renderer.Renderer(settings)
+    renderer = Renderer.Renderer(settings, history)
     debugger = Debugger.Debugger(settings, cropscoordinates, evaluation)
     settings.set_debugger(debugger)
 
@@ -44,6 +44,8 @@ def main_loop(args):
 
         if len(active_coordinates) == 0:
             print("Nothing left active - that's possibly ok, skip")
+            renderer.render([], frame)
+            history.report_skipped_final_evaluation()
             continue
 
         final_evaluation = evaluation.evaluate(active_coordinates, frame, 'evaluation')
@@ -56,5 +58,9 @@ def main_loop(args):
         processed_evaluations = postprocess.postprocess_bboxes_along_splitlines(projected_active_coordinates,projected_final_evaluation, True)
         #debugger.debug_evaluation_to_bboxes_after_reprojection(processed_evaluations, frame[1], 'finalpostprocessed'+frame[0][-8:-4])
 
-        #history.add_record(attention_evaluation, final_evaluation, active_coordinates)
+        print("number of bboxes = ", len(processed_evaluations))
+
         renderer.render(processed_evaluations, frame)
+
+        #history.end_of_frame() < can be called automatically
+    history.tick_loop(True)

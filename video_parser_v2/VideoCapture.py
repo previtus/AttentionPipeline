@@ -54,4 +54,6 @@ class VideoCapture(object):
             if self.settings.verbosity >= 1:
                 print("#"+str(i)+":", self.frame_files[i], image.size)
 
+            self.history.tick_loop()
+
             yield (path, image, self.frame_files[i])
