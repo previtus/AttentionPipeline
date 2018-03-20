@@ -1,6 +1,7 @@
 import evaluation_code.darkflow_handler as darkflow_handler
 import ImageProcessing
 from timeit import default_timer as timer
+from threading import Thread
 
 
 class Evaluation(object):
@@ -21,6 +22,100 @@ class Evaluation(object):
             if self.settings.verbosity >= 2:
                 print("Evaluation init, local model of Darkflow")
             self.local_model = self.init_local()
+
+        if self.settings.precompute_attention_evaluation:
+            # initialize hashmaps / dictionaries
+            self.precomputations_started = {} # <frame_number> => thread id
+            self.precomputations_finished = {} # <frame_number> => results
+            #self.precomputing_threads = []
+
+
+    def evaluate_attention_with_precomputing(self, frame_number, crops_coordinates, frame, type, next_frames):
+        # if the feature is off, evaluate normally
+        if not self.settings.precompute_attention_evaluation or \
+                (len(next_frames) < 1 and not (frame_number in self.precomputations_started.keys() or frame_number in self.precomputations_finished.keys())):
+                ### TODO PUT THIS BACK or self.connection.number_of_server_machines <= 1:
+            return self.evaluate(crops_coordinates, frame, type)
+        else:
+            result = None
+            # We know that we are precomputing attention
+            # - look if we didn't start computing frame <frame_number> already -> wait for the evaluation to finish
+            # - look if we didn't complete computing for frame <frame_number> already -> get data
+            # - remove <frame_number> from both lists
+            # - spawn new evaluation, the next one not yet started or finished from next_frames
+            #
+            # keep hashmaps
+            # precomputations_started: <frame_number> => thread
+            # precomputations_finished = <frame_number> => results
+
+            # 1.) resolve the current frame
+            if frame_number in self.precomputations_finished.keys():
+                result = self.precomputations_finished[frame_number]
+
+                if self.settings.verbosity >= 3:
+                    print("[precomp] Using precomputed",frame_number,".")
+
+                del self.precomputations_finished[frame_number]
+
+                # clean from the other hashmap too
+                if frame_number in self.precomputations_started.keys():
+                    del self.precomputations_started[frame_number]
+
+            elif frame_number in self.precomputations_started.keys():
+                thread = self.precomputations_started[frame_number]
+
+                if self.settings.verbosity >= 3:
+                    print("[precomp] Waiting for precomputation for",frame_number," on thread", thread)
+
+                # wait for it to finish
+                thread.join()
+
+                result = self.precomputations_finished[frame_number]
+
+                if frame_number in self.precomputations_started.keys():
+                    del self.precomputations_started[frame_number]
+
+                # clean from the other hashmap too
+                if frame_number in self.precomputations_finished.keys():
+                    del self.precomputations_finished[frame_number]
+
+            else:
+                # this frame didn't start yet, it must be the first one, evaluate it the old way...
+                if self.settings.verbosity >= 3:
+                    print("[precomp] Frame", frame_number, " had to be started on its own")
+                result = self.evaluate(crops_coordinates, frame, type)
+
+            # 2.) start of the next frame (s)
+            self.start_precomputation(next_frames, crops_coordinates, type)
+
+            return result
+
+    def start_precomputation(self, next_frames, shared_crops_coordinates, shared_type):
+        if self.settings.verbosity >= 3:
+            print("[precomp] Starting threads")
+        for i in range(0, len(next_frames)):
+            frame = next_frames[i]
+            frame_number = frame[3]
+            if frame_number in self.precomputations_started:
+                continue
+            # lenght of next_frames depends on settings.precompute_number and what is remaining
+
+            if self.settings.verbosity >= 3:
+                print("[precomp] Starting thread for <frame_number>", frame_number)
+
+            t = Thread(target=self.evaluate_precompute, args=(shared_crops_coordinates, frame, shared_type, frame_number))
+            t.daemon = True
+            t.start()
+            #self.precomputing_threads.append(t)
+
+            self.precomputations_started[frame_number] = t
+
+    def evaluate_precompute(self, crops_coordinates, frame, type, frame_number):
+
+        result = self.evaluate(crops_coordinates, frame, type)
+
+        self.precomputations_finished[frame_number] = result
+        del self.precomputations_started[frame_number]
 
 
     def evaluate(self, crops_coordinates, frame, type):
@@ -52,7 +147,7 @@ class Evaluation(object):
 
             evaluation = self.evaluate_local(crops, ids_of_crops)
         else:
-            evaluation = self.evaluate_on_server(crops, ids_of_crops)
+            evaluation = self.evaluate_on_server(crops, ids_of_crops, type)
 
         evaluation = self.filter_evaluations(evaluation)
 
@@ -83,8 +178,8 @@ class Evaluation(object):
 
         return evaluation
 
-    def evaluate_on_server(self, crops, ids_of_crops):
-        evaluation = self.connection.evaluate_crops_on_server(crops, ids_of_crops)
+    def evaluate_on_server(self, crops, ids_of_crops, type):
+        evaluation = self.connection.evaluate_crops_on_server(crops, ids_of_crops, type)
         return evaluation
 
     def filter_evaluations(self, evaluation):

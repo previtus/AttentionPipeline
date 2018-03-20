@@ -18,12 +18,16 @@ def main_loop(args):
     debugger = Debugger.Debugger(settings, cropscoordinates, evaluation)
     settings.set_debugger(debugger)
 
-    for frame in videocapture.frame_generator():
+    for frame, next_frames, frame_number in videocapture.frame_generator():
+
+        print("frame: ", frame[2])
+        for i in range(len(next_frames)):
+            print("next_frames",i,": ", next_frames[i][2], next_frames[i][0], next_frames[i][2:])
 
         attention_coordinates = cropscoordinates.get_crops_coordinates('attention')
         #debugger.debug_coordinates_in_frame(attention_coordinates, frame[1],'attention')
 
-        attention_evaluation = evaluation.evaluate(attention_coordinates, frame, 'attention')
+        attention_evaluation = evaluation.evaluate_attention_with_precomputing(frame_number, attention_coordinates, frame, 'attention', next_frames)
         # attention_evaluation start in attention crops space (size of frame downscaled for attention evaluation
         # so that we can cut crops of 608x608 from it easily)
 

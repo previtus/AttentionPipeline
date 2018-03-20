@@ -43,8 +43,12 @@ class Settings(object):
 
 
         # Connection handling
-        self.client_server = False
-        self.server_ports_list = ["5000", "9999", "9998", "9997"]
+        self.client_server = True
+        self.server_ports_list = ["5000", "5001", "5002", "9999", "9998", "9997"]
+
+        # Precomputing Attention
+        self.precompute_attention_evaluation = True
+        self.precompute_number = 1
 
     def set_w_h(self,w,h):
         self.w = w

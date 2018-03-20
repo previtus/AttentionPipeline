@@ -98,7 +98,7 @@ class History(object):
     def plot_and_save(self):
         # plot all of the history graphs:
 
-        style = "areas" # lines of areas
+        style = "lines" # lines of areas
         color_change = True
         # red, yellow, blue, green, blue 2, orange, pink, grey, almost white
         color_list = ['#ec9980', '#f3f3bb', '#8fb6c9', 'accc7c', '#94ccc4', '#ecb475', '#f4d4e4', '#dcdcdc', '#fbfbfb']
