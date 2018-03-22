@@ -31,11 +31,12 @@ class Evaluation(object):
 
 
     def evaluate_attention_with_precomputing(self, frame_number, crops_coordinates, frame, type, next_frames):
-        # if the feature is off, evaluate normally
         if not self.settings.precompute_attention_evaluation or \
-                (len(next_frames) < 1 and not (frame_number in self.precomputations_started.keys() or frame_number in self.precomputations_finished.keys())):
-                ### TODO PUT THIS BACK or self.connection.number_of_server_machines <= 1:
-            return self.evaluate(crops_coordinates, frame, type)
+                (len(next_frames) < 1 and not (frame_number in self.precomputations_started.keys() or frame_number in self.precomputations_finished.keys()))\
+                or self.connection.number_of_server_machines <= 1:
+            # if the feature is off, evaluate normally
+
+            return self.evaluate(crops_coordinates, frame, type, frame_number)
         else:
             result = None
             # We know that we are precomputing attention
@@ -47,6 +48,8 @@ class Evaluation(object):
             # keep hashmaps
             # precomputations_started: <frame_number> => thread
             # precomputations_finished = <frame_number> => results
+
+            start = timer()
 
             # 1.) resolve the current frame
             if frame_number in self.precomputations_finished.keys():
@@ -83,7 +86,11 @@ class Evaluation(object):
                 # this frame didn't start yet, it must be the first one, evaluate it the old way...
                 if self.settings.verbosity >= 3:
                     print("[precomp] Frame", frame_number, " had to be started on its own")
-                result = self.evaluate(crops_coordinates, frame, type)
+                result = self.evaluate(crops_coordinates, frame, type, frame_number)
+
+            end = timer()
+            waited_for_attention_in_total = end - start
+            self.history.report_evaluation_attention_waiting(waited_for_attention_in_total, frame_number)
 
             # 2.) start of the next frame (s)
             self.start_precomputation(next_frames, crops_coordinates, type)
@@ -111,14 +118,15 @@ class Evaluation(object):
             self.precomputations_started[frame_number] = t
 
     def evaluate_precompute(self, crops_coordinates, frame, type, frame_number):
+        # Thread function called to precompute for next frames
 
-        result = self.evaluate(crops_coordinates, frame, type)
+        result = self.evaluate(crops_coordinates, frame, type, frame_number)
 
         self.precomputations_finished[frame_number] = result
         del self.precomputations_started[frame_number]
 
 
-    def evaluate(self, crops_coordinates, frame, type):
+    def evaluate(self, crops_coordinates, frame, type, frame_number):
         t1 = timer()
         frame_path = frame[0]
         frame_image_original = frame[1]
@@ -147,7 +155,7 @@ class Evaluation(object):
 
             evaluation = self.evaluate_local(crops, ids_of_crops)
         else:
-            evaluation = self.evaluate_on_server(crops, ids_of_crops, type)
+            evaluation = self.evaluate_on_server(crops, ids_of_crops, type, frame_number)
 
         evaluation = self.filter_evaluations(evaluation)
 
@@ -158,7 +166,7 @@ class Evaluation(object):
             print("Evaluation ("+where+") of stage `"+type+"`, bboxes in crops", counts)
 
         t = timer() - t1
-        self.history.report_evaluation_whole_function(type, t)
+        self.history.report_evaluation_whole_function(type, t, frame_number)
 
         # Returns evaluation in format:
         # array of crops in order by coordinates_id
@@ -178,8 +186,11 @@ class Evaluation(object):
 
         return evaluation
 
-    def evaluate_on_server(self, crops, ids_of_crops, type):
-        evaluation = self.connection.evaluate_crops_on_server(crops, ids_of_crops, type)
+    def evaluate_on_server(self, crops, ids_of_crops, type, frame_number):
+        evaluation, times = self.connection.evaluate_crops_on_server(crops, ids_of_crops, type)
+        # if its final evaluation, save individual times per servers
+        if type == 'evaluation':
+            self.history.report_evaluation_per_individual_worker(times, type, frame_number)
         return evaluation
 
     def filter_evaluations(self, evaluation):

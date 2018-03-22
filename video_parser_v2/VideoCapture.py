@@ -2,6 +2,7 @@ import os, fnmatch
 from processing_code.file_handling import is_non_zero_file
 from PIL import Image
 from keras.preprocessing.image import img_to_array
+from timeit import default_timer as timer
 
 class VideoCapture(object):
     """
@@ -91,7 +92,7 @@ class VideoCapture(object):
             if self.settings.verbosity >= 1:
                 print("#"+str(i-f)+":", loaded[2], loaded[1].size)
 
-            self.history.tick_loop()
+            self.history.tick_loop(frame_number - 1)
 
 
             yield (loaded, next_frames, frame_number)

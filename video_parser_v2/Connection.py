@@ -67,8 +67,12 @@ class Connection(object):
 
         self.number_of_server_machines = len(self.server_ports_list)
         if (self.number_of_server_machines == 0):
-            print("Connection to all servers failed! Backup solution = turning to local evaluation.")
+            print("Connection to all servers failed! Backup solution = turning to local evaluation, no precomputing allowed.")
             self.settings.client_server = False
+            self.precompute_attention_evaluation = False
+        if (self.number_of_server_machines < 2):
+            print("Only one server connected! No precomputing allowed.")
+            self.precompute_attention_evaluation = False
 
     def prepare_attention_evaluation_server_lists(self):
         N = self.number_of_server_machines
@@ -91,9 +95,15 @@ class Connection(object):
     def evaluate_crops_on_server(self, crops, ids_of_crops, type):
         # will be more advanced
         # like splitting to all available servers
+        N = self.number_of_server_machines
 
-        result = self.split_across_list_of_servers(crops, ids_of_crops, type)
-        return result
+        if N > 1:
+            result,times = self.split_across_list_of_servers(crops, ids_of_crops, type)
+        else:
+            port = self.server_ports_list[0]
+            result,time = self.direct_to_server(crops, ids_of_crops, port)
+            times = [time]
+        return result, times
 
         """
         port = self.server_ports_list[0]
@@ -142,6 +152,7 @@ class Connection(object):
         F = math.floor((C/N))
 
         results = [[]]*(max(ids_of_crops)+1)
+        times = [[]]*(N)
         threads = []
 
         for i in range(N):
@@ -161,7 +172,7 @@ class Connection(object):
                 print(port, "> from",a,"to",b,", with len=",len(sub_crops), "of ids:", sub_ids)
 
             # start a new thread to call the API
-            t = Thread(target=self.eval_subset_and_save_to_queue, args=(sub_crops, sub_ids, port, results))
+            t = Thread(target=self.eval_subset_and_save_to_list, args=(sub_crops, sub_ids, port, results, i, times))
             t.daemon = True
             t.start()
             threads.append(t)
@@ -173,30 +184,35 @@ class Connection(object):
             print("All threads finished, assuming we have all the ids from", ids_of_crops)
 
         results_tmp = []
-        for r in results:
+        #print("times", times)
+
+        for i,r in enumerate(results):
             if len(r) > 0:
                 results_tmp.append(r)
 
         results = results_tmp
+
         if self.settings.verbosity >= 3:
             print("results = ", results)
 
-        return results
+        return results, times
 
-    def eval_subset_and_save_to_queue(self, crops, ids_of_crops, port, results):
-        evaluation = self.direct_to_server(crops, ids_of_crops, port)
+    def eval_subset_and_save_to_list(self, crops, ids_of_crops, port, results, ith, times):
+        evaluation,time = self.direct_to_server(crops, ids_of_crops, port)
+        times[ith] = time
+        #print("times[ith]", ith, " = ", time)
 
         for uid,bbox in evaluation:
             results[uid] = [uid,bbox]
             #results[uid] = [uid]
 
     def direct_to_server(self, crops, ids_of_crops, port):
+        start = timer()
 
         EVALUATE_API_URL = "http://localhost:" + port + "/evaluate_image_batch"
 
         number_of_images = len(crops)
 
-        start = timer()
         payload = {}
 
         for i in range(number_of_images):
@@ -213,12 +229,12 @@ class Connection(object):
         try:
             r = requests.post(EVALUATE_API_URL, files=payload).json()
         except Exception:
-            print("CONNECTION TO SERVER FAILED - return to backup local evaluation?")
+            print("CONNECTION TO SERVER ",EVALUATE_API_URL," FAILED - return to backup local evaluation?")
 
         end = timer()
-        t = end - start
+        time = end - start
         if self.settings.verbosity >= 2:
-            print("Server on port",port," evaluated", len(crops), "crops. Time:", t, "Request data:", r)
+            print("Server on port",port," evaluated", len(crops), "crops. Time:", time, "Request data:", r)
 
         print("request", r)
 
@@ -238,5 +254,5 @@ class Connection(object):
         #     each holds id and array of dictionaries for each bbox {} keys label, confidence, topleft, bottomright
         #print("evaluation", evaluation)
 
-        return evaluation
+        return evaluation, time
 

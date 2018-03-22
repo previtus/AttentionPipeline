@@ -31,7 +31,7 @@ class AttentionModel(object):
         if self.settings.verbosity > 2:
             print("Attention model found",len(active_coordinates),"active crops in the image (out of",len(evaluation_coordinates),")")
 
-        self.history.report_attention(len(active_coordinates), len(evaluation_coordinates))
+        self.history.report_attention(len(active_coordinates), len(evaluation_coordinates), self.settings.frame_number)
 
         return active_coordinates
 
