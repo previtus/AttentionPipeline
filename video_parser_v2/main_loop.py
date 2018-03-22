@@ -12,13 +12,14 @@ def main_loop(args):
     videocapture = VideoCapture.VideoCapture(settings, history)
     evaluation = Evaluation.Evaluation(settings, connection, cropscoordinates, history)
     attentionmodel = AttentionModel.AttentionModel(settings, cropscoordinates, evaluation, history)
-    postprocess = Postprocess.Postprocess(settings)
+    postprocess = Postprocess.Postprocess(settings, history)
 
     renderer = Renderer.Renderer(settings, history)
     debugger = Debugger.Debugger(settings, cropscoordinates, evaluation)
     settings.set_debugger(debugger)
 
     for frame, next_frames, frame_number in videocapture.frame_generator():
+        settings.frame_number = frame_number
 
         print("frame: ", frame[2])
         for i in range(len(next_frames)):
@@ -49,10 +50,10 @@ def main_loop(args):
         if len(active_coordinates) == 0:
             print("Nothing left active - that's possibly ok, skip")
             renderer.render([], frame)
-            history.report_skipped_final_evaluation()
+            history.report_skipped_final_evaluation(frame_number)
             continue
 
-        final_evaluation = evaluation.evaluate(active_coordinates, frame, 'evaluation')
+        final_evaluation = evaluation.evaluate(active_coordinates, frame, 'evaluation', frame_number)
         # evaluation are in evaluation space
         projected_final_evaluation = cropscoordinates.project_evaluation_back(final_evaluation, 'evaluation')
         # projected back to original space
@@ -66,5 +67,4 @@ def main_loop(args):
 
         renderer.render(processed_evaluations, frame)
 
-        #history.end_of_frame() < can be called automatically
-    history.tick_loop(True)
+    history.tick_loop(frame_number, True)

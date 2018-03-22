@@ -56,8 +56,12 @@ class History(object):
 
         # IO related
         self.IO_loads = {} # in VideoCapture
-        self.IO_cut_crops = {} # in attention Evaluation
+        self.IO_EVAL_cut_crops_attention = {} # in attention Evaluation
+        self.IO_EVAL_cut_crops_final = {} # in final Evaluation
         self.IO_saves = {} # in Render
+
+        # Postprocessing
+        self.postprocess = {}  # in Render
 
         # is it worth it to measure each crops evaluation time? maybe not really
 
@@ -116,6 +120,21 @@ class History(object):
         self.times_final_evaluation_processing_full_frame[frame_number]=0
         self.number_of_detected_objects[frame_number]=0
 
+    def report_IO_load(self, time, frame_number):
+        self.IO_loads[frame_number] = time
+
+    def report_IO_save(self, time, frame_number):
+        self.IO_saves[frame_number] = time
+
+    def report_postprocessing(self, time, frame_number):
+        self.postprocess[frame_number] = time
+
+    def report_IO_EVAL_cut_evaluation(self, type, time, frame_number):
+        if type == 'attention':
+            self.IO_EVAL_cut_crops_attention[frame_number]=time
+        elif type == 'evaluation':
+            self.IO_EVAL_cut_crops_final[frame_number]=time
+
     def end_of_frame(self, force=False):
         self.frame_ticker -= 1
         if self.frame_ticker <= 0 or force:
@@ -126,8 +145,11 @@ class History(object):
             self.plot_and_save()
 
     def plot_and_save(self):
+        self.print_all_datalists()
+        self.timing_per_frame_plot_stackedbar() ###
+        self.timing_per_frame_plot_boxplot() ####
 
-        for_attention_measure_waiting_instead_of_time = True
+        for_attention_measure_waiting_instead_of_time = self.settings.precompute_attention_evaluation
 
         active_crops_per_frames = list(self.active_crops_per_frames.values())
         total_crops_per_frames = list(self.total_crops_per_frames.values())
@@ -249,3 +271,155 @@ class History(object):
             # outliers might be significantly messing up the graph
             # max value is 2x what most of the data is...
             plt.ylim(ymax=most_below, ymin=0)
+
+    def timing_per_frame_plot_idea(self):
+        """
+        Idea of this plotting is:
+
+        (yellow+orange)   |  (light blue)  | (light red)                | (green)
+
+        IO load, IO save  | Attention Wait | Final cut + eval           | Postprocessing
+                                             [[cut] + per server] total
+        """
+
+        # IO load, IO save
+        self.IO_loads
+        self.IO_saves
+
+        # Attention Wait
+        self.times_attention_evaluation_waiting
+
+        # Final cut + eval
+        self.times_final_evaluation_processing_full_frame
+        # alternatively: [[cut] + per server] total
+        self.IO_EVAL_cut_crops_final
+        self.times_final_evaluation_processing_per_worker
+
+        # Postprocessing
+        self.postprocess
+
+
+        return 0
+
+    def timing_per_frame_plot_boxplot(self):
+        """
+        (yellow+orange)   |  (light blue)  | (light red)                | (green)
+        IO load, IO save  | Attention Wait | Final cut + eval           | Postprocessing
+                                             [[cut] + per server] total
+        """
+
+        # 1.) into lists
+        # IO load, IO save
+        IO_loads = list(self.IO_loads.values())
+        IO_saves = list(self.IO_saves.values())
+
+        # Attention Wait
+        if self.settings.precompute_attention_evaluation:
+            AttWait = list(self.times_attention_evaluation_waiting.values())
+            attention_name = "AttWait"
+        else:
+            AttWait = list(self.times_attention_evaluation_processing_full_frame.values())
+            attention_name = "AttEval"
+
+        # Final cut + eval
+        FinalCutEval = list(self.times_final_evaluation_processing_full_frame.values())
+        FinalCut = list(self.IO_EVAL_cut_crops_final.values())
+        FinalEval = np.array(FinalCutEval) - np.array(FinalCut)
+
+        # alternatively: [[cut] + per server] total
+        #Cuts = list(self.IO_EVAL_cut_crops_final.values())
+        #FinalPerWorker = list(self.times_final_evaluation_processing_per_worker.values())
+
+        # Postprocessing
+        postprocess = list(self.postprocess.values())
+
+        #data = [IO_loads, IO_saves, AttWait, FinalCutEval, postprocess]
+        data = [IO_loads, IO_saves, AttWait, FinalCut, FinalEval, postprocess]
+        # multiple box plots on one figure
+
+        plt.title("Per frame analysis - box plot")
+        plt.ylabel("Time (s)")
+        plt.xlabel("Stages")
+
+        plt.boxplot(data)
+        #plt.xticks(range(1,6), ['IO_loads', 'IO_saves', attention_name, 'FinalCutEval', 'postprocess'])
+        plt.xticks(range(1,7), ['IO_loads', 'IO_saves', attention_name, 'FinalCut', 'FinalEval', 'postprocess'])
+        # https://matplotlib.org/gallery/statistics/boxplot_demo.html
+
+        save_path = self.settings.render_folder_name + "boxplot.png"
+        plt.savefig(save_path, dpi=120)
+
+        plt.show()
+
+        return 0
+
+    def timing_per_frame_plot_stackedbar(self):
+
+        # prepare lists:
+        IO_loads = list(self.IO_loads.values())
+        IO_saves = list(self.IO_saves.values())
+        if self.settings.precompute_attention_evaluation:
+            AttWait = list(self.times_attention_evaluation_waiting.values())
+            attention_name = "AttWait"
+        else:
+            AttWait = list(self.times_attention_evaluation_processing_full_frame.values())
+            attention_name = "AttEval"
+
+        FinalCutEval = list(self.times_final_evaluation_processing_full_frame.values())
+        FinalCut = list(self.IO_EVAL_cut_crops_final.values())
+        FinalEval = np.array(FinalCutEval) - np.array(FinalCut)
+
+        postprocess = list(self.postprocess.values())
+
+        IO_loads = np.array(IO_loads)
+        IO_saves = np.array(IO_saves)
+        AttWait = np.array(AttWait)
+        FinalCutEval = np.array(FinalCutEval)
+        FinalCut = np.array(FinalCut)
+        postprocess = np.array(postprocess)
+
+        N = len(IO_loads)
+        ind = np.arange(N)
+        width = 0.35
+
+        plt.title("Per frame analysis - stacked bar")
+        plt.ylabel("Time (s)")
+        plt.xlabel("Frame #num")
+
+        p1 = plt.bar(ind, IO_loads, width, color='yellow') # yerr=stand deviation
+        p2 = plt.bar(ind, IO_saves, width, bottom=IO_loads, color='orange')
+        p3 = plt.bar(ind, AttWait, width, bottom=IO_saves+IO_loads, color='blue')
+        #p4 = plt.bar(ind, FinalCutEval, width, bottom=AttWait+IO_saves+IO_loads, color='red')
+        p4a = plt.bar(ind, FinalCut, width, bottom=AttWait+IO_saves+IO_loads, color='lightcoral')
+        p4b = plt.bar(ind, FinalEval, width, bottom=FinalCut+AttWait+IO_saves+IO_loads, color='red')
+        p5 = plt.bar(ind, postprocess, width, bottom=FinalEval+FinalCut+AttWait+IO_saves+IO_loads, color='green')
+
+        plt.legend((p1[0], p2[0], p3[0], p4a[0], p4b[0], p5[0]), ('IO loads', 'IO saves', attention_name, 'FinalCut', 'FinalEval', 'postprocess'))
+
+        save_path = self.settings.render_folder_name + "stacked.png"
+        plt.savefig(save_path, dpi=120)
+
+        plt.show()
+
+        return 0
+
+    def print_all_datalists(self):
+
+        # prepare lists:
+        IO_loads = list(self.IO_loads.values())
+        IO_saves = list(self.IO_saves.values())
+        AttWait = list(self.times_attention_evaluation_waiting.values())
+        AttEval = list(self.times_attention_evaluation_processing_full_frame.values())
+        FinalCutEval = list(self.times_final_evaluation_processing_full_frame.values())
+        postprocess = list(self.postprocess.values())
+
+        print("IO_loads, IO_saves, AttWait/AttEval, FinalCutEval, postprocess")
+        print("IO_loads",IO_loads)
+        print("IO_saves",IO_saves)
+        print("AttWait",AttWait)
+        print("AttEval",AttEval)
+        print("FinalCutEval",FinalCutEval)
+        print("postprocess",postprocess)
+
+
+        return 0

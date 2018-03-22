@@ -1,15 +1,18 @@
 from processing_code.bbox_postprocessing import *
+from timeit import default_timer as timer
 
 class Postprocess(object):
     """
     Postprocessing bounding boxes. Merge along the splitting lines.
     """
 
-    def __init__(self, settings):
+    def __init__(self, settings, history):
         self.settings = settings
+        self.history = history
 
     # a bit messy
     def postprocess_bboxes_along_splitlines(self, active_coordinates, bboxes, DEBUG_POSTPROCESS_COLOR, DEBUG_SHOW_LINES=False):
+        start = timer()
 
         splitlines = get_splitlines(active_coordinates)
 
@@ -46,5 +49,8 @@ class Postprocess(object):
             dictionary["bottomright"]["x"] = bbox[1][3]
 
             postprocessed_bboxes.append(dictionary)
+
+        time = timer() - start
+        self.history.report_postprocessing(time,self.settings.frame_number)
 
         return postprocessed_bboxes

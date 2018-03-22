@@ -28,3 +28,9 @@ class ImageProcessing(object):
         nh = oh * scale
 
         return image.resize((int(nw), int(nh)), Image.ANTIALIAS)
+
+    # Faster alternative for image editing?
+    # (unsuccesful) https://github.com/jbaiter/jpegtran-cffi
+    # (alternative?) https://github.com/ethereon/lycon
+    #    - according to it OpenCV should be faster
+

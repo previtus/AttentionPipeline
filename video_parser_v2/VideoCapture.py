@@ -59,6 +59,8 @@ class VideoCapture(object):
         now_index = 0
 
         for i in range(f, self.number_of_frames+f):
+            load_img_start = timer()
+
             frame_number = i - f
 
             #print("i from L to num", i, "from", L, "to", self.number_of_frames)
@@ -92,8 +94,11 @@ class VideoCapture(object):
             if self.settings.verbosity >= 1:
                 print("#"+str(i-f)+":", loaded[2], loaded[1].size)
 
-            self.history.tick_loop(frame_number - 1)
+            load_img_end = timer() # time from start of this for
+            OI_load_time = load_img_end - load_img_start
+            self.history.report_IO_load(OI_load_time, frame_number)
 
+            self.history.tick_loop(frame_number - 1) # time from start of last tick
 
             yield (loaded, next_frames, frame_number)
 

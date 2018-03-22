@@ -1,5 +1,8 @@
 from PIL import Image, ImageDraw
 from processing_code.file_handling import make_folder
+from timeit import default_timer as timer
+from threading import Thread
+
 class Renderer(object):
     """
     Draw final image with bboxes to a screen or file.
@@ -14,13 +17,17 @@ class Renderer(object):
         if self.render_files_into_folder:
             make_folder(self.render_folder_name)
 
-    def render(self, final_evaluation, frame):
+        self.last_saving_thread = None
 
+    def render(self, final_evaluation, frame):
+        time_start = timer()
 
         if self.render_files_into_folder:
             self.render_into_folder(final_evaluation, frame)
 
-
+        time_IO_saving = timer() - time_start
+        print("Saved",self.settings.frame_number,"frame in", time_IO_saving)
+        self.history.report_IO_save(time_IO_saving, self.settings.frame_number)
 
     def render_into_folder(self, final_evaluation, frame, thickness=5):
         """
@@ -52,11 +59,28 @@ class Renderer(object):
 
             for i in range(thickness):
                 draw.rectangle([left + i, top + i, right - i, bottom - i], outline=color)
+
+            # ps: about fast access to image.pixels data = https://blender.stackexchange.com/questions/3673/why-is-accessing-image-data-so-slow
         del draw
+
 
         if self.settings.verbosity >= 2:
             print("Saved to", self.render_folder_name + name)
-            image.save(self.render_folder_name + name)
+
+        # would opencv be faster?
+        # could I start another process just to save it?
+        if self.last_saving_thread is not None:
+            self.last_saving_thread.join()
+
+        t = Thread(target=self.save_on_thread, args=(image, self.render_folder_name + name))
+        t.daemon = True
+        t.start()
+
+        self.last_saving_thread = t
+        #image.save(self.render_folder_name + name) # best quality: subsampling=0, quality=100)
+
+    def save_on_thread(self, image, path):
+        image.save(path)  # best quality: subsampling=0, quality=100)
 
     def label_to_color(self,label):
         if label == 'person':

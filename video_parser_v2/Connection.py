@@ -69,10 +69,10 @@ class Connection(object):
         if (self.number_of_server_machines == 0):
             print("Connection to all servers failed! Backup solution = turning to local evaluation, no precomputing allowed.")
             self.settings.client_server = False
-            self.precompute_attention_evaluation = False
+            self.settings.precompute_attention_evaluation = False
         if (self.number_of_server_machines < 2):
             print("Only one server connected! No precomputing allowed.")
-            self.precompute_attention_evaluation = False
+            self.settings.precompute_attention_evaluation = False
 
     def prepare_attention_evaluation_server_lists(self):
         N = self.number_of_server_machines

@@ -127,7 +127,7 @@ class Evaluation(object):
 
 
     def evaluate(self, crops_coordinates, frame, type, frame_number):
-        t1 = timer()
+        time_start = timer()
         frame_path = frame[0]
         frame_image_original = frame[1]
 
@@ -146,7 +146,10 @@ class Evaluation(object):
             crop = self.imageprocessing.get_crop(coordinates_area, frame_image)
             crops.append(crop)
             ids_of_crops.append(coordinates_id)
-
+        t_after_cutting = timer()
+        IO_time_to_cut_crops = t_after_cutting - time_start
+        #print("scaling and cutting image into crops took ", IO_time_to_cut_crops, "for type=",type,"frame_number=",frame_number)
+        self.history.report_IO_EVAL_cut_evaluation(type, IO_time_to_cut_crops, frame_number)
 
         if self.local:
             # should we even have this?
@@ -165,7 +168,7 @@ class Evaluation(object):
             if self.settings.client_server: where = 'server'
             print("Evaluation ("+where+") of stage `"+type+"`, bboxes in crops", counts)
 
-        t = timer() - t1
+        t = timer() - time_start
         self.history.report_evaluation_whole_function(type, t, frame_number)
 
         # Returns evaluation in format:
