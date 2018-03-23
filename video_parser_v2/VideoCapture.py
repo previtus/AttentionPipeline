@@ -152,7 +152,7 @@ class VideoCapture(object):
             else:
                 image = cv2.imread(path)
 
-            preloaded_images.append( [path, image, self.frame_files[i]] )
+            preloaded_images.append( [path, image, self.frame_files[i], i] )
             print("init loading ", self.frame_files[i])
         f = L
 
@@ -178,7 +178,8 @@ class VideoCapture(object):
             i_next = i
             if (i_next < self.number_of_frames):
                 print("started thread for = ", self.frame_files[i_next])
-                self.start_loading_next_image_on_thread(i_next, preloaded_images)
+                next_frame_number = (frame_number + L)
+                self.start_loading_next_image_on_thread(i_next, preloaded_images, next_frame_number)
 
             if self.settings.verbosity >= 2:
                 print("\-------------")
@@ -193,17 +194,17 @@ class VideoCapture(object):
 
             yield (current, next_frames, frame_number)
 
-    def start_loading_next_image_on_thread(self,i_next, preloaded_images):
+    def start_loading_next_image_on_thread(self,i_next, preloaded_images, next_frame_number):
         path_of_next = self.path + self.frame_files[i_next]
         filename_next = self.frame_files[i_next]
 
-        t = Thread(target=self.load_on_thread, args=(path_of_next, preloaded_images, filename_next))
+        t = Thread(target=self.load_on_thread, args=(path_of_next, preloaded_images, filename_next, next_frame_number))
         t.daemon = True
         t.start()
 
         self.last_loading_thread = t
 
-    def load_on_thread(self, path, preloaded_images, filename):
+    def load_on_thread(self, path, preloaded_images, filename, next_frame_number):
 
         if self.settings.opencv_or_pil == 'PIL':
             image = Image.open(path)
@@ -211,6 +212,6 @@ class VideoCapture(object):
         else:
             image = cv2.imread(path)
 
-        preloaded_images.append([path, image, filename])
+        preloaded_images.append([path, image, filename, next_frame_number])
 
-        print("finished thread for = ", filename)
+        print("finished thread for = ", filename, " for frame number ",next_frame_number)

@@ -100,9 +100,14 @@ class Renderer(object):
 
     def label_to_color(self,label):
         if label == 'person':
+            if self.settings.opencv_or_pil == 'PIL':
+                return "red"
             return (0,0,256) #BGR
-            return "red"
         elif label == 'car':
-            return "blue"
+            if self.settings.opencv_or_pil == 'PIL':
+                return "blue"
+            return (256,0,0) #BGR
         else:
-            return "yellow"
+            if self.settings.opencv_or_pil == 'PIL':
+                return "yellow"
+            return (256, 256, 0)

@@ -173,7 +173,7 @@ class History(object):
 
         # plot all of the history graphs:
 
-        style = "lines" # lines of areas
+        style = "areas" # lines of areas
         color_change = True
         # red, yellow, blue, green, blue 2, orange, pink, grey, almost white
         color_list = ['#ec9980', '#f3f3bb', '#8fb6c9', 'accc7c', '#94ccc4', '#ecb475', '#f4d4e4', '#dcdcdc', '#fbfbfb']
@@ -356,6 +356,7 @@ class History(object):
         return 0
 
     def timing_per_frame_plot_stackedbar(self):
+        y_limit = True # limit the plot to 0 - 1sec ?
 
         # prepare lists:
         IO_loads = list(self.IO_loads.values())
@@ -398,6 +399,11 @@ class History(object):
         p4a = plt.bar(ind, FinalCut, width, bottom=AttWait+IO_saves+IO_loads, color='lightcoral')
         p4b = plt.bar(ind, FinalEval, width, bottom=FinalCut+AttWait+IO_saves+IO_loads, color='red')
         p5 = plt.bar(ind, postprocess, width, bottom=FinalEval+FinalCut+AttWait+IO_saves+IO_loads, color='green')
+
+        if y_limit:
+            ymin, ymax = plt.ylim()
+            if ymax < 1.0:
+                plt.ylim(0.0, 1.0)
 
         plt.legend((p1[0], p2[0], p3[0], p4a[0], p4b[0], p5[0]), ('IO loads', 'IO saves', attention_name, 'FinalCut', 'FinalEval', 'postprocess'))
 
