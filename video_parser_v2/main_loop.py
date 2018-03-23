@@ -18,7 +18,7 @@ def main_loop(args):
     debugger = Debugger.Debugger(settings, cropscoordinates, evaluation)
     settings.set_debugger(debugger)
 
-    for frame, next_frames, frame_number in videocapture.frame_generator():
+    for frame, next_frames, frame_number in videocapture.frame_generator_thread_loading():
         settings.frame_number = frame_number
 
         print("frame: ", frame[2])

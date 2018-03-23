@@ -6,6 +6,9 @@ import queue
 import math
 from threading import Thread
 
+from PIL import Image
+import cv2
+
 # del
 from timeit import default_timer as timer
 import numpy
@@ -218,18 +221,25 @@ class Connection(object):
         for i in range(number_of_images):
             image = crops[i]
 
+            if self.settings.opencv_or_pil != 'PIL':
+                # TODO: MAYBE INEFFICIENT, back to PIL for sending
+                image = Image.fromarray(image)
+
             memory_file = BytesIO()
             image.save(memory_file, "JPEG")
             memory_file.seek(0)
 
             id = ids_of_crops[i]
             payload[str(id)] = memory_file
+        t0 = timer()
+        print("Image encoding (with",self.settings.opencv_or_pil,") took = ", t0-start, "(during the eval)")
 
         # submit the request
         try:
             r = requests.post(EVALUATE_API_URL, files=payload).json()
-        except Exception:
+        except Exception as e:
             print("CONNECTION TO SERVER ",EVALUATE_API_URL," FAILED - return to backup local evaluation?")
+            print("Exception:", e)
 
         end = timer()
         time = end - start

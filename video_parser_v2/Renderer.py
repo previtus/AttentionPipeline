@@ -1,4 +1,5 @@
 from PIL import Image, ImageDraw
+import cv2
 from processing_code.file_handling import make_folder
 from timeit import default_timer as timer
 from threading import Thread
@@ -42,26 +43,38 @@ class Renderer(object):
         image = frame[1]
         name = frame[2] # contains just the file name, not to have a messy string splitting here
 
-        draw = ImageDraw.Draw(image)
+        if self.settings.opencv_or_pil == 'PIL':
+            draw = ImageDraw.Draw(image)
 
-        for bbox in final_evaluation:
-            predicted_class = bbox["label"]
-            color = self.label_to_color(predicted_class)
+            for bbox in final_evaluation:
+                predicted_class = bbox["label"]
+                color = self.label_to_color(predicted_class)
 
-            top = bbox["topleft"]["y"]
-            left = bbox["topleft"]["x"]
-            bottom = bbox["bottomright"]["y"]
-            right = bbox["bottomright"]["x"]
-            #top = max(0, np.floor(top + 0.5).astype('int32'))
-            #left = max(0, np.floor(left + 0.5).astype('int32'))
-            #bottom = min(image_size[1], np.floor(bottom + 0.5).astype('int32'))
-            #right = min(image_size[0], np.floor(right + 0.5).astype('int32'))
+                top = bbox["topleft"]["y"]
+                left = bbox["topleft"]["x"]
+                bottom = bbox["bottomright"]["y"]
+                right = bbox["bottomright"]["x"]
+                #top = max(0, np.floor(top + 0.5).astype('int32'))
+                #left = max(0, np.floor(left + 0.5).astype('int32'))
+                #bottom = min(image_size[1], np.floor(bottom + 0.5).astype('int32'))
+                #right = min(image_size[0], np.floor(right + 0.5).astype('int32'))
 
-            for i in range(thickness):
-                draw.rectangle([left + i, top + i, right - i, bottom - i], outline=color)
+                for i in range(thickness):
+                    draw.rectangle([left + i, top + i, right - i, bottom - i], outline=color)
 
-            # ps: about fast access to image.pixels data = https://blender.stackexchange.com/questions/3673/why-is-accessing-image-data-so-slow
-        del draw
+                # ps: about fast access to image.pixels data = https://blender.stackexchange.com/questions/3673/why-is-accessing-image-data-so-slow
+            del draw
+        else:
+            for bbox in final_evaluation:
+                predicted_class = bbox["label"]
+                color = self.label_to_color(predicted_class)
+
+                top = bbox["topleft"]["y"]
+                left = bbox["topleft"]["x"]
+                bottom = bbox["bottomright"]["y"]
+                right = bbox["bottomright"]["x"]
+
+                cv2.rectangle(image,(int(left), int(top)), (int(right), int(bottom)),color, thickness)
 
 
         if self.settings.verbosity >= 2:
@@ -80,10 +93,14 @@ class Renderer(object):
         #image.save(self.render_folder_name + name) # best quality: subsampling=0, quality=100)
 
     def save_on_thread(self, image, path):
-        image.save(path)  # best quality: subsampling=0, quality=100)
+        if self.settings.opencv_or_pil == 'PIL':
+            image.save(path)  # best quality: subsampling=0, quality=100)
+        else:
+            cv2.imwrite(path, image)
 
     def label_to_color(self,label):
         if label == 'person':
+            return (0,0,256) #BGR
             return "red"
         elif label == 'car':
             return "blue"

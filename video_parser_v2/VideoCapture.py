@@ -1,8 +1,10 @@
 import os, fnmatch
 from processing_code.file_handling import is_non_zero_file
 from PIL import Image
+import cv2
 from keras.preprocessing.image import img_to_array
 from timeit import default_timer as timer
+from threading import Thread
 
 class VideoCapture(object):
     """
@@ -17,6 +19,8 @@ class VideoCapture(object):
         self.init_frames_from_folder(self.path)
 
         self.init_settings_w_h()
+
+        self.last_loading_thread = None
 
     def init_frames_from_folder(self, path):
         files = sorted(os.listdir(path))
@@ -39,8 +43,13 @@ class VideoCapture(object):
 
     def init_settings_w_h(self):
         first_image = self.path + self.frame_files[0]
-        frame_image = Image.open(first_image)
-        w, h = frame_image.size
+        if self.settings.opencv_or_pil == 'PIL':
+            frame_image = Image.open(first_image)
+            w, h = frame_image.size
+        else:
+            frame_image = cv2.imread(first_image)
+            h, w, channels = frame_image.shape
+
         self.settings.set_w_h(w,h)
 
     def frame_generator(self):
@@ -50,7 +59,10 @@ class VideoCapture(object):
         preloaded_images = []
         for i in range(L):
             path = self.path + self.frame_files[i]
-            image = Image.open(path)
+            if self.settings.opencv_or_pil == 'PIL':
+                image = Image.open(path)
+            else:
+                image = cv2.imread(path)
 
             preloaded_images.append( [path, image, self.frame_files[i]] )
 
@@ -72,7 +84,11 @@ class VideoCapture(object):
                 preloaded_images[now_index] = None
             else:
                 path = self.path + self.frame_files[i]
-                image = Image.open(path)
+                if self.settings.opencv_or_pil == 'PIL':
+                    image = Image.open(path)
+                    image.load()
+                else:
+                    image = cv2.imread(path)
 
                 preloaded_images[now_index] = [path, image, self.frame_files[i]]
 
@@ -119,3 +135,82 @@ class VideoCapture(object):
 
             yield (path, image, self.frame_files[i])
     """
+
+    def frame_generator_thread_loading(self):
+        # On thread
+        # preloading the same, but in the loop loading different
+        # just before yielding fire off a new thread
+
+        L = self.settings.precompute_number + 1
+        L = min(self.number_of_frames, L) # careful not to go beyond
+
+        preloaded_images = []
+        for i in range(L):
+            path = self.path + self.frame_files[i]
+            if self.settings.opencv_or_pil == 'PIL':
+                image = Image.open(path)
+            else:
+                image = cv2.imread(path)
+
+            preloaded_images.append( [path, image, self.frame_files[i]] )
+            print("init loading ", self.frame_files[i])
+        f = L
+
+        for i in range(f, self.number_of_frames+f):
+            load_img_start = timer()
+
+            frame_number = i - f
+
+            #print("i from L to num", i, "from", L, "to", self.number_of_frames)
+            # load current
+
+            if self.last_loading_thread is not None:
+                print("waiting for loading thread")
+                self.last_loading_thread.join()
+
+            current = preloaded_images[0]
+            print("current = ", current[2])
+            next_frames = preloaded_images[1:]
+            for j,n in enumerate(next_frames):
+                print("next[",j,"] = ", n[2])
+            preloaded_images = next_frames
+
+            i_next = i
+            if (i_next < self.number_of_frames):
+                print("started thread for = ", self.frame_files[i_next])
+                self.start_loading_next_image_on_thread(i_next, preloaded_images)
+
+            if self.settings.verbosity >= 2:
+                print("\-------------")
+                print("")
+            if self.settings.verbosity >= 1:
+                print("#"+str(i-f)+":", current[2], current[1].size)
+
+            load_img_end = timer()
+            OI_load_time = load_img_end - load_img_start
+            self.history.report_IO_load(OI_load_time, frame_number)
+            self.history.tick_loop(frame_number - 1) # time from start of last tick
+
+            yield (current, next_frames, frame_number)
+
+    def start_loading_next_image_on_thread(self,i_next, preloaded_images):
+        path_of_next = self.path + self.frame_files[i_next]
+        filename_next = self.frame_files[i_next]
+
+        t = Thread(target=self.load_on_thread, args=(path_of_next, preloaded_images, filename_next))
+        t.daemon = True
+        t.start()
+
+        self.last_loading_thread = t
+
+    def load_on_thread(self, path, preloaded_images, filename):
+
+        if self.settings.opencv_or_pil == 'PIL':
+            image = Image.open(path)
+            image.load()
+        else:
+            image = cv2.imread(path)
+
+        preloaded_images.append([path, image, filename])
+
+        print("finished thread for = ", filename)

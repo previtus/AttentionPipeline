@@ -118,6 +118,8 @@ class History(object):
     def report_skipped_final_evaluation(self, frame_number):
         # No active crop was detected - we can just skip the finner evaluation
         self.times_final_evaluation_processing_full_frame[frame_number]=0
+        self.IO_EVAL_cut_crops_final[frame_number]=0
+        self.postprocess[frame_number]=0
         self.number_of_detected_objects[frame_number]=0
 
     def report_IO_load(self, time, frame_number):
@@ -349,8 +351,8 @@ class History(object):
         save_path = self.settings.render_folder_name + "boxplot.png"
         plt.savefig(save_path, dpi=120)
 
-        plt.show()
-
+        #plt.show()
+        plt.clf()
         return 0
 
     def timing_per_frame_plot_stackedbar(self):
@@ -373,6 +375,9 @@ class History(object):
 
         IO_loads = np.array(IO_loads)
         IO_saves = np.array(IO_saves)
+        if len(IO_loads) > len(IO_saves):
+            IO_loads = IO_loads[0:len(IO_saves)]
+
         AttWait = np.array(AttWait)
         FinalCutEval = np.array(FinalCutEval)
         FinalCut = np.array(FinalCut)
@@ -399,18 +404,20 @@ class History(object):
         save_path = self.settings.render_folder_name + "stacked.png"
         plt.savefig(save_path, dpi=120)
 
-        plt.show()
-
+        #plt.show()
+        plt.clf()
         return 0
 
     def print_all_datalists(self):
 
         # prepare lists:
+        """
         IO_loads = list(self.IO_loads.values())
         IO_saves = list(self.IO_saves.values())
         AttWait = list(self.times_attention_evaluation_waiting.values())
         AttEval = list(self.times_attention_evaluation_processing_full_frame.values())
         FinalCutEval = list(self.times_final_evaluation_processing_full_frame.values())
+        FinalCut = list(self.IO_EVAL_cut_crops_final.values())
         postprocess = list(self.postprocess.values())
 
         print("IO_loads, IO_saves, AttWait/AttEval, FinalCutEval, postprocess")
@@ -420,6 +427,15 @@ class History(object):
         print("AttEval",AttEval)
         print("FinalCutEval",FinalCutEval)
         print("postprocess",postprocess)
+        """
+        print("IO_loads, IO_saves, AttWait/AttEval, FinalCutEval, postprocess")
+        print("IO_loads",self.IO_loads)
+        print("IO_saves",self.IO_saves)
+        print("AttWait",self.times_attention_evaluation_waiting)
+        print("AttEval",self.times_attention_evaluation_processing_full_frame)
+        print("FinalCutEval",self.times_final_evaluation_processing_full_frame)
+        print("FinalCut",self.IO_EVAL_cut_crops_final)
+        print("postprocess",self.postprocess)
 
 
         return 0

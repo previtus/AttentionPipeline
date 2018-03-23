@@ -31,6 +31,8 @@ class Settings(object):
         self.INPUT_FRAMES = args.input
         self.RUN_NAME = args.name
 
+        self.opencv_or_pil = 'OpenCV' # 'PIL' or 'OpenCV'
+
         ### w and h
         self.w = 0
         self.h = 0
