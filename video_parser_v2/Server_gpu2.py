@@ -1,5 +1,4 @@
 import evaluation_code.darkflow_handler as darkflow_handler
-from keras.preprocessing.image import img_to_array
 from evaluation_code.encoding import base64_decode_image
 
 from threading import Thread
@@ -11,6 +10,7 @@ import io
 import os
 from timeit import default_timer as timer
 from multiprocessing.pool import ThreadPool
+import numpy as np
 
 # Thanks to the tutorial at: https://blog.keras.io/building-a-simple-keras-deep-learning-rest-api.html
 
@@ -40,7 +40,7 @@ class Server(object):
         t.daemon = True
         t.start()
 
-        #app.run(port=5001)
+        #app.run()
         # On server:
         app.run(host='0.0.0.0', port=8666)
 
@@ -93,7 +93,7 @@ def evaluate_image_batch():
         for key in flask.request.files:
             image = flask.request.files[key].read()
             image = Image.open(io.BytesIO(image))
-            image = img_to_array(image) # maybe
+            image = my_img_to_array(image) # maybe
 
             images.append(image)
             uids.append(key)
@@ -114,6 +114,10 @@ def evaluate_image_batch():
 
     return flask.jsonify(data)
 
+def my_img_to_array(img):
+    # remove Keras dep
+    x = np.asarray(img, dtype='float32')
+    return x
 
 if __name__ == "__main__":
     server = Server()
