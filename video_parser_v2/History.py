@@ -87,6 +87,8 @@ class History(object):
             self.times_evaluation_each_loop[frame_number]=t
 
             self.end_of_frame(force)
+            # we want to disregard graph plotting time:
+            self.loop_timer = timer()
 
     def report_crops_in_attention_evaluation(self, number_of_attention_crops, frame_number):
         self.total_crops_during_attention_evaluation[frame_number] = number_of_attention_crops
@@ -445,3 +447,24 @@ class History(object):
 
 
         return 0
+
+
+    def save_whole_history_and_settings(self):
+        settings = self.settings
+        history = self
+        folder = settings.render_folder_name
+
+        settings.debugger = None
+        save_object(settings, folder+"settings_last.pkl")
+        save_object(history, folder+"history_last.pkl")
+
+import pickle
+def save_object(obj, filename):
+    print(obj)
+    with open(filename, 'wb') as output:  # Overwrites any existing file.
+        pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
+
+#def load_object(filename):
+#    with open(filename, 'rb') as input:
+#        obj = pickle.load(input)
+#        return obj

@@ -34,6 +34,7 @@ parser.add_argument('-debug_save_masks', help='DEBUG save masks? BW outlines of 
 parser.add_argument('-debug_save_crops', help='DEBUG save crops? Attention models crops. accepts "one" or "all"', default='False')
 parser.add_argument('-debug_color_postprocessed_bboxes', help='DEBUG color postprocessed bounding boxes?', default='False')
 parser.add_argument('-debug_just_count_hist', help='DEBUG just count histograms of numbers of used crops from each video do not evaluate the outside of attention model.', default='False')
+parser.add_argument('-debug_just_handshake', help='DEBUG just handshake with servers', default='False')
 
 parser.add_argument('-anchorf', help='anchor file', default='yolo_anchors.txt')
 

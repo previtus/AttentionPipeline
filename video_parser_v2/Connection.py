@@ -1,17 +1,13 @@
 import requests
-from timeit import default_timer as timer
 from multiprocessing.pool import ThreadPool
 from io import BytesIO
-import queue
 import math
 from threading import Thread
+import numpy as np
 
 from PIL import Image
 import cv2
-
-# del
 from timeit import default_timer as timer
-import numpy
 
 class Connection(object):
     """
@@ -20,6 +16,7 @@ class Connection(object):
 
     def __init__(self, settings):
         self.settings = settings
+        self.hard_stop = False # hard break of code
 
         # indicates if we are connecting to server(s)
         if self.settings.client_server:
@@ -37,6 +34,9 @@ class Connection(object):
             if self.settings.precompute_attention_evaluation:
                 self.prepare_attention_evaluation_server_lists()
 
+            if self.settings.debug_just_handshake:
+                self.hard_stop = True
+
         self.pool = ThreadPool()
 
 
@@ -46,6 +46,7 @@ class Connection(object):
         if self.settings.verbosity >= 2:
             print("Connection init, handshake")
 
+        failed_on_ports = []
         for port in self.server_ports_suggestions:
             try:
                 HANDSHAKE_API_URL = "http://localhost:" + port + "/handshake"
@@ -61,12 +62,14 @@ class Connection(object):
                     self.server_ports_list.append(port)
                     self.server_ports_number_of_requests[port] = 0
                 else:
-                    if self.settings.verbosity >= 1:
-                        print("Connection with server on port", port, "FAILED.")
+                    failed_on_ports.append(port)
 
             except Exception:
-                if self.settings.verbosity >= 1:
-                    print("Connection with server on port", port, "FAILED.")
+                failed_on_ports.append(port)
+
+        if self.settings.verbosity >= 1:
+            print("FAILED on ports:", " ".join(failed_on_ports))
+            print("SUCCESS on ports:", " ".join(self.server_ports_list))
 
         self.number_of_server_machines = len(self.server_ports_list)
         if (self.number_of_server_machines == 0):
@@ -144,7 +147,6 @@ class Connection(object):
         else:
             ports_list = self.server_ports_list
 
-
         N = len(ports_list)
         C = len(crops)
 
@@ -152,27 +154,22 @@ class Connection(object):
             print("[Connection to multiple servers] We can split",C,"crops on",N," machines as ",(C/N)," per each (type",type,")")
             print("all ids:",ids_of_crops)
 
-        F = math.floor((C/N))
-
         results = [[]]*(max(ids_of_crops)+1)
         times = [[]]*(N)
         threads = []
 
-        for i in range(N):
-            if i != N-1:
-                a = i * F
-                b = (i+1) * F - 1
-            else:
-                a = i * F
-                b = C - 1
+        id_splits = np.array_split(ids_of_crops, N)
+        print("id_splits",id_splits)
+        for i,ids in enumerate(id_splits):
+            if len(ids)==0:
+                continue
 
-            sub_crops = crops[a:b + 1]
-            sub_ids = ids_of_crops[a:b + 1]
-
+            sub_crops = [crops[id] for id in ids]
+            sub_ids = [ids_of_crops[id] for id in ids]
             port = ports_list[i]
 
             if self.settings.verbosity >= 3:
-                print(port, "> from",a,"to",b,", with len=",len(sub_crops), "of ids:", sub_ids)
+                print(port, "> with len=",len(sub_crops), "of ids:", sub_ids)
 
             # start a new thread to call the API
             t = Thread(target=self.eval_subset_and_save_to_list, args=(sub_crops, sub_ids, port, results, i, times))
@@ -233,6 +230,10 @@ class Connection(object):
             payload[str(id)] = memory_file
         t0 = timer()
         print("Image encoding (with",self.settings.opencv_or_pil,") took = ", t0-start, "(during the eval)")
+
+        if number_of_images == 0:
+            print("Careful, 0 images, don't send.")
+            return [],0
 
         # submit the request
         try:

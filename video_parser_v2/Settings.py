@@ -26,7 +26,9 @@ class Settings(object):
         self.debug_color_postprocessed_bboxes = (args.debug_color_postprocessed_bboxes == 'True')
         self.debug_just_count_hist = (args.debug_just_count_hist == 'True')
 
-        self.render_history_every_k_frames = 20
+        self.debug_just_handshake = (args.debug_just_handshake == 'True')
+
+        self.render_history_every_k_frames = 35
 
         self.INPUT_FRAMES = args.input
         self.RUN_NAME = args.name
@@ -46,7 +48,14 @@ class Settings(object):
 
         # Connection handling
         self.client_server = True
-        self.server_ports_list = ["5000", "5001", "5002", "9999", "9998", "9997","9996", "9995", "9993"]
+        self.server_ports_list = []
+
+        # local servers
+        for i in range(5000,5002+1): self.server_ports_list.append(str(i))
+        # first gpus
+        for i in range(9000,9010+1): self.server_ports_list.append(str(i))
+        # second gpus
+        for i in range(9100,9110+1): self.server_ports_list.append(str(i))
 
         # Precomputing Attention
         self.precompute_attention_evaluation = True

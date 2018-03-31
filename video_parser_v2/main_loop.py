@@ -7,6 +7,7 @@ def main_loop(args):
     history = History.History(settings)
     connection = Connection.Connection(settings)
     #if connection.failed: return -1
+    if connection.hard_stop: return -1
 
     cropscoordinates = CropsCoordinates.CropsCoordinates(settings, history)
     videocapture = VideoCapture.VideoCapture(settings, history)
@@ -68,3 +69,6 @@ def main_loop(args):
         renderer.render(processed_evaluations, frame)
 
     history.tick_loop(frame_number, True)
+
+    history.save_whole_history_and_settings()
+
