@@ -2,6 +2,8 @@ from darkflow.net.build import TFNet
 from evaluation_code.darkflow_extension import predict_extend
 
 import numpy
+import os, fnmatch, random
+import cv2
 
 def load_model():
     options = {#"model": "cfg/yolo.cfg",
@@ -15,6 +17,10 @@ def load_model():
     #self.define('metaLoad', '', 'path to .meta file generated during --savepb that corresponds to .pb file')
 
     tfnet = TFNet(options)
+
+    print("Warm up...")
+    warm_up_the_oven(tfnet)
+
     return tfnet
 
 def convert_numpy_floats(result):
@@ -43,3 +49,24 @@ def run_on_images(image_objects, model):
         results[i] = convert_numpy_floats(results[i])
 
     return results
+
+def warm_up_the_oven(model):
+
+    folder = "warmup_images/"
+    files = sorted(os.listdir(folder))
+    frame_files = fnmatch.filter(files, '*.jpg')
+    image_paths = [folder + i for i in frame_files]
+    random.shuffle(image_paths)
+
+    n = 10
+    n = min(n, len(image_paths))
+    image_paths = image_paths[0:n]
+
+    images = []
+    for p in image_paths:
+        print(p)
+        image = cv2.imread(p)
+
+        images.append(image)
+
+    run_on_images(images, model)
