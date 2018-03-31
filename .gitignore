@@ -173,4 +173,10 @@ venv.bak/
 *.pdf
 !project_illustration.jpg
 
+!warmup_image1.jpg
+!warmup_image2.jpg
+!warmup_image3.jpg
+!warmup_image4.jpg
+!warmup_image5.jpg
+
 *.pkl
