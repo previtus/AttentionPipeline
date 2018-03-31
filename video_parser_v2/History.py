@@ -51,6 +51,9 @@ class History(object):
 
         self.times_evaluation_each_loop = {}
 
+        # stored speed for each server by its name
+        self.server_name_specific_speeds = {} # name -> list of speeds, will be variable
+
         # Renderer
         self.number_of_detected_objects = {}
 
@@ -111,6 +114,11 @@ class History(object):
         elif type == 'evaluation':
             self.times_final_evaluation_processing_per_worker[frame_number] = times
 
+    def report_evaluation_per_specific_server(self, server_name, speed):
+        if server_name not in self.server_name_specific_speeds:
+            self.server_name_specific_speeds[server_name] = []
+        self.server_name_specific_speeds[server_name].append(speed)
+
     def report_evaluation_attention_waiting(self, time, frame_number):
         self.times_attention_evaluation_waiting[frame_number] = time
 
@@ -152,6 +160,7 @@ class History(object):
         self.print_all_datalists()
         self.timing_per_frame_plot_stackedbar() ###
         self.timing_per_frame_plot_boxplot() ####
+        self.timing_per_server_plot_boxplot()
 
         for_attention_measure_waiting_instead_of_time = self.settings.precompute_attention_evaluation
 
@@ -410,6 +419,36 @@ class History(object):
         plt.legend((p1[0], p2[0], p3[0], p4a[0], p4b[0], p5[0]), ('IO loads', 'IO saves', attention_name, 'FinalCut', 'FinalEval', 'postprocess'))
 
         save_path = self.settings.render_folder_name + "stacked.png"
+        plt.savefig(save_path, dpi=120)
+
+        #plt.show()
+        plt.clf()
+        return 0
+
+    def timing_per_server_plot_boxplot(self):
+        """
+        Just evaluations, linked to specific servers
+        """
+        print("self.server_name_specific_speeds", self.server_name_specific_speeds)
+
+        keys = self.server_name_specific_speeds.keys()
+
+        data = []
+        for key in keys:
+            data.append(self.server_name_specific_speeds[key])
+
+        # multiple box plots on one figure
+
+        plt.title("Server analysis")
+        plt.ylabel("Time (s)")
+        plt.xlabel("Server names")
+
+        plt.boxplot(data)
+
+        plt.xticks(range(0,len(keys)+1), [""]+list(keys))
+        # https://matplotlib.org/gallery/statistics/boxplot_demo.html
+
+        save_path = self.settings.render_folder_name + "servers.png"
         plt.savefig(save_path, dpi=120)
 
         #plt.show()

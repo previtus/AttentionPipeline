@@ -4,6 +4,7 @@ from io import BytesIO
 import math
 from threading import Thread
 import numpy as np
+from random import shuffle
 
 from PIL import Image
 import cv2
@@ -14,8 +15,9 @@ class Connection(object):
     Holds connection to server(s), handles sending and receiving to and from the right one.
     """
 
-    def __init__(self, settings):
+    def __init__(self, settings, history):
         self.settings = settings
+        self.history = history
         self.hard_stop = False # hard break of code
 
         # indicates if we are connecting to server(s)
@@ -26,6 +28,7 @@ class Connection(object):
             self.server_ports_list = []
             self.server_ports_number_of_requests = {}
             self.number_of_server_machines = 0
+            self.server_names = {} # port -> server name
 
             self.reserve_machines_for_attention = 1
 
@@ -46,6 +49,7 @@ class Connection(object):
         if self.settings.verbosity >= 2:
             print("Connection init, handshake")
 
+        servers_dedicated_for_precompute = self.settings.precompute_number
         failed_on_ports = []
         for port in self.server_ports_suggestions:
             try:
@@ -60,6 +64,16 @@ class Connection(object):
                 if r["success"]:
                     if self.settings.verbosity >= 1:
                         print("Connection with server on port",port,"established. Time:", (end - start), "Request data:", r)
+
+                    server_name = r["server_name"]
+
+                    if self.settings.precompute_attention_evaluation:
+                        if servers_dedicated_for_precompute > 0:
+                            server_name += '_Att'
+                            servers_dedicated_for_precompute -= 1
+
+                    self.server_names[port] = server_name
+
                     self.server_ports_list.append(port)
                     self.server_ports_number_of_requests[port] = 0
                 else:
@@ -148,6 +162,8 @@ class Connection(object):
         else:
             ports_list = self.server_ports_list
 
+        shuffle(ports_list)
+
         N = len(ports_list)
         C = len(crops)
 
@@ -159,8 +175,11 @@ class Connection(object):
         times = [[]]*(N)
         threads = []
 
-        id_splits = np.array_split(ids_of_crops, N)
+        id_of_indices_0_to_C = range(0,C)
+        id_splits = np.array_split(id_of_indices_0_to_C, N)
         print("id_splits",id_splits)
+        print("corresponds to crops", np.array_split(ids_of_crops, N))
+
         for i,ids in enumerate(id_splits):
             if len(ids)==0:
                 continue
@@ -170,7 +189,7 @@ class Connection(object):
             port = ports_list[i]
 
             if self.settings.verbosity >= 3:
-                print(port, "> with len=",len(sub_crops), "of ids:", sub_ids)
+                print(port, self.server_names[port], "> with len=",len(sub_crops), "of ids:", sub_ids)
 
             # start a new thread to call the API
             t = Thread(target=self.eval_subset_and_save_to_list, args=(sub_crops, sub_ids, port, results, i, times))
@@ -198,6 +217,7 @@ class Connection(object):
 
         return results, times
 
+    # thread function
     def eval_subset_and_save_to_list(self, crops, ids_of_crops, port, results, ith, times):
         evaluation,time = self.direct_to_server(crops, ids_of_crops, port)
         times[ith] = time
@@ -206,6 +226,9 @@ class Connection(object):
         for uid,bbox in evaluation:
             results[uid] = [uid,bbox]
             #results[uid] = [uid]
+
+        self.history.report_evaluation_per_specific_server(self.server_names[port], time)
+
 
     def direct_to_server(self, crops, ids_of_crops, port):
         start = timer()
