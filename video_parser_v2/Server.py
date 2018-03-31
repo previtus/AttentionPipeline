@@ -61,6 +61,8 @@ class Server(object):
         darkflow_model = darkflow_handler.load_model(gpu_num)
         print('Model loaded.')
 
+
+
 @app.route("/handshake", methods=["POST"])
 def handshake():
     # Handshake
@@ -78,12 +80,16 @@ def handshake():
             # which gpu we occupy
             # and return it at an identifier to the client ~
 
+
             try:
                 hostname = socket.gethostname() # gpu048.etcetcetc.edu
                 machine_name = hostname.split(".")[0]
-                data["server_name"] = machine_name
+                buses = get_gpus_buses()
+                print("Bus information =",buses)
+                data["server_name"] = machine_name + buses
             except Exception as e:
                 data["server_name"] = backup_name
+
 
             end = timer()
             data["internal_time"] = end - start
@@ -130,6 +136,21 @@ def my_img_to_array(img):
     # remove Keras dep
     x = np.asarray(img, dtype='float32')
     return x
+
+from tensorflow.python.client import device_lib
+def get_gpus_buses():
+    local_device_protos = device_lib.list_local_devices()
+    gpu_devices = [x for x in local_device_protos if x.device_type == 'GPU']
+    buses = ""
+    for device in gpu_devices:
+        desc = device.physical_device_desc # device: 0, name: Tesla P100-PCIE-16GB, pci bus id: 0000:81:00.0
+        bus = desc.split(",")[-1].split(" ")[-1][5:] # split to get to the bus information
+        bus = bus[0:2] # idk if this covers every aspect of gpu bus
+        if len(buses)>0:
+            buses += ";"
+        buses += str(bus)
+    return buses
+
 
 if __name__ == "__main__":
     server = Server()
