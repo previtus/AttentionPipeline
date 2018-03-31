@@ -173,3 +173,4 @@ venv.bak/
 *.pdf
 !project_illustration.jpg
 
+*.pkl
