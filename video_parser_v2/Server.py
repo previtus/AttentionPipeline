@@ -11,6 +11,7 @@ import os
 from timeit import default_timer as timer
 from multiprocessing.pool import ThreadPool
 import numpy as np
+import socket
 
 # Thanks to the tutorial at: https://blog.keras.io/building-a-simple-keras-deep-learning-rest-api.html
 
@@ -70,8 +71,19 @@ def handshake():
     if flask.request.method == "POST":
         if flask.request.files.get("client"):
             client_message = flask.request.files["client"].read()
-
             print("Handshake, received: ",client_message)
+
+            backup_name = flask.request.files["backup_name"].read()
+            # try to figure out what kind of server we are, what is our name, where do we live, what are we like,
+            # which gpu we occupy
+            # and return it at an identifier to the client ~
+
+            try:
+                hostname = socket.gethostname() # gpu048.etcetcetc.edu
+                machine_name = hostname.split(".")[0]
+                data["server_name"] = machine_name
+            except Exception as e:
+                data["server_name"] = backup_name
 
             end = timer()
             data["internal_time"] = end - start

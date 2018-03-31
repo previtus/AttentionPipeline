@@ -50,7 +50,8 @@ class Connection(object):
         for port in self.server_ports_suggestions:
             try:
                 HANDSHAKE_API_URL = "http://localhost:" + port + "/handshake"
-                payload = {"client": "Hi, I am Bob."}
+                backup_name = port
+                payload = {"client": "Hi, I am Bob.", "backup_name": backup_name}
 
                 start = timer()
                 r = requests.post(HANDSHAKE_API_URL, files=payload).json()
