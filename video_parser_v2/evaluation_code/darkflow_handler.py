@@ -3,13 +3,15 @@ from evaluation_code.darkflow_extension import predict_extend
 
 import numpy
 
-def load_model(gpuname=1.0):
+def load_model():
     options = {#"model": "cfg/yolo.cfg",
                #"load": "bin/yolo.weights",
                "pbLoad": "built_graph/yolo.pb",
                "metaLoad": "built_graph/yolo.meta",
-               "threshold": 0.3, #yad2k default "score_threshold" 0.3, "iou_threshold" 0.5, ps 0.0 is broken, set 0.01 min
-               "gpu": gpuname}
+               "threshold": 0.3} #yad2k default "score_threshold" 0.3, "iou_threshold" 0.5, ps 0.0 is broken, set 0.01 min
+
+               #"gpuName": gpuname} #'/gpu:0'
+               #"gpu": gpuname}
     #self.define('pbLoad', '', 'path to .pb protobuf file (metaLoad must also be specified)')
     #self.define('metaLoad', '', 'path to .meta file generated during --savepb that corresponds to .pb file')
 

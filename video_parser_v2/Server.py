@@ -33,8 +33,7 @@ class Server(object):
     def __init__(self):
         print("Server ... starting server and loading model ... please wait until its started ...")
 
-        gpu_num = 1.0
-        self.load_model_darkflow(gpu_num)
+        self.load_model_darkflow()
 
         frequency_sec = 10.0
         t = Thread(target=self.mem_monitor_deamon, args=([frequency_sec]))
@@ -61,9 +60,9 @@ class Server(object):
             print("Memory:", mem)
             time.sleep(frequency_sec)  # check every frequency_sec sec
 
-    def load_model_darkflow(self, gpu_num):
+    def load_model_darkflow(self):
         global darkflow_model
-        darkflow_model = darkflow_handler.load_model(gpu_num)
+        darkflow_model = darkflow_handler.load_model()
         print('Model loaded.')
 
 
