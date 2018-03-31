@@ -41,9 +41,14 @@ class Server(object):
         t.daemon = True
         t.start()
 
-        app.run()
-        # On server:
-        #app.run(host='0.0.0.0', port=8123)
+        # hack to distinguish server
+        # this might not work on non gpu machines
+        # but we are using only those
+        hostname = socket.gethostname()  # gpu048.etcetcetc.edu
+        if hostname[0:3] == "gpu":
+            app.run(host='0.0.0.0', port=8123)
+        else:
+            app.run()
 
     def mem_monitor_deamon(self, frequency_sec):
         import subprocess
@@ -86,6 +91,8 @@ def handshake():
                 machine_name = hostname.split(".")[0]
                 buses = get_gpus_buses()
                 print("Bus information =",buses)
+                if len(buses) > 0:
+                    buses = ":"+buses
                 data["server_name"] = machine_name + buses
             except Exception as e:
                 data["server_name"] = backup_name
