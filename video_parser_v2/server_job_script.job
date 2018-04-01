@@ -1,0 +1,36 @@
+#!/bin/bash
+#SBATCH -p GPU
+#SBATCH -t 02:00:00
+#SBATCH --gres=gpu:p100:2
+
+#echo commands to stdout
+set -x
+
+#move to working directory
+module load keras/2.0.6_anaconda
+source activate $KERAS_ENV
+cd /home/vruzicka/intership_project/video_parser_v2
+
+
+NAME=S1000040_5fps_1to2
+FOLDER=RuzickaDataset
+FRAMES=S1000040_5fps
+
+INPUT="$PROJECT/_videos_files/$FOLDER/input/$FRAMES/"
+#INPUT_S="$SCRATCH/input/$FRAMES/"
+OUTPUT="$PROJECT/_videos_files/$FOLDER/output/$NAME"
+
+#copy files to fast storage
+#mkdir -p $SCRATCH/input/
+#cp -R $INPUT $SCRATCH/input/
+
+#run program
+python run.py -atthorizontal_splits 1 -horizontal_splits 2 -input $INPUT -name $NAME
+
+#copy results back to permanent storage
+#mkdir $SCRATCH/output/
+#mkdir $SCRATCH/output/$NAME
+#cp -R $SCRATCH/output/$NAME $OUTPUT
+
+# run this with: sbatch server_job_batch_script.job
+
