@@ -151,6 +151,7 @@ class Evaluation(object):
         #print("scaling and cutting image into crops took ", IO_time_to_cut_crops, "for type=",type,"frame_number=",frame_number)
         self.history.report_IO_EVAL_cut_evaluation(type, IO_time_to_cut_crops, frame_number)
 
+
         if self.local:
             # should we even have this?
             from keras.preprocessing.image import img_to_array

@@ -1,4 +1,5 @@
 
+
 class Settings(object):
     """
     Project wide management of settings
@@ -39,7 +40,7 @@ class Settings(object):
         self.w = 0
         self.h = 0
 
-        self.set_verbosity(2)
+        self.set_verbosity(3)
 
         # Renderer
         self.render_files_into_folder = True
