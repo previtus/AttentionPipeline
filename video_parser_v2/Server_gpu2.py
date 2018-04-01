@@ -47,7 +47,7 @@ class Server(object):
         # but we are using only those
         hostname = socket.gethostname()  # gpu048.etcetcetc.edu
         if hostname[0:3] == "gpu":
-            app.run(host='0.0.0.0', port=8123)
+            app.run(host='0.0.0.0', port=8666)
         else:
             app.run(port=5001)
 

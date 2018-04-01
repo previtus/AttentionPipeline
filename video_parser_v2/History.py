@@ -456,9 +456,9 @@ class History(object):
         bottom += AttWait
         p3a = plt.bar(ind, FinalCut, width, bottom=bottom, color='lightcoral')
         bottom += FinalCut
-        p3b = plt.bar(ind, FinalEncode, width, bottom=bottom, color='magenta')
+        p3b = plt.bar(ind, FinalEncode, width, bottom=bottom, color='navajowhite')
         bottom += FinalEncode
-        p4a = plt.bar(ind, FinalDecode, width, bottom=bottom, color='magenta')
+        p4a = plt.bar(ind, FinalDecode, width, bottom=bottom, color='burlywood')
         bottom += FinalDecode
         p4b = plt.bar(ind, FinalTransfer, width, bottom=bottom, color='magenta')
         bottom += FinalTransfer
