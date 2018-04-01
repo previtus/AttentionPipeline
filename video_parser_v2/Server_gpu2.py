@@ -42,9 +42,14 @@ class Server(object):
         t.daemon = True
         t.start()
 
-        #app.run()
-        # On server:
-        app.run(host='0.0.0.0', port=8666)
+        # hack to distinguish server
+        # this might not work on non gpu machines
+        # but we are using only those
+        hostname = socket.gethostname()  # gpu048.etcetcetc.edu
+        if hostname[0:3] == "gpu":
+            app.run(host='0.0.0.0', port=8123)
+        else:
+            app.run(port=5001)
 
     def mem_monitor_deamon(self, frequency_sec):
         import subprocess
@@ -108,9 +113,7 @@ def evaluate_image_batch():
         images = []
         uids = []
 
-        t_start_eval = timer()
-        t1 = timer()
-
+        t_start_decode = timer()
         for key in flask.request.files:
             image = flask.request.files[key].read()
             image = Image.open(io.BytesIO(image))
@@ -119,10 +122,7 @@ def evaluate_image_batch():
             images.append(image)
             uids.append(key)
 
-        t2 = timer()
-        times_del.append((t2-t1))
-        print("avg reading ", numpy.mean(times_del))
-
+        t_start_eval = timer()
         print("Received",len(images),"images.", uids, [i.shape for i in images])
 
         results_bboxes = darkflow_handler.run_on_images(image_objects=images, model=darkflow_model)
@@ -131,6 +131,7 @@ def evaluate_image_batch():
         data["bboxes"] = results_bboxes
         data["uids"] = uids
         data["time_pure_eval"] = t_end_eval-t_start_eval
+        data["time_pure_decode"] = t_start_eval-t_start_decode
 
         # indicate that the request was a success
         data["success"] = True

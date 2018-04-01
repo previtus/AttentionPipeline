@@ -158,9 +158,8 @@ class Evaluation(object):
             crops = [img_to_array(crop) for crop in crops]
 
             evaluation = self.evaluate_local(crops, ids_of_crops)
-            transfer = 0.0
         else:
-            evaluation,transfer = self.evaluate_on_server(crops, ids_of_crops, type, frame_number)
+            evaluation = self.evaluate_on_server(crops, ids_of_crops, type, frame_number)
 
         evaluation = self.filter_evaluations(evaluation)
 
@@ -171,7 +170,7 @@ class Evaluation(object):
             print("Evaluation ("+where+") of stage `"+type+"`, bboxes in crops", counts)
 
         time_whole_eval = timer() - time_start
-        self.history.report_evaluation_whole_function(type, time_whole_eval, transfer, frame_number)
+        self.history.report_evaluation_whole_function(type, time_whole_eval, frame_number)
 
         # Returns evaluation in format:
         # array of crops in order by coordinates_id
@@ -192,15 +191,12 @@ class Evaluation(object):
         return evaluation
 
     def evaluate_on_server(self, crops, ids_of_crops, type, frame_number):
-        evaluation, times_eval, times_transfer = self.connection.evaluate_crops_on_server(crops, ids_of_crops, type)
+        evaluation, times_encode, times_eval, times_decode, times_transfer = self.connection.evaluate_crops_on_server(crops, ids_of_crops, type)
         # if its final evaluation, save individual times per servers
         if type == 'evaluation':
-            self.history.report_evaluation_per_individual_worker(times_eval, times_transfer, type, frame_number)
+            self.history.report_evaluation_per_individual_worker(times_encode, times_eval, times_decode, times_transfer, type, frame_number)
 
-        print("times_besides_eval", times_transfer)
-
-        transfer = np.mean(times_transfer)
-        return evaluation,transfer
+        return evaluation
 
     def filter_evaluations(self, evaluation):
 

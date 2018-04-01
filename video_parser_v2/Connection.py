@@ -119,24 +119,15 @@ class Connection(object):
         N = self.number_of_server_machines
 
         if N > 1:
-            result, times_eval, times_transfer = self.split_across_list_of_servers(crops, ids_of_crops, type)
+            result, times_encode, times_eval, times_decode, times_transfer = self.split_across_list_of_servers(crops, ids_of_crops, type)
         else:
             port = self.server_ports_list[0]
-            result,time_eval,time_transfer = self.direct_to_server(crops, ids_of_crops, port)
-            times_eval = [time_eval]
-            times_transfer = [time_transfer]
-        return result, times_eval, times_transfer
-
-        """
-        port = self.server_ports_list[0]
-        result2 = self.direct_to_server(crops, ids_of_crops, port)
-
-        print("===SHOULD BE THE SAME")
-        print("result1",len(result1), result1)
-        print("result2",len(result2), result2)
-
-        return result2
-        """
+            result,time_Encode, time_Evaluation, time_Decode, time_Transfer = self.direct_to_server(crops, ids_of_crops, port)
+            times_encode = [time_Encode]
+            times_eval = [time_Evaluation]
+            times_decode = [time_Decode]
+            times_transfer = [time_Transfer]
+        return result, times_encode, times_eval, times_decode, times_transfer
 
     def split_across_list_of_servers(self, crops, ids_of_crops, type):
 
@@ -187,6 +178,7 @@ class Connection(object):
         times_eval = [[]]*(num_of_actual_threads)
         times_transfer = [[]]*(num_of_actual_threads)
         times_encode = [[]]*(num_of_actual_threads)
+        times_decode = [[]]*(num_of_actual_threads)
 
         print("corresponds to crops", np.array_split(ids_of_crops, N))
 
@@ -202,7 +194,7 @@ class Connection(object):
                 print(port, self.server_names[port], "> with len=",len(sub_crops), "of ids:", sub_ids)
 
             # start a new thread to call the API
-            t = Thread(target=self.eval_subset_and_save_to_list, args=(sub_crops, sub_ids, port, results, i, times_eval, times_transfer))
+            t = Thread(target=self.eval_subset_and_save_to_list, args=(sub_crops, sub_ids, port, results, i, times_eval, times_transfer, times_encode, times_decode))
             t.daemon = True
             t.start()
             threads.append(t)
@@ -224,20 +216,22 @@ class Connection(object):
         if self.settings.verbosity >= 3:
             print("results = ", results)
 
-        return results, times_eval, times_transfer
+        return results, times_encode, times_eval, times_decode, times_transfer
 
     # thread function
-    def eval_subset_and_save_to_list(self, crops, ids_of_crops, port, results, ith, times_eval, times_transfer):
-        evaluation,time_eval,time_transfer = self.direct_to_server(crops, ids_of_crops, port)
-        times_eval[ith] = time_eval
-        times_transfer[ith] = time_transfer
+    def eval_subset_and_save_to_list(self, crops, ids_of_crops, port, results, ith, times_eval, times_transfer, times_encode, times_decode):
+        evaluation,time_Encode, time_Evaluation, time_Decode, time_Transfer = self.direct_to_server(crops, ids_of_crops, port)
+        times_eval[ith] = time_Evaluation
+        times_transfer[ith] = time_Transfer
+        times_encode[ith] = time_Encode
+        times_decode[ith] = time_Decode
         #print("times[ith]", ith, " = ", time)
 
         for uid,bbox in evaluation:
             results[uid] = [uid,bbox]
             #results[uid] = [uid]
 
-        self.history.report_evaluation_per_specific_server(self.server_names[port], time_eval, time_transfer)
+        self.history.report_evaluation_per_specific_server(self.server_names[port], time_Encode, time_Evaluation, time_Decode, time_Transfer)
 
 
     def direct_to_server(self, crops, ids_of_crops, port):
@@ -285,9 +279,9 @@ class Connection(object):
         uids = r["uids"]
         bboxes = r["bboxes"]
 
-        time_EvaluationAndDecode = float(r["time_pure_eval"])
-        time_Transfer = time_EvaluationAndTransfer - time_EvaluationAndDecode
-        time_EvaluationEncodeDecode = time_EvaluationAndDecode+time_Encode
+        time_Evaluation = float(r["time_pure_eval"])
+        time_Decode = float(r["time_pure_decode"])
+        time_Transfer = time_EvaluationAndTransfer - time_Evaluation - time_Decode
 
         #print("uids", uids)
         #print("bboxes len", len(bboxes))
@@ -302,5 +296,5 @@ class Connection(object):
         #     each holds id and array of dictionaries for each bbox {} keys label, confidence, topleft, bottomright
         #print("evaluation", evaluation)
 
-        return evaluation, time_EvaluationEncodeDecode, time_Transfer
+        return evaluation, time_Encode, time_Evaluation, time_Decode, time_Transfer
 
