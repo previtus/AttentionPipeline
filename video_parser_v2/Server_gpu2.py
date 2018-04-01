@@ -20,6 +20,7 @@ pool = ThreadPool()
 import socket
 from timeit import default_timer as timer
 import numpy
+import cv2
 
 times_del = []
 
@@ -115,15 +116,22 @@ def evaluate_image_batch():
 
         t_start_decode = timer()
         for key in flask.request.files:
-            image = flask.request.files[key].read()
-            image = Image.open(io.BytesIO(image))
-            image = my_img_to_array(image) # maybe
+            im_data = flask.request.files[key].read()
+            image = cv2.imdecode(np.asarray(bytearray(im_data), dtype=np.uint8), 1)
+
+            #image_data = flask.request.files[key]
+            #nparr = np.fromstring(image_data, np.uint8)
+            #image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+            #image = flask.request.files[key].read()
+            #image = Image.open(io.BytesIO(image))
+            #image = my_img_to_array(image) # maybe
 
             images.append(image)
             uids.append(key)
 
         t_start_eval = timer()
-        print("Received",len(images),"images.", uids, [i.shape for i in images])
+        print("Received",len(images),"images (Decoded in",(t_start_eval-t_start_decode),".", uids, [i.shape for i in images])
 
         results_bboxes = darkflow_handler.run_on_images(image_objects=images, model=darkflow_model)
         t_end_eval = timer()

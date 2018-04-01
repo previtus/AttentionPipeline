@@ -242,9 +242,20 @@ class Connection(object):
 
         payload = {}
 
+
         t0 = timer()
+        encoded_images = self.pool.map(lambda i: (
+            cv2.imencode('.jpg', i)[1].tostring()
+        ), crops)
+
         for i in range(number_of_images):
-            image = crops[i]
+            #image = crops[i]
+            #image_enc = cv2.imencode('.jpg', image)[1].tostring()
+            image_enc = encoded_images[i]
+            id = ids_of_crops[i]
+            payload[str(id)] = image_enc
+
+            """
             if self.settings.opencv_or_pil != 'PIL':
                 # TODO: MAYBE INEFFICIENT, back to PIL for sending
                 image = Image.fromarray(image)
@@ -255,9 +266,10 @@ class Connection(object):
 
             id = ids_of_crops[i]
             payload[str(id)] = memory_file
+            """
         t1 = timer()
         time_Encode = t1-t0
-        print("Image encoding (with",self.settings.opencv_or_pil,") took = ", time_Encode, "(during the eval)")
+        print(number_of_images,"Image(s) encoding (with",self.settings.opencv_or_pil,") took = ", time_Encode, "(during the eval)")
 
         if number_of_images == 0:
             print("Careful, 0 images, don't send.")
