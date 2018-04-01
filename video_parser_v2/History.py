@@ -156,11 +156,11 @@ class History(object):
 
             self.plot_and_save()
 
-    def plot_and_save(self):
+    def plot_and_save(self, show_instead_of_saving=False):
         self.print_all_datalists()
-        self.timing_per_frame_plot_stackedbar() ###
-        self.timing_per_frame_plot_boxplot() ####
-        self.timing_per_server_plot_boxplot()
+        self.timing_per_frame_plot_stackedbar(show_instead_of_saving) ###
+        self.timing_per_frame_plot_boxplot(show_instead_of_saving) ####
+        self.timing_per_server_plot_boxplot(show_instead_of_saving)
 
         for_attention_measure_waiting_instead_of_time = self.settings.precompute_attention_evaluation
 
@@ -247,10 +247,11 @@ class History(object):
 
         plt.legend(loc='upper left', shadow=True)
 
-
-        #plt.show()
-        save_path = self.settings.render_folder_name + "last_plot.png"
-        plt.savefig(save_path, dpi=120)
+        if show_instead_of_saving:
+            plt.show()
+        else:
+            save_path = self.settings.render_folder_name + "last_plot.png"
+            plt.savefig(save_path, dpi=120)
 
         plt.clf()
         return 0
@@ -314,7 +315,7 @@ class History(object):
 
         return 0
 
-    def timing_per_frame_plot_boxplot(self):
+    def timing_per_frame_plot_boxplot(self,show_instead_of_saving):
         """
         (yellow+orange)   |  (light blue)  | (light red)                | (green)
         IO load, IO save  | Attention Wait | Final cut + eval           | Postprocessing
@@ -359,14 +360,16 @@ class History(object):
         plt.xticks(range(1,7), ['IO_loads', 'IO_saves', attention_name, 'FinalCut', 'FinalEval', 'postprocess'])
         # https://matplotlib.org/gallery/statistics/boxplot_demo.html
 
-        save_path = self.settings.render_folder_name + "boxplot.png"
-        plt.savefig(save_path, dpi=120)
+        if show_instead_of_saving:
+            plt.show()
+        else:
+            save_path = self.settings.render_folder_name + "boxplot.png"
+            plt.savefig(save_path, dpi=120)
 
-        #plt.show()
         plt.clf()
         return 0
 
-    def timing_per_frame_plot_stackedbar(self):
+    def timing_per_frame_plot_stackedbar(self,show_instead_of_saving):
         y_limit = True # limit the plot to 0 - 1sec ?
 
         # prepare lists:
@@ -418,14 +421,16 @@ class History(object):
 
         plt.legend((p1[0], p2[0], p3[0], p4a[0], p4b[0], p5[0]), ('IO loads', 'IO saves', attention_name, 'FinalCut', 'FinalEval', 'postprocess'))
 
-        save_path = self.settings.render_folder_name + "stacked.png"
-        plt.savefig(save_path, dpi=120)
+        if show_instead_of_saving:
+            plt.show()
+        else:
+            save_path = self.settings.render_folder_name + "stacked.png"
+            plt.savefig(save_path, dpi=120)
 
-        #plt.show()
         plt.clf()
         return 0
 
-    def timing_per_server_plot_boxplot(self):
+    def timing_per_server_plot_boxplot(self, show_instead_of_saving):
         """
         Just evaluations, linked to specific servers
         """
@@ -436,6 +441,9 @@ class History(object):
         data = []
         for key in keys:
             data.append(self.server_name_specific_speeds[key])
+
+        if len(data) == 0:
+            return 0
 
         # multiple box plots on one figure
 
@@ -448,10 +456,12 @@ class History(object):
         plt.xticks(range(0,len(keys)+1), [""]+list(keys))
         # https://matplotlib.org/gallery/statistics/boxplot_demo.html
 
-        save_path = self.settings.render_folder_name + "servers.png"
-        plt.savefig(save_path, dpi=120)
+        if show_instead_of_saving:
+            plt.show()
+        else:
+            save_path = self.settings.render_folder_name + "servers.png"
+            plt.savefig(save_path, dpi=120)
 
-        #plt.show()
         plt.clf()
         return 0
 

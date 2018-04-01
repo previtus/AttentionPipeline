@@ -19,8 +19,10 @@ def load_last(load_folder, save_folder):
     history = load_whole_history_and_settings(load_folder)
     history.settings.render_folder_name = save_folder
 
-    history.plot_and_save()
+    history.plot_and_save(show_instead_of_saving = True)
     print("Done---")
 
+
 folder = "/home/ekmek/intership_project/video_parser_v2/__Renders/March28_saving/"
+folder = "/home/ekmek/intership_project/video_parser_v2/__Renders/____OnSERVERrunsClient/S1000040_5fps_1to2/"
 load_last(folder,folder)
