@@ -192,14 +192,14 @@ class Evaluation(object):
         return evaluation
 
     def evaluate_on_server(self, crops, ids_of_crops, type, frame_number):
-        evaluation, times_eval, times_besides_eval = self.connection.evaluate_crops_on_server(crops, ids_of_crops, type)
+        evaluation, times_eval, times_transfer = self.connection.evaluate_crops_on_server(crops, ids_of_crops, type)
         # if its final evaluation, save individual times per servers
         if type == 'evaluation':
-            self.history.report_evaluation_per_individual_worker(times_eval, times_besides_eval, type, frame_number)
+            self.history.report_evaluation_per_individual_worker(times_eval, times_transfer, type, frame_number)
 
-        print("times_besides_eval", times_besides_eval)
+        print("times_besides_eval", times_transfer)
 
-        transfer = np.mean(times_besides_eval)
+        transfer = np.mean(times_transfer)
         return evaluation,transfer
 
     def filter_evaluations(self, evaluation):

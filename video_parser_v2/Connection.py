@@ -119,13 +119,13 @@ class Connection(object):
         N = self.number_of_server_machines
 
         if N > 1:
-            result,times_eval,times_besides_eval = self.split_across_list_of_servers(crops, ids_of_crops, type)
+            result, times_eval, times_transfer = self.split_across_list_of_servers(crops, ids_of_crops, type)
         else:
             port = self.server_ports_list[0]
-            result,time_eval,time_besides_eval = self.direct_to_server(crops, ids_of_crops, port)
+            result,time_eval,time_transfer = self.direct_to_server(crops, ids_of_crops, port)
             times_eval = [time_eval]
-            times_besides_eval = [time_besides_eval]
-        return result, times_eval, times_besides_eval
+            times_transfer = [time_transfer]
+        return result, times_eval, times_transfer
 
         """
         port = self.server_ports_list[0]
@@ -185,7 +185,8 @@ class Connection(object):
                 num_of_actual_threads+=1
 
         times_eval = [[]]*(num_of_actual_threads)
-        times_besides_eval = [[]]*(num_of_actual_threads)
+        times_transfer = [[]]*(num_of_actual_threads)
+        times_encode = [[]]*(num_of_actual_threads)
 
         print("corresponds to crops", np.array_split(ids_of_crops, N))
 
@@ -201,7 +202,7 @@ class Connection(object):
                 print(port, self.server_names[port], "> with len=",len(sub_crops), "of ids:", sub_ids)
 
             # start a new thread to call the API
-            t = Thread(target=self.eval_subset_and_save_to_list, args=(sub_crops, sub_ids, port, results, i, times_eval, times_besides_eval))
+            t = Thread(target=self.eval_subset_and_save_to_list, args=(sub_crops, sub_ids, port, results, i, times_eval, times_transfer))
             t.daemon = True
             t.start()
             threads.append(t)
@@ -213,8 +214,6 @@ class Connection(object):
             print("All threads finished, assuming we have all the ids from", ids_of_crops)
 
         results_tmp = []
-        print("times_eval", times_eval)
-        print("times_besides_eval", times_besides_eval)
 
         for i,r in enumerate(results):
             if len(r) > 0:
@@ -225,24 +224,23 @@ class Connection(object):
         if self.settings.verbosity >= 3:
             print("results = ", results)
 
-        return results, times_eval, times_besides_eval
+        return results, times_eval, times_transfer
 
     # thread function
-    def eval_subset_and_save_to_list(self, crops, ids_of_crops, port, results, ith, times_eval, times_besides_eval):
-        evaluation,time_eval,time_besides_eval = self.direct_to_server(crops, ids_of_crops, port)
+    def eval_subset_and_save_to_list(self, crops, ids_of_crops, port, results, ith, times_eval, times_transfer):
+        evaluation,time_eval,time_transfer = self.direct_to_server(crops, ids_of_crops, port)
         times_eval[ith] = time_eval
-        times_besides_eval[ith] = time_besides_eval
+        times_transfer[ith] = time_transfer
         #print("times[ith]", ith, " = ", time)
 
         for uid,bbox in evaluation:
             results[uid] = [uid,bbox]
             #results[uid] = [uid]
 
-        self.history.report_evaluation_per_specific_server(self.server_names[port], time_eval, time_besides_eval)
+        self.history.report_evaluation_per_specific_server(self.server_names[port], time_eval, time_transfer)
 
 
     def direct_to_server(self, crops, ids_of_crops, port):
-        start = timer()
 
         EVALUATE_API_URL = "http://localhost:" + port + "/evaluate_image_batch"
 
@@ -250,9 +248,9 @@ class Connection(object):
 
         payload = {}
 
+        t0 = timer()
         for i in range(number_of_images):
             image = crops[i]
-
             if self.settings.opencv_or_pil != 'PIL':
                 # TODO: MAYBE INEFFICIENT, back to PIL for sending
                 image = Image.fromarray(image)
@@ -263,13 +261,15 @@ class Connection(object):
 
             id = ids_of_crops[i]
             payload[str(id)] = memory_file
-        t0 = timer()
-        print("Image encoding (with",self.settings.opencv_or_pil,") took = ", t0-start, "(during the eval)")
+        t1 = timer()
+        time_Encode = t1-t0
+        print("Image encoding (with",self.settings.opencv_or_pil,") took = ", time_Encode, "(during the eval)")
 
         if number_of_images == 0:
             print("Careful, 0 images, don't send.")
             return [],0
 
+        start = timer()
         # submit the request
         try:
             r = requests.post(EVALUATE_API_URL, files=payload).json()
@@ -285,8 +285,9 @@ class Connection(object):
         uids = r["uids"]
         bboxes = r["bboxes"]
 
-        time_OnlyEvaluation = float(r["time_pure_eval"])
-        time_BesidesEvaluation = time_EvaluationAndTransfer - time_OnlyEvaluation
+        time_EvaluationAndDecode = float(r["time_pure_eval"])
+        time_Transfer = time_EvaluationAndTransfer - time_EvaluationAndDecode
+        time_EvaluationEncodeDecode = time_EvaluationAndDecode+time_Encode
 
         #print("uids", uids)
         #print("bboxes len", len(bboxes))
@@ -301,5 +302,5 @@ class Connection(object):
         #     each holds id and array of dictionaries for each bbox {} keys label, confidence, topleft, bottomright
         #print("evaluation", evaluation)
 
-        return evaluation, time_OnlyEvaluation, time_BesidesEvaluation
+        return evaluation, time_EvaluationEncodeDecode, time_Transfer
 
