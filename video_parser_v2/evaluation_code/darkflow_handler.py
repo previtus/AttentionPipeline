@@ -5,7 +5,7 @@ import numpy
 import os, fnmatch, random
 import cv2
 
-def load_model():
+def load_model(warm_up):
     options = {#"model": "cfg/yolo.cfg",
                #"load": "bin/yolo.weights",
                "pbLoad": "built_graph/yolo.pb",
@@ -19,7 +19,7 @@ def load_model():
     tfnet = TFNet(options)
 
     print("Warm up...")
-    warm_up_the_oven(tfnet)
+    warm_up_the_oven(tfnet,warm_up)
 
     return tfnet
 
@@ -37,7 +37,6 @@ def run_on_image(image_object, model):
     result = model.return_predict(image_object)
     result = convert_numpy_floats(result)
 
-
     return result
 
 def run_on_images(image_objects, model):
@@ -50,7 +49,7 @@ def run_on_images(image_objects, model):
 
     return results
 
-def warm_up_the_oven(model):
+def warm_up_the_oven(model,warm_up):
 
     folder = "warmup_images/"
     files = sorted(os.listdir(folder))
@@ -58,9 +57,12 @@ def warm_up_the_oven(model):
     image_paths = [folder + i for i in frame_files]
     random.shuffle(image_paths)
 
-    n = 10
+    n = warm_up
     n = min(n, len(image_paths))
     image_paths = image_paths[0:n]
+
+    if len(image_paths)==0:
+        return 0
 
     images = []
     for p in image_paths:

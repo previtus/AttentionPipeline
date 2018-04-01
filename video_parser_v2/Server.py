@@ -32,6 +32,7 @@ class Server(object):
 
     def __init__(self):
         print("Server ... starting server and loading model ... please wait until its started ...")
+        self.warm_up = 0
 
         self.load_model_darkflow()
 
@@ -62,7 +63,7 @@ class Server(object):
 
     def load_model_darkflow(self):
         global darkflow_model
-        darkflow_model = darkflow_handler.load_model()
+        darkflow_model = darkflow_handler.load_model(self.warm_up)
         print('Model loaded.')
 
 
@@ -128,10 +129,13 @@ def evaluate_image_batch():
 
         print("Received",len(images),"images.", uids, [i.shape for i in images])
 
+        t_start_eval = timer()
         results_bboxes = darkflow_handler.run_on_images(image_objects=images, model=darkflow_model)
+        t_end_eval = timer()
 
         data["bboxes"] = results_bboxes
         data["uids"] = uids
+        data["time_pure_eval"] = t_end_eval-t_start_eval
 
         # indicate that the request was a success
         data["success"] = True
