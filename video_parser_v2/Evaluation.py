@@ -2,7 +2,7 @@ import evaluation_code.darkflow_handler as darkflow_handler
 import ImageProcessing
 from timeit import default_timer as timer
 from threading import Thread
-
+import numpy as np
 
 class Evaluation(object):
     """
@@ -158,9 +158,9 @@ class Evaluation(object):
             crops = [img_to_array(crop) for crop in crops]
 
             evaluation = self.evaluate_local(crops, ids_of_crops)
-            slowest_transfer_and_decode = 0.0
+            transfer = 0.0
         else:
-            evaluation,slowest_transfer_and_decode = self.evaluate_on_server(crops, ids_of_crops, type, frame_number)
+            evaluation,transfer = self.evaluate_on_server(crops, ids_of_crops, type, frame_number)
 
         evaluation = self.filter_evaluations(evaluation)
 
@@ -171,7 +171,7 @@ class Evaluation(object):
             print("Evaluation ("+where+") of stage `"+type+"`, bboxes in crops", counts)
 
         time_whole_eval = timer() - time_start
-        self.history.report_evaluation_whole_function(type, time_whole_eval, slowest_transfer_and_decode, frame_number)
+        self.history.report_evaluation_whole_function(type, time_whole_eval, transfer, frame_number)
 
         # Returns evaluation in format:
         # array of crops in order by coordinates_id
@@ -199,8 +199,8 @@ class Evaluation(object):
 
         print("times_besides_eval", times_besides_eval)
 
-        slowest_transfer_and_decode = max(times_besides_eval)
-        return evaluation,slowest_transfer_and_decode
+        transfer = np.mean(times_besides_eval)
+        return evaluation,transfer
 
     def filter_evaluations(self, evaluation):
 

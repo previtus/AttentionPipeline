@@ -113,6 +113,7 @@ def evaluate_image_batch():
         images = []
         uids = []
 
+        t_start_eval = timer()
         t1 = timer()
 
         for key in flask.request.files:
@@ -129,7 +130,6 @@ def evaluate_image_batch():
 
         print("Received",len(images),"images.", uids, [i.shape for i in images])
 
-        t_start_eval = timer()
         results_bboxes = darkflow_handler.run_on_images(image_objects=images, model=darkflow_model)
         t_end_eval = timer()
 

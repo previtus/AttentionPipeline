@@ -11,13 +11,15 @@ import os
 from timeit import default_timer as timer
 from multiprocessing.pool import ThreadPool
 import numpy as np
+import socket
 
 # Thanks to the tutorial at: https://blog.keras.io/building-a-simple-keras-deep-learning-rest-api.html
 
 app = flask.Flask(__name__)
 darkflow_model = None
 pool = ThreadPool()
-import socket
+
+# del
 from timeit import default_timer as timer
 import numpy
 
@@ -32,9 +34,6 @@ class Server(object):
         print("Server ... starting server and loading model ... please wait until its started ...")
         self.warm_up = 0
 
-        # use
-        #  CUDA_VISIBLE_DEVICES=1
-
         self.load_model_darkflow()
 
         frequency_sec = 10.0
@@ -42,9 +41,14 @@ class Server(object):
         t.daemon = True
         t.start()
 
-        #app.run()
-        # On server:
-        app.run(host='0.0.0.0', port=8666)
+        # hack to distinguish server
+        # this might not work on non gpu machines
+        # but we are using only those
+        hostname = socket.gethostname()  # gpu048.etcetcetc.edu
+        if hostname[0:3] == "gpu":
+            app.run(host='0.0.0.0', port=8123)
+        else:
+            app.run(port=5001)
 
     def mem_monitor_deamon(self, frequency_sec):
         import subprocess
@@ -62,6 +66,8 @@ class Server(object):
         darkflow_model = darkflow_handler.load_model(self.warm_up)
         print('Model loaded.')
 
+
+
 @app.route("/handshake", methods=["POST"])
 def handshake():
     # Handshake
@@ -72,7 +78,6 @@ def handshake():
     if flask.request.method == "POST":
         if flask.request.files.get("client"):
             client_message = flask.request.files["client"].read()
-
             print("Handshake, received: ",client_message)
 
             backup_name = flask.request.files["backup_name"].read()
@@ -155,6 +160,7 @@ def get_gpus_buses():
             buses += ";"
         buses += str(bus)
     return buses
+
 
 if __name__ == "__main__":
     server = Server()
