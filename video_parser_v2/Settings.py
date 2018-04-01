@@ -54,9 +54,9 @@ class Settings(object):
         # local servers
         for i in range(5000,5002+1): self.server_ports_list.append(str(i))
         # first gpus
-        for i in range(9000,9010+1): self.server_ports_list.append(str(i))
+        for i in range(9000,9020+1): self.server_ports_list.append(str(i))
         # second gpus
-        for i in range(9100,9110+1): self.server_ports_list.append(str(i))
+        for i in range(9100,9120+1): self.server_ports_list.append(str(i))
 
         # Precomputing Attention
         self.precompute_attention_evaluation = True

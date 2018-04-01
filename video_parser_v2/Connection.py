@@ -119,12 +119,13 @@ class Connection(object):
         N = self.number_of_server_machines
 
         if N > 1:
-            result,times = self.split_across_list_of_servers(crops, ids_of_crops, type)
+            result,times_eval,times_besides_eval = self.split_across_list_of_servers(crops, ids_of_crops, type)
         else:
             port = self.server_ports_list[0]
-            result,time = self.direct_to_server(crops, ids_of_crops, port)
-            times = [time]
-        return result, times
+            result,time_eval,time_besides_eval = self.direct_to_server(crops, ids_of_crops, port)
+            times_eval = [time_eval]
+            times_besides_eval = [time_besides_eval]
+        return result, times_eval, times_besides_eval
 
         """
         port = self.server_ports_list[0]
@@ -172,12 +173,20 @@ class Connection(object):
             print("all ids:",ids_of_crops)
 
         results = [[]]*(max(ids_of_crops)+1)
-        times = [[]]*(N)
         threads = []
 
         id_of_indices_0_to_C = range(0,C)
         id_splits = np.array_split(id_of_indices_0_to_C, N)
         print("id_splits",id_splits)
+
+        num_of_actual_threads = 0
+        for ids in id_splits:
+            if len(ids)>0:
+                num_of_actual_threads+=1
+
+        times_eval = [[]]*(num_of_actual_threads)
+        times_besides_eval = [[]]*(num_of_actual_threads)
+
         print("corresponds to crops", np.array_split(ids_of_crops, N))
 
         for i,ids in enumerate(id_splits):
@@ -192,7 +201,7 @@ class Connection(object):
                 print(port, self.server_names[port], "> with len=",len(sub_crops), "of ids:", sub_ids)
 
             # start a new thread to call the API
-            t = Thread(target=self.eval_subset_and_save_to_list, args=(sub_crops, sub_ids, port, results, i, times))
+            t = Thread(target=self.eval_subset_and_save_to_list, args=(sub_crops, sub_ids, port, results, i, times_eval, times_besides_eval))
             t.daemon = True
             t.start()
             threads.append(t)
@@ -204,7 +213,8 @@ class Connection(object):
             print("All threads finished, assuming we have all the ids from", ids_of_crops)
 
         results_tmp = []
-        #print("times", times)
+        print("times_eval", times_eval)
+        print("times_besides_eval", times_besides_eval)
 
         for i,r in enumerate(results):
             if len(r) > 0:
@@ -215,19 +225,20 @@ class Connection(object):
         if self.settings.verbosity >= 3:
             print("results = ", results)
 
-        return results, times
+        return results, times_eval, times_besides_eval
 
     # thread function
-    def eval_subset_and_save_to_list(self, crops, ids_of_crops, port, results, ith, times):
-        evaluation,time = self.direct_to_server(crops, ids_of_crops, port)
-        times[ith] = time
+    def eval_subset_and_save_to_list(self, crops, ids_of_crops, port, results, ith, times_eval, times_besides_eval):
+        evaluation,time_eval,time_besides_eval = self.direct_to_server(crops, ids_of_crops, port)
+        times_eval[ith] = time_eval
+        times_besides_eval[ith] = time_besides_eval
         #print("times[ith]", ith, " = ", time)
 
         for uid,bbox in evaluation:
             results[uid] = [uid,bbox]
             #results[uid] = [uid]
 
-        self.history.report_evaluation_per_specific_server(self.server_names[port], time)
+        self.history.report_evaluation_per_specific_server(self.server_names[port], time_eval, time_besides_eval)
 
 
     def direct_to_server(self, crops, ids_of_crops, port):
@@ -267,14 +278,15 @@ class Connection(object):
             print("Exception:", e)
 
         end = timer()
-        time = end - start
+        time_EvaluationAndTransfer = end - start
         if self.settings.verbosity >= 2:
-            print("Server on port",port," evaluated", len(crops), "crops. Time:", time, "Request data:", r)
-
-        print("request", r)
+            print("Server on port",port," evaluated", len(crops), "crops. Time:", time_EvaluationAndTransfer, "Request data:", r)
 
         uids = r["uids"]
         bboxes = r["bboxes"]
+
+        time_OnlyEvaluation = float(r["time_pure_eval"])
+        time_BesidesEvaluation = time_EvaluationAndTransfer - time_OnlyEvaluation
 
         #print("uids", uids)
         #print("bboxes len", len(bboxes))
@@ -289,5 +301,5 @@ class Connection(object):
         #     each holds id and array of dictionaries for each bbox {} keys label, confidence, topleft, bottomright
         #print("evaluation", evaluation)
 
-        return evaluation, time
+        return evaluation, time_OnlyEvaluation, time_BesidesEvaluation
 

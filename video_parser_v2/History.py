@@ -43,16 +43,20 @@ class History(object):
         self.times_attention_evaluation_processing_full_frame = {}
         self.times_final_evaluation_processing_full_frame = {}
 
+        self.times_attention_full_frame_slowest_transfer = {}
+        self.times_final_full_frame_slowest_transfer = {}
+
         # per server/worker information
-        self.times_final_evaluation_processing_per_worker = {} # should have an array or times for each frame
-        self.times_attention_evaluation_processing_per_worker = {}
+        self.times_final_evaluation_processing_per_worker_eval = {} # should have an array or times for each frame
+        self.times_final_evaluation_processing_per_worker_transfers = {} # should have an array or times for each frame
 
         self.times_attention_evaluation_waiting = {}
 
         self.times_evaluation_each_loop = {}
 
         # stored speed for each server by its name
-        self.server_name_specific_speeds = {} # name -> list of speeds, will be variable
+        self.server_name_specific_eval_speeds = {} # name -> list of speeds, will be variable
+        self.server_name_specific_transfer_speeds = {} # name -> list of speeds, will be variable
 
         # Renderer
         self.number_of_detected_objects = {}
@@ -100,24 +104,29 @@ class History(object):
         self.active_crops_per_frames[frame_number] = active
         self.total_crops_per_frames[frame_number] = total
 
-    def report_evaluation_whole_function(self, type, for_frame, frame_number):
+    def report_evaluation_whole_function(self, type, whole_frame, slowest_transfer_and_decode, frame_number):
         if type == 'attention':
-            self.times_attention_evaluation_processing_full_frame[frame_number]=for_frame
-        elif type == 'evaluation':
-            self.times_final_evaluation_processing_full_frame[frame_number]=for_frame
+            self.times_attention_evaluation_processing_full_frame[frame_number]=whole_frame
+            self.times_attention_full_frame_slowest_transfer[frame_number] = slowest_transfer_and_decode
 
-    def report_evaluation_per_individual_worker(self, times, type, frame_number):
-        if type == 'attention':
-            # however for this one, we don't care for now
-            # frame_number can be 'in future' when precomputing
-            self.times_attention_evaluation_processing_per_worker[frame_number] = times
         elif type == 'evaluation':
-            self.times_final_evaluation_processing_per_worker[frame_number] = times
+            self.times_final_evaluation_processing_full_frame[frame_number]=whole_frame
+            self.times_final_full_frame_slowest_transfer[frame_number] = slowest_transfer_and_decode
 
-    def report_evaluation_per_specific_server(self, server_name, speed):
-        if server_name not in self.server_name_specific_speeds:
-            self.server_name_specific_speeds[server_name] = []
-        self.server_name_specific_speeds[server_name].append(speed)
+    def report_evaluation_per_individual_worker(self, times_eval, times_besides_eval, type, frame_number):
+        #if type == 'attention':
+        #    # however for this one, we don't care for now
+        #    # frame_number can be 'in future' when precomputing
+        if type == 'evaluation':
+            self.times_final_evaluation_processing_per_worker_eval[frame_number] = times_eval
+            self.times_final_evaluation_processing_per_worker_transfers[frame_number] = times_besides_eval
+
+    def report_evaluation_per_specific_server(self, server_name, time_eval, time_besides_eval):
+        if server_name not in self.server_name_specific_eval_speeds:
+            self.server_name_specific_eval_speeds[server_name] = []
+            self.server_name_specific_transfer_speeds[server_name] = []
+        self.server_name_specific_eval_speeds[server_name].append(time_eval)
+        self.server_name_specific_transfer_speeds[server_name].append(time_besides_eval)
 
     def report_evaluation_attention_waiting(self, time, frame_number):
         self.times_attention_evaluation_waiting[frame_number] = time
@@ -128,6 +137,7 @@ class History(object):
     def report_skipped_final_evaluation(self, frame_number):
         # No active crop was detected - we can just skip the finner evaluation
         self.times_final_evaluation_processing_full_frame[frame_number]=0
+        self.times_final_full_frame_slowest_transfer[frame_number]=0
         self.IO_EVAL_cut_crops_final[frame_number]=0
         self.postprocess[frame_number]=0
         self.number_of_detected_objects[frame_number]=0
@@ -303,8 +313,13 @@ class History(object):
         # Attention Wait
         self.times_attention_evaluation_waiting
 
-        # Final cut + eval
+        # Final cut + eval + transfer
         self.times_final_evaluation_processing_full_frame
+        # just transfer
+        self.times_final_full_frame_slowest_transfer
+        # just cut
+        self.IO_EVAL_cut_crops_final
+
         # alternatively: [[cut] + per server] total
         self.IO_EVAL_cut_crops_final
         self.times_final_evaluation_processing_per_worker
@@ -338,7 +353,8 @@ class History(object):
         # Final cut + eval
         FinalCutEval = list(self.times_final_evaluation_processing_full_frame.values())
         FinalCut = list(self.IO_EVAL_cut_crops_final.values())
-        FinalEval = np.array(FinalCutEval) - np.array(FinalCut)
+        FinalTransfer = list(self.times_final_full_frame_slowest_transfer.values())
+        FinalEval = np.array(FinalCutEval) - np.array(FinalCut) - np.array(FinalTransfer)
 
         # alternatively: [[cut] + per server] total
         #Cuts = list(self.IO_EVAL_cut_crops_final.values())
@@ -348,7 +364,7 @@ class History(object):
         postprocess = list(self.postprocess.values())
 
         #data = [IO_loads, IO_saves, AttWait, FinalCutEval, postprocess]
-        data = [IO_loads, IO_saves, AttWait, FinalCut, FinalEval, postprocess]
+        data = [IO_loads, IO_saves, AttWait, FinalCut, FinalTransfer, FinalEval, postprocess]
         # multiple box plots on one figure
 
         plt.title("Per frame analysis - box plot")
@@ -357,7 +373,7 @@ class History(object):
 
         plt.boxplot(data)
         #plt.xticks(range(1,6), ['IO_loads', 'IO_saves', attention_name, 'FinalCutEval', 'postprocess'])
-        plt.xticks(range(1,7), ['IO_loads', 'IO_saves', attention_name, 'FinalCut', 'FinalEval', 'postprocess'])
+        plt.xticks(range(1,8), ['IO_loads', 'IO_saves', attention_name, 'Crop \n&Enc', 'Transfer\n& Dec', 'FinalEval', 'Post'])
         # https://matplotlib.org/gallery/statistics/boxplot_demo.html
 
         if show_instead_of_saving:
@@ -384,7 +400,8 @@ class History(object):
 
         FinalCutEval = list(self.times_final_evaluation_processing_full_frame.values())
         FinalCut = list(self.IO_EVAL_cut_crops_final.values())
-        FinalEval = np.array(FinalCutEval) - np.array(FinalCut)
+        FinalTransfer = list(self.times_final_full_frame_slowest_transfer.values())
+        FinalEval = np.array(FinalCutEval) - np.array(FinalCut) - np.array(FinalTransfer)
 
         postprocess = list(self.postprocess.values())
 
@@ -396,6 +413,7 @@ class History(object):
         AttWait = np.array(AttWait)
         FinalCutEval = np.array(FinalCutEval)
         FinalCut = np.array(FinalCut)
+        FinalTransfer = np.array(FinalTransfer)
         postprocess = np.array(postprocess)
 
         N = len(IO_loads)
@@ -411,15 +429,16 @@ class History(object):
         p3 = plt.bar(ind, AttWait, width, bottom=IO_saves+IO_loads, color='blue')
         #p4 = plt.bar(ind, FinalCutEval, width, bottom=AttWait+IO_saves+IO_loads, color='red')
         p4a = plt.bar(ind, FinalCut, width, bottom=AttWait+IO_saves+IO_loads, color='lightcoral')
-        p4b = plt.bar(ind, FinalEval, width, bottom=FinalCut+AttWait+IO_saves+IO_loads, color='red')
-        p5 = plt.bar(ind, postprocess, width, bottom=FinalEval+FinalCut+AttWait+IO_saves+IO_loads, color='green')
+        p4b = plt.bar(ind, FinalTransfer, width, bottom=FinalCut+AttWait+IO_saves+IO_loads, color='magenta')
+        p4c = plt.bar(ind, FinalEval, width, bottom=FinalTransfer+FinalCut+AttWait+IO_saves+IO_loads, color='red')
+        p5 = plt.bar(ind, postprocess, width, bottom=FinalEval+FinalTransfer+FinalCut+AttWait+IO_saves+IO_loads, color='green')
 
         if y_limit:
             ymin, ymax = plt.ylim()
             if ymax < 1.0:
                 plt.ylim(0.0, 1.0)
 
-        plt.legend((p1[0], p2[0], p3[0], p4a[0], p4b[0], p5[0]), ('IO loads', 'IO saves', attention_name, 'FinalCut', 'FinalEval', 'postprocess'))
+        plt.legend((p1[0], p2[0], p3[0], p4a[0], p4b[0], p4c[0], p5[0]), ('IO loads', 'IO saves', attention_name, 'Crop \n&Enc', 'Transfer\n& Dec', 'FinalEval', 'postprocess'))
 
         if show_instead_of_saving:
             plt.show()
@@ -434,13 +453,17 @@ class History(object):
         """
         Just evaluations, linked to specific servers
         """
-        print("self.server_name_specific_speeds", self.server_name_specific_speeds)
+        print("self.server_name_specific_eval_speeds", self.server_name_specific_eval_speeds)
+        print("self.server_name_specific_transfer_speeds", self.server_name_specific_transfer_speeds)
 
-        keys = self.server_name_specific_speeds.keys()
-
+        keys = self.server_name_specific_eval_speeds.keys()
+        names = []
         data = []
         for key in keys:
-            data.append(self.server_name_specific_speeds[key])
+            data.append(self.server_name_specific_eval_speeds[key])
+            data.append(self.server_name_specific_transfer_speeds[key])
+            names.append(str(key)+"\neval")
+            names.append(str(key)+"\ntransfer")
 
         if len(data) == 0:
             return 0
@@ -453,7 +476,7 @@ class History(object):
 
         plt.boxplot(data)
 
-        plt.xticks(range(0,len(keys)+1), [""]+list(keys))
+        plt.xticks(range(0,len(keys)*2+1), [""]+names)
         # https://matplotlib.org/gallery/statistics/boxplot_demo.html
 
         if show_instead_of_saving:
