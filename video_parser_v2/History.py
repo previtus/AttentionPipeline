@@ -335,6 +335,8 @@ class History(object):
         return 0
 
     def timing_per_frame_plot_boxplot(self,show_instead_of_saving):
+        y_limit = True # limit the plot to 0 - 1sec ?
+
         """
         (yellow+orange)   |  (light blue)  | (light red)                | (green)
         IO load, IO save  | Attention Wait | Final cut + eval           | Postprocessing
@@ -389,6 +391,12 @@ class History(object):
         #plt.xticks(range(1,6), ['IO_loads', 'IO_saves', attention_name, 'FinalCutEval', 'postprocess'])
         plt.xticks(range(1,10), ['IO_loads', 'IO_saves', attention_name, 'Crop', 'Transfer', 'Enc', 'Dec', 'FinalEval', 'Post'])
         # https://matplotlib.org/gallery/statistics/boxplot_demo.html
+
+        if y_limit:
+            ymin, ymax = plt.ylim()
+            if ymax < 1.0:
+                plt.ylim(0.0, 1.0)
+
 
         if show_instead_of_saving:
             plt.show()
@@ -485,6 +493,8 @@ class History(object):
         return 0
 
     def timing_per_server_plot_boxplot(self, show_instead_of_saving):
+        y_limit = True # limit the plot to 0 - 1sec ?
+
         """
         Just evaluations, linked to specific servers
         """
@@ -513,6 +523,11 @@ class History(object):
 
         plt.xticks(range(0,len(keys)*2+1), [""]+names)
         # https://matplotlib.org/gallery/statistics/boxplot_demo.html
+
+        if y_limit:
+            ymin, ymax = plt.ylim()
+            if ymax < 1.0:
+                plt.ylim(0.0, 1.0)
 
         if show_instead_of_saving:
             plt.show()

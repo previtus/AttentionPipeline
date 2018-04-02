@@ -56,6 +56,7 @@ class Settings(object):
         self.precompute_number = 1
 
 
+        # limit number of servers (individual connections) available, if set to >0
         self.final_evaluation_limit_servers = 0
 
 
@@ -85,6 +86,7 @@ class Settings(object):
         string = "SETTINGS: \n"
 
         import copy,json
+
         save_dict = copy.deepcopy(vars(self))
         del save_dict["server_ports_list"]
         string+=(json.dumps(save_dict, indent=2))

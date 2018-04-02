@@ -6,8 +6,6 @@ def main_loop(args):
     settings = Settings.Settings(args)
     history = History.History(settings)
     connection = Connection.Connection(settings,history)
-    settings.save_settings()
-
     #if connection.failed: return -1
     if connection.hard_stop: return -1
 
@@ -19,6 +17,8 @@ def main_loop(args):
 
     renderer = Renderer.Renderer(settings, history)
     debugger = Debugger.Debugger(settings, cropscoordinates, evaluation)
+
+    settings.save_settings()
     settings.set_debugger(debugger)
 
     for frame, next_frames, frame_number in videocapture.frame_generator_thread_loading():
