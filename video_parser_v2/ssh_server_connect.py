@@ -27,4 +27,4 @@ for server_name in server_names:
     second_gpu = 9100 + i
     print("ssh -N -f -L  "+str(first_gpu)+":"+server_name+":8123 "+user+"@"+server_name+".pvt.bridges.psc.edu")
     print("ssh -N -f -L  "+str(second_gpu)+":"+server_name+":8666 "+user+"@"+server_name+".pvt.bridges.psc.edu")
-
+    i+=1
