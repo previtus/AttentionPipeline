@@ -52,7 +52,7 @@ class Settings(object):
         self.server_ports_list = []
 
         # local servers
-        for i in range(5000,5002+1): self.server_ports_list.append(str(i))
+        for i in range(5000,5020+1): self.server_ports_list.append(str(i))
         # first gpus
         for i in range(9000,9020+1): self.server_ports_list.append(str(i))
         # second gpus

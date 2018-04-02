@@ -111,24 +111,20 @@ def evaluate_image_batch():
     # Evaluate data
     data = {"success": False}
     if flask.request.method == "POST":
-        images = []
         uids = []
+
+        imgs_data = []
 
         t_start_decode = timer()
         for key in flask.request.files:
             im_data = flask.request.files[key].read()
-            image = cv2.imdecode(np.asarray(bytearray(im_data), dtype=np.uint8), 1)
 
-            #image_data = flask.request.files[key]
-            #nparr = np.fromstring(image_data, np.uint8)
-            #image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-            #image = flask.request.files[key].read()
-            #image = Image.open(io.BytesIO(image))
-            #image = my_img_to_array(image) # maybe
-
-            images.append(image)
+            imgs_data.append(im_data)
             uids.append(key)
+
+        images = pool.map(lambda i: (
+            cv2.imdecode(np.asarray(bytearray(i), dtype=np.uint8), 1)
+        ), imgs_data)
 
         t_start_eval = timer()
         print("Received",len(images),"images (Decoded in",(t_start_eval-t_start_decode),".", uids, [i.shape for i in images])

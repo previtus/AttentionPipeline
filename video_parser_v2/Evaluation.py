@@ -180,7 +180,7 @@ class Evaluation(object):
     # Assuming there is no server via Connection, lets evaluate it here on local machine
     def init_local(self):
 
-        local_model = darkflow_handler.load_model()
+        local_model = darkflow_handler.load_model(0)
 
         return local_model
 
