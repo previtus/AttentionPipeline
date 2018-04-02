@@ -6,6 +6,8 @@ def main_loop(args):
     settings = Settings.Settings(args)
     history = History.History(settings)
     connection = Connection.Connection(settings,history)
+    settings.save_settings()
+
     #if connection.failed: return -1
     if connection.hard_stop: return -1
 

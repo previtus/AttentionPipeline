@@ -17,7 +17,6 @@ class CropsCoordinates(object):
         settings.horizontal_splits
         settings.overlap_px
         settings.attention_horizontal_splits
-        settings.attention
         settings.w
         settings.h
 
