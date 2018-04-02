@@ -95,6 +95,19 @@ class Connection(object):
             print("Only one server connected! No precomputing allowed.")
             self.settings.precompute_attention_evaluation = False
 
+        # limiter
+        if self.settings.final_evaluation_limit_servers > 0:
+            t = 0
+            if self.settings.precompute_attention_evaluation:
+                t = self.reserve_machines_for_attention
+            for_final = len(self.server_ports_list) - t
+            #print(for_final,"vs",self.settings.final_evaluation_limit_servers)
+
+            if self.settings.final_evaluation_limit_servers < for_final:
+                self.server_ports_list = self.server_ports_list[0:self.settings.final_evaluation_limit_servers+t]
+                print("Limiting number of final-evaluation-servers to",len(self.server_ports_list),":",self.server_ports_list)
+
+
     def prepare_attention_evaluation_server_lists(self):
         N = self.number_of_server_machines
 

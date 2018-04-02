@@ -56,6 +56,9 @@ class Settings(object):
         self.precompute_number = 1
 
 
+        self.final_evaluation_limit_servers = 0
+
+
         # is set during the run
         self.frame_number = -1
 
