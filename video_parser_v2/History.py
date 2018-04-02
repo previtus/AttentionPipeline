@@ -394,8 +394,8 @@ class History(object):
 
         if y_limit:
             ymin, ymax = plt.ylim()
-            if ymax < 1.0:
-                plt.ylim(0.0, 1.0)
+            if ymax < 0.5:
+                plt.ylim(0.0, 0.5)
 
 
         if show_instead_of_saving:
@@ -526,8 +526,8 @@ class History(object):
 
         if y_limit:
             ymin, ymax = plt.ylim()
-            if ymax < 1.0:
-                plt.ylim(0.0, 1.0)
+            if ymax < 0.5:
+                plt.ylim(0.0, 0.5)
 
         if show_instead_of_saving:
             plt.show()
