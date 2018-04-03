@@ -106,6 +106,7 @@ class Connection(object):
             if self.settings.final_evaluation_limit_servers < for_final:
                 self.server_ports_list = self.server_ports_list[0:self.settings.final_evaluation_limit_servers+t]
                 print("Limiting number of final-evaluation-servers to",len(self.server_ports_list),":",self.server_ports_list)
+                self.number_of_server_machines = len(self.server_ports_list)
 
 
     def prepare_attention_evaluation_server_lists(self):

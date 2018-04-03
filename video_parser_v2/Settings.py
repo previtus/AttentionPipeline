@@ -22,7 +22,7 @@ class Settings(object):
 
         self.debug_just_handshake = (args.debug_just_handshake == 'True')
 
-        self.render_history_every_k_frames = 35
+        self.render_history_every_k_frames = 100
 
         self.INPUT_FRAMES = args.input
         self.RUN_NAME = args.name
@@ -57,6 +57,7 @@ class Settings(object):
 
 
         # limit number of servers (individual connections) available, if set to >0
+        # remember +1 is used for attention precomp.
         self.final_evaluation_limit_servers = 0
 
 

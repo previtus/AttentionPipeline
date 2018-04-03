@@ -24,7 +24,7 @@ class VideoCapture(object):
 
     def init_frames_from_folder(self, path):
         files = sorted(os.listdir(path))
-        files = [p for p in files if is_non_zero_file(path + p)]
+        files = [p for p in files if is_non_zero_file(path + p)] # this can be slow, if we are looking at full folder!
 
         self.frame_files = fnmatch.filter(files, '*.jpg')
         self.annotation_files = fnmatch.filter(files, '*.xml')
