@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw
 import numpy as np
-
+from timeit import default_timer as timer
 class AttentionModel(object):
     """
     Calculation of which crop should be active. Stands in the middle of two evaluations - attention evaluation
@@ -18,6 +18,7 @@ class AttentionModel(object):
             Faster, because we don't scale the temp mask image
             possibly can be further rewritten...
         """
+        start = timer()
         projected_evaluation = self.cropscoordinates.project_evaluation_to(projected_evaluation, 'original_image_to_evaluation_space')
         scaled_extend = self.settings.extend_mask_by * self.cropscoordinates.scale_ratio_of_evaluation_crop
         mask_image = self.mask_image_eval_space_size(projected_evaluation, scaled_extend)
@@ -30,7 +31,10 @@ class AttentionModel(object):
 
         if self.settings.verbosity > 2:
             print("Attention model found",len(active_coordinates),"active crops in the image (out of",len(evaluation_coordinates),")")
+        end = timer()
+        time_active_coords = end - start
 
+        self.history.report_time_getting_active_crops(time_active_coords, self.settings.frame_number)
         self.history.report_attention(len(active_coordinates), len(evaluation_coordinates), self.settings.frame_number)
 
         return active_coordinates

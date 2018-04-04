@@ -39,6 +39,8 @@ class History(object):
 
         self.total_crops_during_attention_evaluation = {}
 
+        self.time_getting_active_crops = {}
+
         # Evaluation and VideoCapture feed time for
         self.times_attention_evaluation_processing_full_frame = {}
         self.times_final_evaluation_processing_full_frame = {}
@@ -137,6 +139,9 @@ class History(object):
 
     def report_evaluation_attention_waiting(self, time, frame_number):
         self.times_attention_evaluation_waiting[frame_number] = time
+
+    def report_time_getting_active_crops(self, time, frame_number):
+        self.time_getting_active_crops[frame_number] = time
 
     def report_number_of_detected_objects(self, number_of_detected_objects, frame_number):
         self.number_of_detected_objects[frame_number]=number_of_detected_objects
@@ -366,6 +371,13 @@ class History(object):
         FinalTransfer = list(self.times_final_evaluation_processing_per_worker_transfers.values())
         FinalEval = list(self.times_final_evaluation_processing_per_worker_eval.values())
 
+
+        # ONLY FOR NEWER MEASUREMENTS
+        ActiveCrops_on = True
+        if ActiveCrops_on:
+            ActiveCrops = list(self.time_getting_active_crops.values())
+
+
         # flatten lists
         FinalTransfer = [item for sublist in FinalTransfer for item in sublist]
         FinalEval = [item for sublist in FinalEval for item in sublist]
@@ -381,15 +393,21 @@ class History(object):
 
         #data = [IO_loads, IO_saves, AttWait, FinalCutEval, postprocess]
         data = [IO_loads, IO_saves, AttWait, FinalCut, FinalTransfer, FinalEncode, FinalDecode, FinalEval, postprocess]
-        # multiple box plots on one figure
+        names = ['IO_loads', 'IO_saves', attention_name, 'Crop', 'Transfer', 'Enc', 'Dec', 'FinalEval', 'Post']
+
+
+        if ActiveCrops_on:
+            data.append(ActiveCrops)
+            names.append("Active\nCropCalc")
 
         plt.title("Per frame analysis - box plot")
         plt.ylabel("Time (s)")
         plt.xlabel("Stages")
 
         plt.boxplot(data)
+
         #plt.xticks(range(1,6), ['IO_loads', 'IO_saves', attention_name, 'FinalCutEval', 'postprocess'])
-        plt.xticks(range(1,10), ['IO_loads', 'IO_saves', attention_name, 'Crop', 'Transfer', 'Enc', 'Dec', 'FinalEval', 'Post'])
+        plt.xticks(range(1,len(names)+1), names)
         # https://matplotlib.org/gallery/statistics/boxplot_demo.html
 
         if y_limit:
@@ -423,6 +441,9 @@ class History(object):
         ##FinalCutEval = list(self.times_final_evaluation_processing_full_frame.values())
         FinalCut = list(self.IO_EVAL_cut_crops_final.values())
 
+        ActiveCrops_on = True
+        if ActiveCrops_on:
+            ActiveCrops = list(self.time_getting_active_crops.values())
 
         # these are ~ [[0...N], [0...N]] N values across N servers
         FinalEncode = list(self.times_final_evaluation_processing_per_worker_encode.values())
@@ -431,10 +452,39 @@ class History(object):
         FinalEval = list(self.times_final_evaluation_processing_per_worker_eval.values())
 
         # flatten lists
-        FinalTransfer = [np.mean(item) for item in FinalTransfer]
-        FinalEval = [np.mean(item) for item in FinalEval]
-        FinalEncode = [np.mean(item) for item in FinalEncode]
-        FinalDecode = [np.mean(item) for item in FinalDecode]
+        # up to 16 workers - we should ideally look at the most delaying one
+        FinalTransfer = np.array(FinalTransfer)
+        FinalEval = np.array(FinalEval)
+        FinalEncode = np.array(FinalEncode)
+        FinalDecode = np.array(FinalDecode)
+
+        # this is the fix:
+        cummulative = [[]] * len(FinalTransfer)
+        for i in range(0, len(FinalTransfer)):
+            # print(len(FinalTransfer[i]),len(FinalEval[i]),len(FinalEncode[i]),len(FinalDecode[i]))
+            cummulative[i] = [[]] * len(FinalTransfer[i])
+            for j in range(0, len(FinalTransfer[i])):
+                cummulative[i][j] = FinalTransfer[i][j] + FinalEval[i][j] + FinalEncode[i][j] + FinalDecode[i][j]
+
+        indices = [np.argmax(item) for item in cummulative]
+
+        FinalTransferT = [[]]*len(FinalTransfer)
+        FinalEvalT = [[]]*len(FinalTransfer)
+        FinalEncodeT = [[]]*len(FinalTransfer)
+        FinalDecodeT = [[]]*len(FinalTransfer)
+
+        for i in range(0, len(FinalTransfer)):
+            ind = indices[i]
+
+            FinalTransferT[i] = FinalTransfer[i][ind]
+            FinalEvalT[i] = FinalEval[i][ind]
+            FinalEncodeT[i] = FinalEncode[i][ind]
+            FinalDecodeT[i] = FinalDecode[i][ind]
+
+        FinalTransfer=FinalTransferT
+        FinalEval=FinalEvalT
+        FinalEncode=FinalEncodeT
+        FinalDecode=FinalDecodeT
 
         ###FinalTransfer = list(self.times_final_full_frame_avg_transfer.values())
         ###FinalEval = np.array(FinalCutEval) - np.array(FinalCut) - np.array(FinalTransfer)
@@ -449,6 +499,7 @@ class History(object):
         AttWait = np.array(AttWait)
         FinalCut = np.array(FinalCut)
         postprocess = np.array(postprocess)
+
 
         N = len(IO_loads)
         ind = np.arange(N)
@@ -474,13 +525,20 @@ class History(object):
         bottom += FinalEval
         p5 = plt.bar(ind, postprocess, width, bottom=bottom, color='green')
         bottom += postprocess
+        if ActiveCrops_on:
+            p6 = plt.bar(ind, ActiveCrops, width, bottom=bottom, color='orange')
+            bottom += ActiveCrops
 
         if y_limit:
             ymin, ymax = plt.ylim()
             if ymax < 1.0:
                 plt.ylim(0.0, 1.0)
 
-        plt.legend((p1[0], p2[0], p3a[0], p3b[0], p4a[0], p4b[0], p4c[0], p5[0]),
+        if ActiveCrops_on:
+            plt.legend((p1[0], p2[0], p3a[0], p3b[0], p4a[0], p4b[0], p4c[0], p5[0], p6[0]),
+                   ('IO load&save', attention_name, 'Crop', 'Enc', 'Dec', 'Transfer', 'Eval', 'postprocess','Active\nCropCalc'))
+        else:
+            plt.legend((p1[0], p2[0], p3a[0], p3b[0], p4a[0], p4b[0], p4c[0], p5[0]),
                    ('IO load&save', attention_name, 'Crop', 'Enc', 'Dec', 'Transfer', 'Eval', 'postprocess'))
 
         if show_instead_of_saving:
@@ -490,6 +548,26 @@ class History(object):
             plt.savefig(save_path, dpi=120)
 
         plt.clf()
+
+
+        plt.title("SANITY CHECK")
+        plt.ylabel("Time (s)")
+        plt.xlabel("SHOULD BE SAME")
+        times_evaluation_each_loop = list(self.times_evaluation_each_loop.values())
+        #print("[SANITY CHECK #1] STACKED MAX:",bottom)
+        #print("[SANITY CHECK #2] WHOLE LOOP:", times_evaluation_each_loop)
+        plt.plot(bottom, label="summed stacked measurements")
+        plt.plot(times_evaluation_each_loop, label="whole loop")
+        plt.legend()
+        ymin, ymax = plt.ylim()
+        plt.ylim(0.0, ymax)
+
+        if show_instead_of_saving:
+            plt.show()
+        else:
+            save_path = self.settings.render_folder_name + "SANITY.png"
+            plt.savefig(save_path, dpi=120)
+
         return 0
 
     def timing_per_server_plot_boxplot(self, show_instead_of_saving):
