@@ -27,6 +27,17 @@ class Settings(object):
         self.INPUT_FRAMES = args.input
         self.RUN_NAME = args.name
 
+        # move as parameters outside:
+        #
+        # render_history_every_k_frames 100
+        # verbosity 3
+        # precompute_attention_evaluation = True
+        # precompute_number = 1
+        # final_evaluation_limit_servers = 0
+
+        # Connection >
+        # self.reserve_machines_for_attention
+
         self.opencv_or_pil = 'OpenCV' # 'PIL' or 'OpenCV'
 
         ### w and h
@@ -53,13 +64,12 @@ class Settings(object):
 
         # Precomputing Attention
         self.precompute_attention_evaluation = True
-        self.precompute_number = 1
-
+        self.precompute_number = 1 # number of precomputed frames
+        self.reserve_machines_for_attention = 2 # number of machines for attention (if its turned on)
 
         # limit number of servers (individual connections) available, if set to >0
-        # remember +1 is used for attention precomp.
+        # remember +reserve_machines_for_attention is used for attention precomp.
         self.final_evaluation_limit_servers = 0
-
 
         # is set during the run
         self.frame_number = -1

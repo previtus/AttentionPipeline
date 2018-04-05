@@ -11,7 +11,6 @@ class ThreadHerd(object):
 
     def __init__(self, N):
         self.herd_size = N
-
         self.thread_pool = []
 
     def check_dead_threads(self):
@@ -19,12 +18,15 @@ class ThreadHerd(object):
 
     def assign_job_CAREFULLY_CAN_STALL(self, fuction, arguments):
         if len(self.thread_pool) >= self.herd_size:
-            print(arguments,"ThreadHerd had full capacity (all",self.herd_size,") we need to wait.")
-            start_waiting = timer()
-            while len(self.thread_pool) >= self.herd_size:
-                self.check_dead_threads()
-            have_waited = timer() - start_waiting
-            print("Executing, we had to wait for ",have_waited)
+            self.check_dead_threads()
+            if len(self.thread_pool) >= self.herd_size:
+                print("ThreadHerd had full capacity (all",self.herd_size,") we need to wait.")
+
+                start_waiting = timer()
+                while len(self.thread_pool) >= self.herd_size:
+                    self.check_dead_threads()
+                have_waited = timer() - start_waiting
+                print("Executing, we had to wait for ",have_waited)
 
         # assign new thread:
         t = Thread(target=fuction, args=arguments)

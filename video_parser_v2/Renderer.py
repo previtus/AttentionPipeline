@@ -3,6 +3,7 @@ import cv2
 from processing_code.file_handling import make_folder
 from timeit import default_timer as timer
 from threading import Thread
+import ThreadHerd
 
 class Renderer(object):
     """
@@ -19,6 +20,8 @@ class Renderer(object):
             make_folder(self.render_folder_name)
 
         self.last_saving_thread = None
+
+        self.thread_herd_saving_images = ThreadHerd.ThreadHerd(8)
 
     def render(self, final_evaluation, frame):
         time_start = timer()
@@ -80,17 +83,25 @@ class Renderer(object):
         if self.settings.verbosity >= 2:
             print("Saved to", self.render_folder_name + name)
 
+        # deploy saving to the threads:
+        # if there's no empty thread, it will automatically wait
+
+        self.thread_herd_saving_images.assign_job_CAREFULLY_CAN_STALL(self.save_on_thread, (image, self.render_folder_name + name))
+
+        """
         # would opencv be faster?
         # could I start another process just to save it?
         if self.last_saving_thread is not None:
             self.last_saving_thread.join()
 
+        
         t = Thread(target=self.save_on_thread, args=(image, self.render_folder_name + name))
         t.daemon = True
         t.start()
 
         self.last_saving_thread = t
         #image.save(self.render_folder_name + name) # best quality: subsampling=0, quality=100)
+        """
 
     def save_on_thread(self, image, path):
         if self.settings.opencv_or_pil == 'PIL':

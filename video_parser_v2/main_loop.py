@@ -44,13 +44,7 @@ def main_loop(args):
         # so that we can cut crops of 608x608 from it easily)
         #debugger.debug_coordinates_in_frame(evaluation_coordinates, frame[1], 'evaluation')
 
-        active_coordinates_old = attentionmodel.get_active_crops_older(projected_evaluation, evaluation_coordinates, frame)
         active_coordinates = attentionmodel.get_active_crops_intersections(projected_evaluation, evaluation_coordinates, frame)
-
-        if len(active_coordinates) is not len(active_coordinates_old):
-            print("active_coordinates", active_coordinates)
-            print("active_coordinates_old ", active_coordinates_old)
-
         #debugger.debug_coordinates_in_frame(active_coordinates, frame[1], 'evaluation', "__"+str(settings.frame_number)+'activeonly')
 
         if len(active_coordinates) == 0:

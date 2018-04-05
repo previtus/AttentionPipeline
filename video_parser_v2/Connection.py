@@ -30,7 +30,9 @@ class Connection(object):
             self.number_of_server_machines = 0
             self.server_names = {} # port -> server name
 
-            self.reserve_machines_for_attention = 1
+            # Split machines to attention and final evaluation
+            # total N - self.reserve_machines_for_attention will go to final evaluation
+            self.reserve_machines_for_attention = self.settings.reserve_machines_for_attention
 
             self.handshake()
 
@@ -49,7 +51,7 @@ class Connection(object):
         if self.settings.verbosity >= 2:
             print("Connection init, handshake")
 
-        servers_dedicated_for_precompute = self.settings.precompute_number
+        servers_dedicated_for_precompute = self.reserve_machines_for_attention
         failed_on_ports = []
         for port in self.server_ports_suggestions:
             try:
@@ -85,6 +87,7 @@ class Connection(object):
         if self.settings.verbosity >= 1:
             print("FAILED on ports:", " ".join(failed_on_ports))
             print("SUCCESS on ports:", " ".join(self.server_ports_list))
+            print("machine names:", self.server_names)
 
         self.number_of_server_machines = len(self.server_ports_list)
         if (self.number_of_server_machines == 0):
@@ -133,6 +136,7 @@ class Connection(object):
         N = self.number_of_server_machines
 
         if N > 1:
+            #print("ON MULTIPLE MACHINES", N, "(att:",len(self.attention_machines_ports),", eval:",len(self.evaluation_machines_ports),")")
             result, times_encode, times_eval, times_decode, times_transfer = self.split_across_list_of_servers(crops, ids_of_crops, type)
         else:
             port = self.server_ports_list[0]
