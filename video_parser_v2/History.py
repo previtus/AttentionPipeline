@@ -549,7 +549,7 @@ class History(object):
 
         plt.clf()
 
-
+        ### SANITY CHECK
         plt.title("SANITY CHECK")
         plt.ylabel("Time (s)")
         plt.xlabel("SHOULD BE SAME")
@@ -567,6 +567,7 @@ class History(object):
         else:
             save_path = self.settings.render_folder_name + "SANITY.png"
             plt.savefig(save_path, dpi=120)
+        plt.clf()
 
         return 0
 
