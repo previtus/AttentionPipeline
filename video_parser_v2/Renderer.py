@@ -26,6 +26,8 @@ class Renderer(object):
     def render(self, final_evaluation, frame):
         time_start = timer()
 
+        self.history.report_number_of_detected_objects(len(final_evaluation), self.settings.frame_number)
+
         if self.render_files_into_folder:
             self.render_into_folder(final_evaluation, frame)
 

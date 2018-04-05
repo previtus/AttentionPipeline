@@ -63,8 +63,6 @@ def main_loop(args):
         processed_evaluations = postprocess.postprocess_bboxes_along_splitlines(projected_active_coordinates,projected_final_evaluation, True)
         #debugger.debug_evaluation_to_bboxes_after_reprojection(processed_evaluations, frame[1], 'finalpostprocessed'+frame[0][-8:-4])
 
-        print("number of bboxes = ", len(processed_evaluations))
-
         renderer.render(processed_evaluations, frame)
 
     history.tick_loop(frame_number, True)

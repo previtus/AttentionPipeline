@@ -153,6 +153,8 @@ class History(object):
         self.postprocess[frame_number]=0
         self.number_of_detected_objects[frame_number]=0
 
+        self.report_evaluation_per_individual_worker([0], [0], [0], [0], 'evaluation',frame_number)
+
     def report_IO_load(self, time, frame_number):
         self.IO_loads[frame_number] = time
 
@@ -179,9 +181,10 @@ class History(object):
 
     def plot_and_save(self, show_instead_of_saving=False):
         self.print_all_datalists()
-        self.timing_per_frame_plot_stackedbar(show_instead_of_saving) ###
-        self.timing_per_frame_plot_boxplot(show_instead_of_saving) ####
+        self.timing_per_frame_plot_stackedbar(show_instead_of_saving)
+        self.timing_per_frame_plot_boxplot(show_instead_of_saving)
         self.timing_per_server_plot_boxplot(show_instead_of_saving)
+        self.number_of_objects(show_instead_of_saving)
 
         for_attention_measure_waiting_instead_of_time = self.settings.precompute_attention_evaluation
 
@@ -612,6 +615,27 @@ class History(object):
             plt.show()
         else:
             save_path = self.settings.render_folder_name + "servers.png"
+            plt.savefig(save_path, dpi=120)
+
+        plt.clf()
+        return 0
+
+    def number_of_objects(self, show_instead_of_saving):
+        print("self.number_of_detected_objects", self.number_of_detected_objects)
+
+        detected_objects = list(self.number_of_detected_objects.values())
+
+        plt.plot(detected_objects, label="Number of detected objects")
+
+        plt.legend(loc='best', shadow=True)
+        plt.title("Number of detected objects")
+        plt.ylabel("Detected objects")
+        plt.xlabel("Frames")
+
+        if show_instead_of_saving:
+            plt.show()
+        else:
+            save_path = self.settings.render_folder_name + "detected_objects.png"
             plt.savefig(save_path, dpi=120)
 
         plt.clf()

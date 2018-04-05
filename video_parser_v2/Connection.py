@@ -186,7 +186,7 @@ class Connection(object):
 
         id_of_indices_0_to_C = range(0,C)
         id_splits = np.array_split(id_of_indices_0_to_C, N)
-        print("id_splits",id_splits)
+        #print("id_splits",id_splits)
 
         num_of_actual_threads = 0
         for ids in id_splits:
@@ -198,7 +198,7 @@ class Connection(object):
         times_encode = [[]]*(num_of_actual_threads)
         times_decode = [[]]*(num_of_actual_threads)
 
-        print("corresponds to crops", np.array_split(ids_of_crops, N))
+        #print("corresponds to crops", np.array_split(ids_of_crops, N))
 
         for i,ids in enumerate(id_splits):
             if len(ids)==0:
@@ -287,7 +287,8 @@ class Connection(object):
             """
         t1 = timer()
         time_Encode = t1-t0
-        print(number_of_images,"Image(s) encoding (with",self.settings.opencv_or_pil,") took = ", time_Encode, "(during the eval)")
+        if self.settings.verbosity >= 2:
+            print(number_of_images,"Image(s) encoding (with",self.settings.opencv_or_pil,") took = ", time_Encode, "(during the eval)")
 
         if number_of_images == 0:
             print("Careful, 0 images, don't send.")
