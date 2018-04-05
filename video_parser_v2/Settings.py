@@ -19,24 +19,14 @@ class Settings(object):
         self.debug_save_crops = (args.debug_save_crops == 'True')
         self.debug_color_postprocessed_bboxes = (args.debug_color_postprocessed_bboxes == 'True')
         self.debug_just_count_hist = (args.debug_just_count_hist == 'True')
-
         self.debug_just_handshake = (args.debug_just_handshake == 'True')
 
-        self.render_history_every_k_frames = 100
+        self.render_history_every_k_frames = int(args.render_history_every)
 
         self.INPUT_FRAMES = args.input
         self.RUN_NAME = args.name
 
-        # move as parameters outside:
-        #
-        # render_history_every_k_frames 100
-        # verbosity 3
-        # precompute_attention_evaluation = True
-        # precompute_number = 1
-        # final_evaluation_limit_servers = 0
-
-        # Connection >
-        # self.reserve_machines_for_attention
+        verbosity = int(args.verbosity)
 
         self.opencv_or_pil = 'OpenCV' # 'PIL' or 'OpenCV'
 
@@ -44,7 +34,7 @@ class Settings(object):
         self.w = 0
         self.h = 0
 
-        self.set_verbosity(3)
+        self.set_verbosity(verbosity)
 
         # Renderer
         self.render_files_into_folder = True
@@ -63,13 +53,13 @@ class Settings(object):
         for i in range(9100,9140+1): self.server_ports_list.append(str(i))
 
         # Precomputing Attention
-        self.precompute_attention_evaluation = True
-        self.precompute_number = 1 # number of precomputed frames
-        self.reserve_machines_for_attention = 2 # number of machines for attention (if its turned on)
+        self.precompute_attention_evaluation = (args.precompute_attention == 'True')
+        self.precompute_number = int(args.precompute_number) # number of precomputed frames
+        self.reserve_machines_for_attention = int(args.SetAttMach) # number of machines for attention (if its turned on)
 
         # limit number of servers (individual connections) available, if set to >0
         # remember +reserve_machines_for_attention is used for attention precomp.
-        self.final_evaluation_limit_servers = 0
+        self.final_evaluation_limit_servers = int(args.LimitEvalMach)
 
         # is set during the run
         self.frame_number = -1
