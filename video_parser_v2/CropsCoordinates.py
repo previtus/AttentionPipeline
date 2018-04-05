@@ -50,6 +50,21 @@ class CropsCoordinates(object):
             projected_evaluation += bboxes_in_img
         return projected_evaluation
 
+    def evaluations_to_bboxes(self,evaluations):
+        # convert the formats
+        # from array of {'label': 'person', 'confidence': 0.39, 'topleft': {'x': 333.190635451505, 'y': 1184.0167224080267}, 'bottomright': {'x': 370.87290969899664, 'y': 1203.8494983277592}}
+        # to array of [left, top, right, bottom]
+        bboxes = []
+
+        for evaluation in evaluations:
+            left = evaluation["topleft"]["x"]
+            top = evaluation["topleft"]["y"]
+            right = evaluation["bottomright"]["x"]
+            bottom = evaluation["bottomright"]["y"]
+            bbox = [left, top, right, bottom]
+            bboxes.append(bbox)
+        return bboxes
+
     def project_evaluation_to(self, evaluation_one_array, variant):
         """
         [Maybe to be rewritten ?]
@@ -62,7 +77,6 @@ class CropsCoordinates(object):
 
         projected_evaluation = self.project_back_to_original_image(0, evaluation_one_array, 'special_manual', [crop1, scale])
         return projected_evaluation
-
 
     def project_coordinates_back(self, coordinates, type):
         # coordinates come in array of [[id, (0, 0, 608, 608)], ... ]

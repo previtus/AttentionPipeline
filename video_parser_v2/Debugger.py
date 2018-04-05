@@ -50,29 +50,44 @@ class Debugger(object):
     def debug_attention_mask(self, mask_image, image=None, optional_bboxes=None, custom_name='', thickness=4):
         print("Debugging mask", mask_image.size)
 
-        if image is None:
-            mask_image.save("mask"+custom_name+".png")
-        else:
-            image = image.convert("RGBA")
+        #if image is None and optional_bboxes is None:
+        #    mask_image.save("mask"+custom_name+".png")
+        #else:
+        if True:
             mask_image = mask_image.convert("RGBA")
 
             if optional_bboxes is not None:
                 draw = ImageDraw.Draw(mask_image)
                 for bbox in optional_bboxes:
                     predicted_class = bbox["label"]
-                    if predicted_class is 'crop':
-                        continue
+                    #if predicted_class is 'crop':
+                    #    continue
 
                     top = bbox["topleft"]["y"]
                     left = bbox["topleft"]["x"]
                     bottom = bbox["bottomright"]["y"]
                     right = bbox["bottomright"]["x"]
 
+                    color = "orange"
+                    if int(predicted_class) > 50:
+                        color = "red"
+                    if int(predicted_class) > 100:
+                        color = "green"
+                    if int(predicted_class) > 200:
+                        color = "blue"
+
+
                     for i in range(thickness):
-                        draw.rectangle([left+i, top+i, right-i, bottom-i],outline="orange")
+                        draw.rectangle([left+i, top+i, right-i, bottom-i],outline=color)
                 del draw
-            blended_image = Image.blend(image, mask_image, 0.5)
-            blended_image.save("mask"+custom_name+".png")
+            if image is None:
+                if self.settings.opencv_or_pil is not "PIL":
+                    image = Image.fromarray(image)
+                image = image.convert("RGBA")
+                blended_image = Image.blend(image, mask_image, 0.5)
+                mask_image = blended_image
+
+            mask_image.save("mask"+custom_name+".png")
 
 
     def coordinates_to_fake_bboxes(self, coordinates):
@@ -98,6 +113,10 @@ class Debugger(object):
         if image is None:
             image_size = (self.settings.w, self.settings.h)
             image = Image.new("L", image_size, "black")
+
+        if self.settings.opencv_or_pil is not "PIL":
+            image = Image.fromarray(image)
+
 
         image_size = image.size
         image = image.convert("RGBA")
