@@ -49,14 +49,15 @@ if __name__ == '__main__':
 
     start = timer()
 
-    args.input = "/pylon2/ci4s8dp/vruzicka/_videos_files/RuzickaDataset/input/S1000040_5fps/"
-    args.endframe = '50'
-    args.atthorizontal_splits = 1
-    args.horizontal_splits = 2
+    #args.input = "/pylon2/ci4s8dp/vruzicka/_videos_files/liverpool_station_8k/input/frames_4fps/"
+    #args.input = "/pylon2/ci4s8dp/vruzicka/_videos_files/RuzickaDataset/input/S1000040_5fps/"
+    #args.endframe = '50'
+    #args.atthorizontal_splits = 1
+    #args.horizontal_splits = 2
 
     print('dont forget that you can -debug_just_handshake="True"')
 
-    args.name = "TestOnServer"
+    #args.name = "TestOnServer"
 
     main_loop(args)
 
