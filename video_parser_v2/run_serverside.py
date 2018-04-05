@@ -33,6 +33,15 @@ parser.add_argument('-debug_color_postprocessed_bboxes', help='DEBUG color postp
 parser.add_argument('-debug_just_count_hist', help='DEBUG just count histograms of numbers of used crops from each video do not evaluate the outside of attention model.', default='False')
 parser.add_argument('-debug_just_handshake', help='DEBUG just handshake with servers', default='False')
 
+parser.add_argument('-render_history_every', help='Every k frames we save all the plots.', default='50')
+parser.add_argument('-verbosity', help='0 Muted, 1 = Minimal, 2 = Talkative, 3+ = Specific debug', default='3')
+
+parser.add_argument('-precompute_attention', help='Hard switch for killing precomputation (by default on if there are enough servers)', default='True')
+parser.add_argument('-precompute_number', help='How many frames we precompute. Seems like 1 is enough.', default='1')
+
+parser.add_argument('-LimitEvalMach', help='# of machines for Final Evaluation, hard limit, otherwise always max', default='0')
+parser.add_argument('-SetAttMach', help='# of machines for Attention Evaluation, needs to be specified if we want > 1', default='1')
+
 from main_loop import main_loop
 
 if __name__ == '__main__':
