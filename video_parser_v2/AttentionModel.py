@@ -21,7 +21,10 @@ class AttentionModel(object):
             Even faster, just looking at intersections
         """
         start = timer()
-        #projected_evaluation = self.cropscoordinates.project_evaluation_to(projected_evaluation, 'original_image_to_evaluation_space')
+
+        # careful, this has to be calculated exactly once! (its changing the values)
+        projected_evaluation = self.cropscoordinates.project_evaluation_to(projected_evaluation, 'original_image_to_evaluation_space')
+
         scaled_extend = self.settings.extend_mask_by * self.cropscoordinates.scale_ratio_of_evaluation_crop
 
         evaluations_bboxes = self.cropscoordinates.evaluations_to_bboxes(projected_evaluation)
@@ -109,10 +112,10 @@ class AttentionModel(object):
         # building both the mask and in the evaluation space
 
         #self.settings.debugger.debug_attention_mask(mask_image, custom_name="__"+str(self.settings.frame_number)+"checkIfItsTheSame")
-
+        
         # evaluation_coordinates are also in the evaluation space
         active_coordinates = self.active_coordinates_in_mask(mask_image, evaluation_coordinates)
-
+        
         end = timer()
         time_active_coords = end - start
         if self.settings.verbosity > 2:
