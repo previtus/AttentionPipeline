@@ -120,10 +120,11 @@ class Evaluation(object):
     def evaluate_precompute(self, crops_coordinates, frame, type, frame_number):
         # Thread function called to precompute for next frames
         result = self.evaluate(crops_coordinates, frame, type, frame_number)
-
+        try:
+            del self.precomputations_started[frame_number]
+        except Exception as e:
+            print("Expection",e)
         self.precomputations_finished[frame_number] = result
-        del self.precomputations_started[frame_number]
-
 
     def evaluate(self, crops_coordinates, frame, type, frame_number):
         time_start = timer()
