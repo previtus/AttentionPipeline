@@ -553,6 +553,7 @@ class History(object):
         plt.clf()
 
         ### SANITY CHECK
+        # ps: misses a bit if attention is empty and we are skipping the frame (possibly ignore it then)
         plt.title("SANITY CHECK")
         plt.ylabel("Time (s)")
         plt.xlabel("SHOULD BE SAME")
