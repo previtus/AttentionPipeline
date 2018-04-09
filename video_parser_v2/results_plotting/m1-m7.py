@@ -5,13 +5,13 @@ from results_plotting.multiple_graph_loading import *
 
 # THIS IS DIRECTORY SPECIFIC
 # IN OUR CASE THESE WORK: tuples of (root_folder, pattern, names function(applies for all above it) )
-root_folder = "/home/ekmek/__RESULTS_and_MEASUREMENTS/_m1-m3_from local/"
+root_folder = "/home/ekmek/__RESULTS_and_MEASUREMENTS/M_experiment/_m1-m3_from local/"
 pattern = ".*/m1.*"
 pattern = ".*/m2.*"
 pattern = ".*/m3.*"
 # names = [name[13:21] for name in names]
 # pattern = ".*" # all
-root_folder = "/home/ekmek/__RESULTS_and_MEASUREMENTS/_m4-m7_fully  serverside/"
+root_folder = "/home/ekmek/__RESULTS_and_MEASUREMENTS/M_experiment/_m4-m7_fully  serverside/"
 pattern = ".*/m4.*"
 pattern = ".*/m5.*"
 # pattern = ".*/m6.*" # nvm
@@ -21,7 +21,7 @@ pattern = ".*/m5.*"
 # names = [name[23:32] for name in names]
 
 
-root_folder = "/home/ekmek/__RESULTS_and_MEASUREMENTS/_m1-m3_from local/"
+root_folder = "/home/ekmek/__RESULTS_and_MEASUREMENTS/M_experiment/_m1-m3_from local/"
 pattern = ".*/m3.*"
 
 folders, names = select_subdirectories(root_folder, pattern)
