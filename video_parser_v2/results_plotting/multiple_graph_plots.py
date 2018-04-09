@@ -175,8 +175,10 @@ def one_stackedbar(self,plt,show_instead_of_saving, column):
     width = 0.35
     ind = (column)
 
-    p1 = plt.bar(ind, np.mean(IO_loads + IO_saves), width,color='yellow')  # yerr=stand deviation
-    bottom = np.mean(IO_saves + IO_loads)
+    p0 = plt.bar(ind, np.mean(IO_loads), width,color='orange')  # yerr=stand deviation
+    bottom = np.mean(IO_loads)
+    p1 = plt.bar(ind, np.mean(IO_saves), width, bottom=bottom, color='yellow')  # yerr=stand deviation
+    bottom += np.mean(IO_saves)
     p2 = plt.bar(ind, np.mean(AttWait), width, bottom=bottom, color='blue')
     bottom += np.mean(AttWait)
     p3a = plt.bar(ind, np.mean(FinalCut), width, bottom=bottom, color='lightcoral')
@@ -212,11 +214,11 @@ def one_stackedbar(self,plt,show_instead_of_saving, column):
 
     """
 
-    if i == 1:
+    if column == 1:
 
         # Describe only once
-        plt.legend((p1[0], p2[0], p3a[0], p3b[0], p4a[0], p4b[0], p4c[0], p5[0]),
-           ('IO load&save', attention_name, 'Crop', 'Enc', 'Dec', 'Transfer', 'Eval', 'postprocess'))
+        plt.legend((p0[0], p1[0], p2[0], p3a[0], p3b[0], p4a[0], p4b[0], p4c[0], p5[0]),
+           ('IO load', 'IO save', attention_name, 'Crop', 'Enc', 'Dec', 'Transfer', 'Eval', 'postprocess'))
 
         if y_limit:
             ymin, ymax = plt.ylim()
