@@ -80,6 +80,10 @@ class History(object):
 
         self.loop_timer = None
 
+        # BBOX track keeping
+        self.whole_final_bboxes = {}
+        self.whole_final_filenames = {}
+
     def tick_loop(self, frame_number, force=False):
         # measures every loop
         if self.loop_timer is None:
@@ -170,6 +174,20 @@ class History(object):
         elif type == 'evaluation':
             self.IO_EVAL_cut_crops_final[frame_number]=time
 
+    def save_whole_final_bbox_eval(self, final_evaluation, frame, frame_number):
+        # the idea is to keep track of bounding boxes and file names
+        # eventually we want to have this:
+        #  line = str(annotation_name)+" "+str(score)+" "+str(left)+" "+str(top)+" "+str(right)+" "+str(bottom)
+        #  and list of annotation_name which are the file names
+        if frame_number not in self.whole_final_bboxes:
+            self.whole_final_bboxes[frame_number] = []
+            self.whole_final_filenames[frame_number] = []
+
+        # list of {'label': 'person', 'confidence': 0.81, 'topleft': {'y': 1200.2023608768973, 'x': 361.51770657672853}, 'bottomright': {'y': 1414.1989881956156, 'x': 468.97133220910627}}
+        self.whole_final_bboxes[frame_number] = final_evaluation
+        self.whole_final_filenames[frame_number] = frame[2] # filenames, like '0018.jpg'
+
+
     def end_of_frame(self, force=False):
         self.frame_ticker -= 1
         if self.frame_ticker <= 0 or force:
@@ -177,7 +195,40 @@ class History(object):
             print("History report!")
             self.frame_ticker = self.settings.render_history_every_k_frames
 
+            self.save_annotations()
+
             self.plot_and_save()
+
+    def save_annotations(self):
+        annotations_names_saved = []
+        annotations_lines_saved = []
+        for key in self.whole_final_bboxes:
+            # list of {'label': 'person', 'confidence': 0.81, 'topleft': {'y': 1, 'x': 3}, 'bottomright': {'y': 14, 'x': 46}}
+
+            bboxes = self.whole_final_bboxes[key]
+            filename = self.whole_final_filenames[key][0:-4]
+
+            annotations_names_saved.append(filename)
+
+            for bbox in bboxes:
+                # has label, confidence, topleft.y, topleft.x, bottomright.y, bottomright.x
+
+                top = int(bbox["topleft"]["y"])
+                left = int(bbox["topleft"]["x"])
+                bottom = int(bbox["bottomright"]["y"])
+                right = int(bbox["bottomright"]["x"])
+                score = bbox["confidence"]
+
+                line = str(filename) + " " + str(score) + " " + str(left) + " " + str(top) + " " + str(right) + " " + str(bottom)
+                annotations_lines_saved.append(line)
+
+
+        with open(self.settings.render_folder_name + 'annotnames.txt', 'w') as the_file:
+            for l in annotations_names_saved:
+                the_file.write(l + '\n')
+        with open(self.settings.render_folder_name + 'annotbboxes.txt', 'w') as the_file:
+            for l in annotations_lines_saved:
+                the_file.write(l + '\n')
 
     def plot_and_save(self, show_instead_of_saving=False):
         self.print_all_datalists()
@@ -512,6 +563,26 @@ class History(object):
         plt.ylabel("Time (s)")
         plt.xlabel("Frame #num")
 
+        # careful with lengths:
+        print("IO_loads",len(IO_loads))
+        print("IO_saves",len(IO_saves))
+        print("AttWait",len(AttWait))
+        print("FinalCut",len(FinalCut))
+        print("FinalEncode",len(FinalEncode))
+        print("FinalDecode",len(FinalDecode))
+        print("FinalTransfer",len(FinalTransfer))
+        print("FinalEval",len(FinalEval))
+        print("postprocess",len(postprocess))
+
+        print("self.settings.client_server",self.settings.client_server)
+        print("self.settings.precompute_attention_evaluation",self.settings.precompute_attention_evaluation)
+
+        if not self.settings.precompute_attention_evaluation:
+            return
+
+        if ActiveCrops_on:
+            print("ActiveCrops", len(ActiveCrops))
+
         #p0 = plt.bar(ind, IO_loads, width, color='goldenrot') # yerr=stand deviation
         p1 = plt.bar(ind, IO_loads+IO_saves, width, color='yellow') # yerr=stand deviation
         bottom = IO_saves + IO_loads
@@ -523,10 +594,14 @@ class History(object):
         bottom += FinalEncode
         p4a = plt.bar(ind, FinalDecode, width, bottom=bottom, color='burlywood')
         bottom += FinalDecode
-        p4b = plt.bar(ind, FinalTransfer, width, bottom=bottom, color='magenta')
-        bottom += FinalTransfer
-        p4c = plt.bar(ind, FinalEval, width, bottom=bottom, color='red')
-        bottom += FinalEval
+        p4b=[[]]
+        if len(FinalTransfer) > 0:
+            p4b = plt.bar(ind, FinalTransfer, width, bottom=bottom, color='magenta')
+            bottom += FinalTransfer
+        p4c=[[]]
+        if len(FinalEval) > 0:
+            p4c = plt.bar(ind, FinalEval, width, bottom=bottom, color='red')
+            bottom += FinalEval
         p5 = plt.bar(ind, postprocess, width, bottom=bottom, color='green')
         bottom += postprocess
         if ActiveCrops_on:

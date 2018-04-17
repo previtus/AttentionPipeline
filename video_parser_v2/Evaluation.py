@@ -203,9 +203,13 @@ class Evaluation(object):
         # confidence filtered by the model already
         # see load_model() in darkflow_handler
 
-        evaluation = self.filter_label(evaluation, 'person')
+        #self.settings
 
-        return evaluation
+        evaluation_person = self.filter_label(evaluation, 'person')
+        #evaluation_car = self.filter_label(evaluation, 'car')
+
+        #return evaluation_person+evaluation_car
+        return evaluation_person
 
     def filter_label(self, evaluation, label):
         filtered = []

@@ -28,8 +28,11 @@ class Renderer(object):
 
         self.history.report_number_of_detected_objects(len(final_evaluation), self.settings.frame_number)
 
+        self.history.save_whole_final_bbox_eval(final_evaluation, frame, self.settings.frame_number)
+
         if self.render_files_into_folder:
             self.render_into_folder(final_evaluation, frame)
+            self.bboxes_into_folder(final_evaluation, frame)
 
         time_IO_saving = timer() - time_start
         print("Saved",self.settings.frame_number,"frame in", time_IO_saving)
@@ -124,3 +127,41 @@ class Renderer(object):
             if self.settings.opencv_or_pil == 'PIL':
                 return "yellow"
             return (256, 256, 0)
+
+    def bboxes_into_folder(self, final_evaluation, frame):
+        """
+        final_evaluation: bounding boxes, array of dictionaries for each bbox {} keys label, confidence, topleft, bottomright
+        """
+        name = frame[2] # contains just the file name, not to have a messy string splitting here
+        img_name = name[:-4] # 0003.jpg into 0003, for PASCAL VOC format
+        name = name[:-4] + ".txt"
+        path = self.render_folder_name + name
+
+        print("Saving to", path)
+
+        with open(path, 'w') as file:
+
+            for bbox in final_evaluation:
+                print(bbox)
+
+                predicted_class = bbox["label"]
+
+                top = bbox["topleft"]["y"]
+                left = bbox["topleft"]["x"]
+                bottom = bbox["bottomright"]["y"]
+                right = bbox["bottomright"]["x"]
+                confidence = bbox["confidence"]
+                #top = max(0, np.floor(top + 0.5).astype('int32'))
+                #left = max(0, np.floor(left + 0.5).astype('int32'))
+                #bottom = min(image_size[1], np.floor(bottom + 0.5).astype('int32'))
+                #right = min(image_size[0], np.floor(right + 0.5).astype('int32'))
+                top = int(top)
+                left = int(left)
+                bottom = int(bottom)
+                right = int(right)
+
+                # <image identifier> <confidence> <left> <top> <right> <bottom>
+
+                string = str(img_name)+" "+str(confidence)+" "+str(left)+" "+str(top)+" "+str(right)+" "+str(bottom)
+                #as_list = [top, left, bottom, right]
+                file.write(string+'\n')
