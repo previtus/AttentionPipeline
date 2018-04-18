@@ -134,7 +134,7 @@ def get_splitlines(cropboxes):
     splitlines = final_list
     return splitlines
 
-def process_bboxes_near_splitlines(splitlines, bboxes, overlap_px_h, threshold_for_ratio, DEBUG_POSTPROCESS_COLOR):
+def process_bboxes_near_splitlines(splitlines, bboxes, distance_threshold, threshold_for_ratio,H_multiple = 2.0,W_multiple = 4.0, DEBUG_POSTPROCESS_COLOR=False):
     # for each suspicious line
     new_bounding_boxes = []
     indices_to_cancel = []
@@ -162,7 +162,7 @@ def process_bboxes_near_splitlines(splitlines, bboxes, overlap_px_h, threshold_f
             d2 = abs(bottom - split_height)
             d = min(d1,d2)
 
-            if d < overlap_px_h:
+            if d < distance_threshold:
                 # eliminate those with wrong aspect ratio
                 w = abs(bbox[1][1] - bbox[1][3])
                 h = abs(bbox[1][0] - bbox[1][2])
@@ -203,11 +203,11 @@ def process_bboxes_near_splitlines(splitlines, bboxes, overlap_px_h, threshold_f
                     ### THRESHOLDs
                     # h < L*overlap_px_h
                     # l + r < K*overlap_px_h
-                    H_multiple = 2.0
-                    W_multiple = 4.0
+                    #H_multiple = 2.0 = L
+                    #W_multiple = 4.0 = K
 
-                    if h < H_multiple * overlap_px_h:
-                        if (l+r) < W_multiple * overlap_px_h:
+                    if h < H_multiple * distance_threshold:
+                        if (l+r) < W_multiple * distance_threshold:
 
                             # top, left, bottom, right (bottom < top),(left < bottom)
                             top = min(above[1][0], bellow[1][0])
