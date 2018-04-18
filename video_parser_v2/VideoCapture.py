@@ -35,11 +35,11 @@ class VideoCapture(object):
         end_frame = self.settings.endframe
 
         if end_frame is not -1:
-            frame_files = self.frame_files[start_frame:end_frame]
+            self.frame_files = self.frame_files[start_frame:end_frame]
         else:
-            frame_files = self.frame_files[start_frame:]
+            self.frame_files = self.frame_files[start_frame:]
 
-        self.number_of_frames = len(frame_files)
+        self.number_of_frames = len(self.frame_files)
 
     def init_settings_w_h(self):
         first_image = self.path + self.frame_files[0]
