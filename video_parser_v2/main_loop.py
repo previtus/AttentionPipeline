@@ -60,7 +60,7 @@ def main_loop(args):
 
         projected_active_coordinates = cropscoordinates.project_coordinates_back(active_coordinates, 'evaluation')
 
-        processed_evaluations = postprocess.postprocess_bboxes_along_splitlines(projected_active_coordinates,projected_final_evaluation, True)
+        processed_evaluations = postprocess.postprocess(projected_active_coordinates,projected_final_evaluation)
         #debugger.debug_evaluation_to_bboxes_after_reprojection(processed_evaluations, frame[1], 'finalpostprocessed'+frame[0][-8:-4])
 
         renderer.render(processed_evaluations, frame)
