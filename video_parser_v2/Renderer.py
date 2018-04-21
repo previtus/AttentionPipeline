@@ -21,7 +21,7 @@ class Renderer(object):
 
         self.last_saving_thread = None
 
-        self.thread_herd_saving_images = ThreadHerd.ThreadHerd(8)
+        self.thread_herd_saving_images = ThreadHerd.ThreadHerd(16)
 
     def render(self, final_evaluation, frame):
         time_start = timer()
