@@ -53,20 +53,29 @@ if __name__ == '__main__':
     args.input = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/input/S1000044_1fps/"
 
     """
-Settings:
+    Settings:
 
 	videos:
-		8k_liverpool	/home/vruzicka/storage_pylon5/move_all_from_pylon2/_videos_files/liverpool_station_8k/input/frames_24fps_FULL/
+		S1000010_5fps	/home/vruzicka/storage_pylon5/move_all_from_pylon2/_videos_files/RuzickaDataset/input/S1000010_5fps/
+		S1000051_5fps	/home/vruzicka/storage_pylon5/move_all_from_pylon2/_videos_files/RuzickaDataset/input/S1000051_5fps/
 
-		8k_turbine_hall	/home/vruzicka/storage_pylon5/input/8k_turbin_hall/frames_24fps/
+		S1000041_5fps	/home/vruzicka/storage_pylon5/move_all_from_pylon2/_videos_files/RuzickaDataset/input/S1000041_5fps/
+		S1000021_5fps	/home/vruzicka/storage_pylon5/move_all_from_pylon2/_videos_files/RuzickaDataset/input/S1000021_5fps/
 
 	setups:
-	    8K:
-	        args.atthorizontal_splits = 2
-	        args.horizontal_splits = 6
+		MY CUSTOM 4K:
+
+	        args.atthorizontal_splits = 1
+	        args.horizontal_splits = 2
 
 	        args.atthorizontal_splits = 2
 	        args.horizontal_splits = 4
+
+	        args.atthorizontal_splits = 1
+	        args.horizontal_splits = 3
+
+	        args.atthorizontal_splits = 2
+	        args.horizontal_splits = 6
 
 	servers:
 		
@@ -79,32 +88,35 @@ Settings:
         for 1to2
     """
 
-    full_paths = [
-        "/home/vruzicka/storage_pylon5/move_all_from_pylon2/_videos_files/liverpool_station_8k/input/frames_24fps_FULL/",
-        "/home/vruzicka/storage_pylon5/input/8k_turbin_hall/frames_24fps/"
-    ]
-    names = [
-        "8k_liverpool", "8k_turbine_hall"
+    base = [
+        "S1000010_5fps",
+        "S1000051_5fps",
+        "S1000041_5fps",
+        "S1000021_5fps"
     ]
 
-    #finalEval_server_settings = list(range(18,0,-1))
-    #finalEval_server_settings = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
-    finalEval_server_settings = [18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+    root = "/home/vruzicka/storage_pylon5/move_all_from_pylon2/_videos_files/RuzickaDataset/input/"
+
+    # TODO THESE LAST RUNS:
+    # 1 attention + 1 eval
+    # 0 attention + 1 eval
+
+    finalEval_server_settings = [1]
 
     AttEval_server_settings = [
-        2
-    ]
+        1,0
+    ] #add 1 maybe
     splits_settings = [
-        [2,6],
-        [2,4]
-    ]
+        [2,4],
+        [1,2]
+    ] # [1,3], [2,6]
 
-    #duals = ['A', 'B']
-    duals = ['A']
+    duals = ['A', 'B']
 
-    print(full_paths)
+    list_links = [root+b+"/" for b in base]
+    print(list_links)
 
-    for index,input in enumerate(full_paths):
+    for index,input in enumerate(list_links):
 
         for splits_setting in splits_settings:
             print("Now we are doing", splits_settings, "splits")
@@ -116,10 +128,21 @@ Settings:
                     print("Now we are doing", finalEval_server_settings, "servers allowed Final Evaluation")
 
                     for dual in duals:
+                        input_name = base[index]
+
+                        if input_name == "S1000010_5fps":
+                            if splits_setting[0]==1 and splits_setting[1]==2:
+                                # skip 13-18 finalEval_server_setting
+                                if finalEval_server_setting >= 13:
+                                    continue
+                            if splits_setting[0]==2 and splits_setting[1]==4:
+                                # skip 10-18 finalEval_server_setting
+                                if finalEval_server_setting >= 10:
+                                    continue
+
                         print("Now we are doing", dual, "dual")
 
                         args.input = input
-                        input_name = names[index]
 
                         args.verbosity = 1
                         args.render_history_every = 200
@@ -139,7 +162,7 @@ Settings:
                         tmp_name = input_name+"_"+str(args.atthorizontal_splits)+"to"+str(args.horizontal_splits)
                         servers_name = str(args.SetAttMach) + "att_" + str(args.LimitEvalMach) + "eval"
 
-                        args.name = "8Kvid_" + tmp_name + "_" + servers_name + "_" + dual
+                        args.name = "MyCustom4K_" + tmp_name + "_" + servers_name + "_" + dual
 
                         #args.debug_just_handshake = "True"
 

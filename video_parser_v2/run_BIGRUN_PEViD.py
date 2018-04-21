@@ -105,7 +105,8 @@ Settings:
         [2,4]
     ]
 
-    duals = ['A', 'B']
+    #duals = ['A', 'B']
+    duals = ['A']
 
     print(full_paths)
 

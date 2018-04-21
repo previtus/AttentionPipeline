@@ -88,14 +88,25 @@ if __name__ == '__main__':
         for 1to2
     """
 
+    #base = [
+    #    "S1000010_5fps",
+    #    "S1000051_5fps",
+    #    "S1000041_5fps",
+    #    "S1000021_5fps"
+    #]
     base = [
-        "S1000010_5fps",
-        "S1000051_5fps",
         "S1000041_5fps",
         "S1000021_5fps"
     ]
+    base = [
+        "S1000051_5fps"
+    ]
 
     root = "/home/vruzicka/storage_pylon5/move_all_from_pylon2/_videos_files/RuzickaDataset/input/"
+
+    # TODO
+    # 1 attention + 1 eval
+    # 0 attention + 1 eval
 
     #finalEval_server_settings = list(range(18,0,-1))
     #finalEval_server_settings = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
@@ -108,8 +119,11 @@ if __name__ == '__main__':
         [2,4],
         [1,2]
     ] # [1,3], [2,6]
+    
+    splits_settings = [[1,2]]
 
-    duals = ['A', 'B']
+    #duals = ['A', 'B']
+    duals = ['A']
 
     list_links = [root+b+"/" for b in base]
     print(list_links)
