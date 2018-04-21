@@ -142,7 +142,7 @@ class Renderer(object):
         with open(path, 'w') as file:
 
             for bbox in final_evaluation:
-                print(bbox)
+                #print(bbox)
 
                 predicted_class = bbox["label"]
 
