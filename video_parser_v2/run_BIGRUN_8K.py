@@ -84,7 +84,7 @@ Settings:
         "/home/vruzicka/storage_pylon5/input/8k_turbin_hall/frames_24fps/"
     ]
     names = [
-        "8k_liverpool", "8k_turbine_hall"
+        "8k_turbine_hall"
     ]
 
     #finalEval_server_settings = list(range(18,0,-1))

@@ -96,6 +96,7 @@ Settings:
     #finalEval_server_settings = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
     finalEval_server_settings = [18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 
+    """
     AttEval_server_settings = [
         1
     ]
@@ -103,6 +104,13 @@ Settings:
         [1,3],
         [1,2]
     ] # [2,4] = do this one with 2 att servers, otherwise there are slowdowns
+    """
+    AttEval_server_settings = [
+        2
+    ]
+    splits_settings = [
+        [2,4]
+    ]
 
     #duals = ['A', 'B']
     duals = ['A']
