@@ -126,7 +126,9 @@ if __name__ == '__main__':
                     print("Now we are doing", finalEval_server_settings, "servers allowed Final Evaluation")
 
                     for dual in duals:
-                        if base == "S1000010_5fps":
+                        input_name = base[index]
+
+                        if input_name == "S1000010_5fps":
                             if splits_setting[0]==1 and splits_setting[1]==2:
                                 # skip 13-18 finalEval_server_setting
                                 if finalEval_server_setting >= 13:
@@ -139,7 +141,6 @@ if __name__ == '__main__':
                         print("Now we are doing", dual, "dual")
 
                         args.input = input
-                        input_name = base[index]
 
                         args.verbosity = 1
                         args.render_history_every = 200
