@@ -97,7 +97,7 @@ Settings:
     finalEval_server_settings = [18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 
     AttEval_server_settings = [
-        1,2
+        1
     ]
     splits_settings = [
         [1,3],
@@ -122,10 +122,18 @@ Settings:
                     print("Now we are doing", finalEval_server_settings, "servers allowed Final Evaluation")
 
                     for dual in duals:
+                        input_name = names[index]
+
+                        if input_name == "Exchange_2":
+                            if splits_setting[0]==1 and splits_setting[1]==3:
+                                # skip 13-18 finalEval_server_setting
+                                if finalEval_server_setting >= 10:
+                                    continue
+
+
                         print("Now we are doing", dual, "dual")
 
                         args.input = input
-                        input_name = names[index]
 
                         args.verbosity = 1
                         args.render_history_every = 200

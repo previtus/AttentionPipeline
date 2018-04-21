@@ -116,9 +116,17 @@ Settings:
 
                     for dual in duals:
                         print("Now we are doing", dual, "dual")
+                        input_name = names[index]
+
+                        # we have  8Kvid_8k_liverpool_2to6_1att_01eval_A
+                        if input_name == "8k_liverpool":
+                            if splits_setting[0]==2 and splits_setting[1]==6:
+                                # skip 10-18 finalEval_server_setting
+                                if AttEval_server_setting == 1:
+                                    continue
+
 
                         args.input = input
-                        input_name = names[index]
 
                         args.verbosity = 1
                         args.render_history_every = 200
