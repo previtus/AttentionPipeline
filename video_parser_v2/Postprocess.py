@@ -68,9 +68,9 @@ class Postprocess(object):
         # areas - the interesection area
         perc = intersection_area / float(bb2_area)
 
-        print("intersection_area",intersection_area, "/ bb2_area",bb2_area, " = ", perc)
-        print("bb1",bb1)
-        print("bb2",bb2)
+        #print("intersection_area",intersection_area, "/ bb2_area",bb2_area, " = ", perc)
+        #print("bb1",bb1)
+        #print("bb2",bb2)
         return perc
 
     def postprocess_boxes_inside_each_other(self, bboxes, threshold = 0.95):
@@ -92,7 +92,7 @@ class Postprocess(object):
                 other = bboxes[j]
 
                 perc = self.get_iou(other, bbox)
-                print("bbox",i," is in ",j," by ",perc)
+                if self.settings.verbosity >= 3: print("bbox",i," is in ",j," by ",perc)
 
                 if perc > threshold:
                     reject = True
@@ -108,6 +108,7 @@ class Postprocess(object):
 
         return postprocessed_bboxes
 
+    """
     def non_max_suppression_tf(self, session, boxes, scores, classes, max_boxes, iou_threshold):
         print("<Tensorflow for NMS>")
         import tensorflow as tf
@@ -175,7 +176,7 @@ class Postprocess(object):
             postprocessed_bboxes.append(dictionary)
 
         return postprocessed_bboxes
-
+    """
 
     # a bit messy
     def postprocess_bboxes_along_splitlines(self, active_coordinates, bboxes, distance_threshold, threshold_for_ratio, H_multiple,W_multiple, DEBUG_POSTPROCESS_COLOR, DEBUG_SHOW_LINES=False):
@@ -247,7 +248,7 @@ class Postprocess(object):
 
         processed_evaluations1 = self.postprocess_bboxes_along_splitlines(projected_active_coordinates, processed_evaluations0, distance_threshold, threshold_for_ratio,H_multiple,W_multiple, DEBUG_POSTPROCESS_COLOR, DEBUG_SHOW_LINES)
 
-
+        """
         # 2] NMS
         # NMS setting - iou threshodld
         self.settings.postprocess_iou_threshold = 0.5
@@ -257,8 +258,9 @@ class Postprocess(object):
         # 3] Delete boxes inside others (by significant %)
         perc_threshold = 0.95
         processed_evaluations3 = self.postprocess_boxes_inside_each_other(processed_evaluations2, perc_threshold)
+        """
 
         time = timer() - start
         self.history.report_postprocessing(time,self.settings.frame_number)
 
-        return processed_evaluations3
+        return processed_evaluations1
