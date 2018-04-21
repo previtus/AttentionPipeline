@@ -101,9 +101,8 @@ Settings:
     ]
     splits_settings = [
         [1,3],
-        [1,2],
-        [2,4]
-    ]
+        [1,2]
+    ] # [2,4] = do this one with 2 att servers, otherwise there are slowdowns
 
     #duals = ['A', 'B']
     duals = ['A']
