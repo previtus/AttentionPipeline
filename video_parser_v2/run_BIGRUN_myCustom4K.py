@@ -113,7 +113,7 @@ if __name__ == '__main__':
         2
     ] #add 1 maybe
     splits_settings = [
-        [1, 3], [2, 6]
+        [1, 2], [2, 4]
     ]
 
     #duals = ['A', 'B']
