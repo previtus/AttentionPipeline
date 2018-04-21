@@ -98,9 +98,6 @@ if __name__ == '__main__':
         "S1000041_5fps",
         "S1000021_5fps"
     ]
-    base = [
-        "S1000051_5fps"
-    ]
 
     root = "/home/vruzicka/storage_pylon5/move_all_from_pylon2/_videos_files/RuzickaDataset/input/"
 
@@ -116,11 +113,8 @@ if __name__ == '__main__':
         2
     ] #add 1 maybe
     splits_settings = [
-        [2,4],
-        [1,2]
-    ] # [1,3], [2,6]
-
-    splits_settings = [[1,2]]
+        [1, 3], [2, 6]
+    ]
 
     #duals = ['A', 'B']
     duals = ['A']
