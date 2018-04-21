@@ -111,7 +111,7 @@ if __name__ == '__main__':
         [1,2]
     ] # [1,3], [2,6]
 
-    duals = ['A', 'B']
+    duals = ['A']
 
     list_links = [root+b+"/" for b in base]
     print(list_links)
@@ -131,13 +131,10 @@ if __name__ == '__main__':
                         input_name = base[index]
 
                         if input_name == "S1000010_5fps":
-                            if splits_setting[0]==1 and splits_setting[1]==2:
-                                # skip 13-18 finalEval_server_setting
-                                if finalEval_server_setting >= 13:
-                                    continue
+                            # we already have #MyCustom4K_S1000010_5fps_2to4_1att_01eval_A
                             if splits_setting[0]==2 and splits_setting[1]==4:
                                 # skip 10-18 finalEval_server_setting
-                                if finalEval_server_setting >= 10:
+                                if AttEval_server_setting >= 1:
                                     continue
 
                         print("Now we are doing", dual, "dual")
