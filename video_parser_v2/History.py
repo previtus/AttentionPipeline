@@ -586,8 +586,10 @@ class History(object):
         #p0 = plt.bar(ind, IO_loads, width, color='goldenrot') # yerr=stand deviation
         p1 = plt.bar(ind, IO_loads+IO_saves, width, color='yellow') # yerr=stand deviation
         bottom = IO_saves + IO_loads
-        p2 = plt.bar(ind, AttWait, width, bottom=bottom, color='blue')
-        bottom += AttWait
+        p2=[[]]
+        if len(AttWait) > 0:
+            p2 = plt.bar(ind, AttWait, width, bottom=bottom, color='blue')
+            bottom += AttWait
         p3a = plt.bar(ind, FinalCut, width, bottom=bottom, color='lightcoral')
         bottom += FinalCut
         p3b = plt.bar(ind, FinalEncode, width, bottom=bottom, color='navajowhite')
