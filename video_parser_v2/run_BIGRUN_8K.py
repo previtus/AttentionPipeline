@@ -120,7 +120,8 @@ Settings:
                         args.input = input
                         input_name = names[index]
 
-                        args.verbosity = 2
+                        args.verbosity = 1
+                        args.render_history_every = 200
 
                         args.endframe = 100
 

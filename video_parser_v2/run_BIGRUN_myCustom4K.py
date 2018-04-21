@@ -131,7 +131,8 @@ if __name__ == '__main__':
                         args.input = input
                         input_name = base[index]
 
-                        args.verbosity = 2
+                        args.verbosity = 1
+                        args.render_history_every = 200
 
                         args.endframe = 100
 
