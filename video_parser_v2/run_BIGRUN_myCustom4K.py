@@ -119,7 +119,7 @@ if __name__ == '__main__':
         [2,4],
         [1,2]
     ] # [1,3], [2,6]
-    
+
     splits_settings = [[1,2]]
 
     #duals = ['A', 'B']
@@ -172,7 +172,7 @@ if __name__ == '__main__':
                         args.SetAttMach = AttEval_server_setting
 
                         tmp_name = input_name+"_"+str(args.atthorizontal_splits)+"to"+str(args.horizontal_splits)
-                        servers_name = str(args.SetAttMach) + "att_" + str(args.LimitEvalMach) + "eval"
+                        servers_name = str(args.SetAttMach) + "att_" + str(args.LimitEvalMach).zfill(2) + "eval"
 
                         args.name = "MyCustom4K_" + tmp_name + "_" + servers_name + "_" + dual
 

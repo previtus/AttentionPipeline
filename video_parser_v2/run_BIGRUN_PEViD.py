@@ -144,7 +144,7 @@ Settings:
                         args.SetAttMach = AttEval_server_setting
 
                         tmp_name = input_name+"_"+str(args.atthorizontal_splits)+"to"+str(args.horizontal_splits)
-                        servers_name = str(args.SetAttMach)+"att_"+str(args.LimitEvalMach)+"eval"
+                        servers_name = str(args.SetAttMach) + "att_" + str(args.LimitEvalMach).zfill(2) + "eval"
 
                         args.name = "PEViD_50over_" + tmp_name + "_" + servers_name + "_" + dual
 
