@@ -53,7 +53,7 @@ if __name__ == '__main__':
     args.input = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/input/S1000044_1fps/"
 
     """
-Settings:
+    Settings:
 
 	videos:
 		Exchanging_bags_day_indoor_2	/home/vruzicka/storage_pylon5/input/PEViD_full/Exchanging_bags_day_indoor_2/
@@ -82,7 +82,7 @@ Settings:
         args.SetAttMach = 1
         args.LimitEvalMach = 1 -> N
         for 1to2    
-        """
+    """
 
     full_paths = [
         "/home/vruzicka/storage_pylon5/input/PEViD_full/Exchanging_bags_day_indoor_2/",
@@ -106,7 +106,7 @@ Settings:
     ] # [2,4] = do this one with 2 att servers, otherwise there are slowdowns
     """
     AttEval_server_settings = [
-        2
+        2,1,0
     ]
     splits_settings = [
         [2,4]
@@ -131,11 +131,15 @@ Settings:
                     for dual in duals:
                         input_name = names[index]
 
-                        if input_name == "Exchange_2":
-                            if splits_setting[0]==1 and splits_setting[1]==3:
-                                # skip 13-18 finalEval_server_setting
-                                if finalEval_server_setting >= 10:
-                                    continue
+                        if AttEval_server_setting == 0:
+                            # skip except for 0att 1fin
+                            if finalEval_server_setting >= 2:
+                                continue
+
+                        if AttEval_server_setting == 1:
+                            # skip except for 1att 1fin
+                            if finalEval_server_setting >= 2:
+                                continue
 
 
                         print("Now we are doing", dual, "dual")
@@ -162,6 +166,98 @@ Settings:
                         servers_name = str(args.SetAttMach) + "att_" + str(args.LimitEvalMach).zfill(2) + "eval"
 
                         args.name = "PEViD_50over_" + tmp_name + "_" + servers_name + "_" + dual
+
+                        #args.debug_just_handshake = "True"
+
+                        print("RUN", args.name)
+
+                        main_loop(args)
+
+                        end = timer()
+                        time = (end - start)
+                        print("This run took "+str(time)+"s ("+str(time/60.0)+"min)")
+
+    #################################
+    # 2nd
+
+    full_paths = [
+        "/home/vruzicka/storage_pylon5/input/PEViD_full/Exchanging_bags_day_indoor_2/",
+        "/home/vruzicka/storage_pylon5/input/PEViD_full/Stealing_day_outdoor_7/"
+    ]
+    names = [
+        "Exchange_2", "Steal_7"
+    ]
+
+    #finalEval_server_settings = list(range(18,0,-1))
+    #finalEval_server_settings = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]
+    finalEval_server_settings = [18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+
+    """
+    AttEval_server_settings = [
+        1
+    ]
+    splits_settings = [
+        [1,3],
+        [1,2]
+    ] # [2,4] = do this one with 2 att servers, otherwise there are slowdowns
+    """
+    AttEval_server_settings = [
+        1,0
+    ]
+    splits_settings = [
+        [1,2],
+        [1,3]
+    ]
+
+    #duals = ['A', 'B']
+    duals = ['A']
+
+    print(full_paths)
+
+    for index,input in enumerate(full_paths):
+
+        for splits_setting in splits_settings:
+            print("Now we are doing", splits_settings, "splits")
+
+            for AttEval_server_setting in AttEval_server_settings:
+                print("Now we are doing", AttEval_server_setting, "servers allowed Attention")
+
+                for finalEval_server_setting in finalEval_server_settings:
+                    print("Now we are doing", finalEval_server_settings, "servers allowed Final Evaluation")
+
+                    for dual in duals:
+                        input_name = names[index]
+
+                        if AttEval_server_setting == 0:
+                            # skip except for 0att 1fin
+                            if finalEval_server_setting >= 2:
+                                continue
+
+
+                        print("Now we are doing", dual, "dual")
+
+                        args.input = input
+
+                        args.verbosity = 1
+                        args.render_history_every = 200
+
+                        args.endframe = 100
+
+                        args.atthorizontal_splits = splits_setting[0]
+                        args.horizontal_splits = splits_setting[1]
+
+                        args.overlap_px = 20
+
+
+                        # Final Evaluation Machines
+                        args.LimitEvalMach = finalEval_server_setting
+                        # Attention Machines
+                        args.SetAttMach = AttEval_server_setting
+
+                        tmp_name = input_name+"_"+str(args.atthorizontal_splits)+"to"+str(args.horizontal_splits)
+                        servers_name = str(args.SetAttMach) + "att_" + str(args.LimitEvalMach).zfill(2) + "eval"
+
+                        args.name = "PEViD_20over_" + tmp_name + "_" + servers_name + "_" + dual
 
                         #args.debug_just_handshake = "True"
 
