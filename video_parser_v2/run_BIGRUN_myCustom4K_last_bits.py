@@ -88,6 +88,14 @@ if __name__ == '__main__':
         for 1to2
     """
 
+    """
+    S1000010_5fps		1 att, 2 fin, 20 over
+    S1000051_5fps		1 att, 3 fin, 20 over
+    S1000041_5fps		2 att, 4 fin, 20 over
+    S1000021_5fps		2 att, 6 fin, 20 over
+    """
+
+
     base = [
         "S1000010_5fps",
         "S1000051_5fps",
@@ -101,15 +109,17 @@ if __name__ == '__main__':
     # 1 attention + 1 eval
     # 0 attention + 1 eval
 
-    finalEval_server_settings = [1]
+    finalEval_server_settings = [18]
 
     AttEval_server_settings = [
-        1,0
+        2
     ] #add 1 maybe
     splits_settings = [
+        [1,2],
+        [1,3],
         [2,4],
-        [1,2]
-    ] # [1,3], [2,6]
+        [2,6]
+    ]
 
     duals = ['A']
 
@@ -129,13 +139,6 @@ if __name__ == '__main__':
 
                     for dual in duals:
                         input_name = base[index]
-
-                        if input_name == "S1000010_5fps":
-                            # we already have #MyCustom4K_S1000010_5fps_2to4_1att_01eval_A
-                            if splits_setting[0]==2 and splits_setting[1]==4:
-                                # skip 10-18 finalEval_server_setting
-                                if AttEval_server_setting >= 1:
-                                    continue
 
                         print("Now we are doing", dual, "dual")
 
@@ -159,7 +162,7 @@ if __name__ == '__main__':
                         tmp_name = input_name+"_"+str(args.atthorizontal_splits)+"to"+str(args.horizontal_splits)
                         servers_name = str(args.SetAttMach) + "att_" + str(args.LimitEvalMach).zfill(2) + "eval"
 
-                        args.name = "MyCustom4K_" + tmp_name + "_" + servers_name + "_" + dual
+                        args.name = "MyCustom4K(crossSpeedAccu)_" + tmp_name + "_" + servers_name + "_" + dual
 
                         #args.debug_just_handshake = "True"
 
