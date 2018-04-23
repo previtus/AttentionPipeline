@@ -485,10 +485,16 @@ class History(object):
         # prepare lists:
         IO_loads = list(self.IO_loads.values())
         IO_saves = list(self.IO_saves.values())
+        #if self.settings.precompute_attention_evaluation:
+        #    AttWait = list(self.times_attention_evaluation_waiting.values())
+        #    attention_name = "AttWait"
+        #else:
+        #    AttWait = list(self.times_attention_evaluation_processing_full_frame.values())
+        #    attention_name = "AttEval"
         if self.settings.precompute_attention_evaluation:
             AttWait = list(self.times_attention_evaluation_waiting.values())
             attention_name = "AttWait"
-        else:
+        if not self.settings.precompute_attention_evaluation or len(AttWait) == 0:
             AttWait = list(self.times_attention_evaluation_processing_full_frame.values())
             attention_name = "AttEval"
 
