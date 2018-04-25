@@ -3,6 +3,8 @@ import ImageProcessing
 from timeit import default_timer as timer
 from threading import Thread
 import numpy as np
+from multiprocessing.pool import ThreadPool
+
 
 class Evaluation(object):
     """
@@ -16,6 +18,7 @@ class Evaluation(object):
         self.history = history
 
         self.imageprocessing = ImageProcessing.ImageProcessing(settings)
+        self.pool = ThreadPool()
 
         self.local = not (self.settings.client_server)
         if self.local:
@@ -139,13 +142,24 @@ class Evaluation(object):
 
         ids_of_crops = []
         crops = []
+
+        ## POOL SPEEDUP
+        crops = self.pool.map(lambda coordinates: (
+            self.imageprocessing.get_crop_openCV(frame_image[coordinates[1][1]:coordinates[1][3], coordinates[1][0]:coordinates[1][2]])
+        ), crops_coordinates)
+
+        #crops = self.pool.map(lambda coordinates: (
+        #    self.imageprocessing.get_crop(coordinates[1], frame_image)
+        #), crops_coordinates)
+
         for coordinates in crops_coordinates:
             coordinates_id = coordinates[0]
-            coordinates_area = coordinates[1]
+            #coordinates_area = coordinates[1]
 
-            crop = self.imageprocessing.get_crop(coordinates_area, frame_image)
-            crops.append(crop)
+            #crop = self.imageprocessing.get_crop(coordinates_area, frame_image)
+            #crops.append(crop)
             ids_of_crops.append(coordinates_id)
+
         t_after_cutting = timer()
         IO_time_to_cut_crops = t_after_cutting - time_start
         #print("scaling and cutting image into crops took ", IO_time_to_cut_crops, "for type=",type,"frame_number=",frame_number)

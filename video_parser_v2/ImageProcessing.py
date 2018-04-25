@@ -11,6 +11,17 @@ class ImageProcessing(object):
     def __init__(self, settings):
         self.settings = settings
 
+
+    def get_crop_openCV(self, cropped_img):
+
+        if cropped_img.shape[0] != 608 or cropped_img.shape[1] != 608:
+            print("Careful, needed to resize the crop in Evaluation->ImageProcessing. It was", cropped_img.shape)
+            cropped_img = cv2.resize(cropped_img, (608, 608), interpolation=cv2.INTER_CUBIC)
+
+        ### cropped_img = img_to_array(cropped_img) ### SHOULD BE WITH LOADER IN VIDEOCAPTURE
+        return cropped_img
+
+
     def get_crop(self, coordinates, img):
 
         #print("coordinates",coordinates)
@@ -48,7 +59,10 @@ class ImageProcessing(object):
             nw = ow * scale
             nh = oh * scale
 
-            return cv2.resize(image, (int(nw), int(nh)), interpolation=cv2.INTER_CUBIC) # or better quality??
+            return cv2.resize(image, (int(nw), int(nh)), interpolation=cv2.INTER_NEAREST)
+            # perhaps rather INTER_LINEAR
+            # fastest INTER_NEAREST
+            # before had  INTER_CUBIC
 
     # Faster alternative for image editing?
     # (unsuccesful) https://github.com/jbaiter/jpegtran-cffi

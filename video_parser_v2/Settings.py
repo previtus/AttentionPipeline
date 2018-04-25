@@ -39,7 +39,7 @@ class Settings(object):
         # Renderer
         self.render_files_into_folder = True
         #self.render_folder_name = "__Renders/"+self.RUN_NAME+"/"
-        on_server_path = "/home/vruzicka/storage_pylon5/__BigRun/"
+        on_server_path = "/home/vruzicka/storage_pylon5/__BigRun_25Apr/"
         #on_server_path = ""
         self.render_folder_name = on_server_path+"__Renders/"+self.RUN_NAME+"/"
 
