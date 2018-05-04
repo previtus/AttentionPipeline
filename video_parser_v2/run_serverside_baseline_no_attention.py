@@ -43,9 +43,11 @@ parser.add_argument('-LimitEvalMach', help='# of machines for Final Evaluation, 
 parser.add_argument('-SetAttMach', help='# of machines for Attention Evaluation, needs to be specified if we want > 1', default='1')
 
 parser.add_argument('-render_files_into_folder', help='Save Images or not', default='True')
+
+
 parser.add_argument('-turn_off_attention_baseline', help='Turn off attention', default='False')
 
-from main_loop import main_loop
+from main_loop_baseline_no_attention import main_loop_baseline_no_attention
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -54,7 +56,6 @@ if __name__ == '__main__':
 
     #args.input = "/pylon2/ci4s8dp/vruzicka/_videos_files/liverpool_station_8k/input/frames_4fps/"
     #args.input = "/pylon2/ci4s8dp/vruzicka/_videos_files/RuzickaDataset/input/S1000040_5fps/"
-    #args.endframe = '50'
     #args.atthorizontal_splits = 1
     #args.horizontal_splits = 2
 
@@ -63,7 +64,7 @@ if __name__ == '__main__':
     #args.name = "TestOnServer"
     #args.endframe = 10
 
-    main_loop(args)
+    main_loop_baseline_no_attention(args)
 
     end = timer()
     time = (end - start)
