@@ -231,11 +231,15 @@ class History(object):
                 the_file.write(l + '\n')
 
     def plot_and_save(self, show_instead_of_saving=False):
+
         self.print_all_datalists()
         self.timing_per_frame_plot_stackedbar(show_instead_of_saving)
         self.timing_per_frame_plot_boxplot(show_instead_of_saving)
         self.timing_per_server_plot_boxplot(show_instead_of_saving)
         self.number_of_objects(show_instead_of_saving)
+
+        if self.settings.turn_off_attention_baseline:
+            return 1
 
         for_attention_measure_waiting_instead_of_time = self.settings.precompute_attention_evaluation
 

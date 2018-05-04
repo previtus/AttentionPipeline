@@ -13,7 +13,7 @@ class Debugger(object):
 
     def debug_coordinates_in_frame(self, coordinates, frame_image, type, custom_name=''):
         print("Debugging",type+custom_name,"coordinates", len(coordinates), coordinates)
-        print("   in image of resolution", frame_image.size)
+        print("   in image of resolution", frame_image.shape)
 
         scale = 1.0
         if type == 'attention':
@@ -22,7 +22,9 @@ class Debugger(object):
             scale = self.cropscoordinates.scale_ratio_of_evaluation_crop
 
         scaled_image = self.evaluation.imageprocessing.scale_image(frame_image,scale)
-        print("   scaled by", scale, " to ", scaled_image.size)
+        print("   scaled by", scale, " to ", scaled_image.shape)
+
+        print("So a 608x608 block in new space will be ", 608.0/scale)
 
         bboxes = self.coordinates_to_fake_bboxes(coordinates)
 

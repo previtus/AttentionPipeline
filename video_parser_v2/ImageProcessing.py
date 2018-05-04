@@ -59,7 +59,8 @@ class ImageProcessing(object):
             nw = ow * scale
             nh = oh * scale
 
-            return cv2.resize(image, (int(nw), int(nh)), interpolation=cv2.INTER_NEAREST)
+            # PERF return cv2.resize(image, (int(nw), int(nh)), interpolation=cv2.INTER_NEAREST)
+            return cv2.resize(image, (int(nw), int(nh)), interpolation=cv2.INTER_CUBIC)
             # perhaps rather INTER_LINEAR
             # fastest INTER_NEAREST
             # before had  INTER_CUBIC

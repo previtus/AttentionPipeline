@@ -16,8 +16,8 @@ class Renderer(object):
 
         self.render_files_into_folder = self.settings.render_files_into_folder
         self.render_folder_name = self.settings.render_folder_name
-        if self.render_files_into_folder:
-            make_folder(self.render_folder_name)
+        #if self.render_files_into_folder:
+        make_folder(self.render_folder_name)
 
         self.last_saving_thread = None
 

@@ -21,6 +21,9 @@ class Settings(object):
         self.debug_just_count_hist = (args.debug_just_count_hist == 'True')
         self.debug_just_handshake = (args.debug_just_handshake == 'True')
 
+        self.turn_off_attention_baseline = (args.turn_off_attention_baseline == 'True')
+        #self.turn_off_attention_baseline = False
+
         self.render_history_every_k_frames = int(args.render_history_every)
 
         self.INPUT_FRAMES = args.input
@@ -37,10 +40,10 @@ class Settings(object):
         self.set_verbosity(verbosity)
 
         # Renderer
-        self.render_files_into_folder = True
+        self.render_files_into_folder = (args.render_files_into_folder == 'True')
         #self.render_folder_name = "__Renders/"+self.RUN_NAME+"/"
-        on_server_path = "/home/vruzicka/storage_pylon5/__BigRun_25Apr/"
-        #on_server_path = ""
+        #on_server_path = "/home/vruzicka/storage_pylon5/__BigRun_25Apr/"
+        on_server_path = ""
         self.render_folder_name = on_server_path+"__Renders/"+self.RUN_NAME+"/"
 
 

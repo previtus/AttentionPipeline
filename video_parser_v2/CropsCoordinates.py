@@ -35,6 +35,11 @@ class CropsCoordinates(object):
 
         if self.settings.verbosity >= 3:
             print("Crop coordinates for stage `"+type+"` generated with one crop sized",crop_size)
+            #print("self.scale_ratio_of_evaluation_crop",self.scale_ratio_of_evaluation_crop)
+            #print("self.crop_size_in_evaluation",self.crop_size_in_evaluation)
+            #print("times",self.crop_size_in_evaluation/self.scale_ratio_of_evaluation_crop)
+            #print("total crops:",len(crops_coords))
+
         return crops_coords
 
     def project_evaluation_back(self, attention_evaluation, type):
@@ -163,6 +168,9 @@ class CropsCoordinates(object):
         # w_crops: [[0, 608], [517, 1125], [1035, 1643], [1553, 2161]]
         # h_crops: [[0, 608], [608, 1216]]
         crop_size = w_crops[0][1] - w_crops[0][0]
+
+        if self.settings.verbosity >= 3:
+            print("Cropping grid dims:",len(h_crops),"rows x", len(w_crops),"columns")
 
         crops = []
         i = 0

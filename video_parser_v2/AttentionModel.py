@@ -16,11 +16,61 @@ class AttentionModel(object):
         self.evaluation = evaluation
         self.history = history
 
+    def get_all_crops(self, evaluation_coordinates):
+        """
+            Even faster, just looking at intersections
+        """
+        start = timer()
+
+        active_coordinates = []
+        already_loaded_ids = []
+
+        for b_coordinate in evaluation_coordinates:
+            box = list(b_coordinate[1])
+            id = b_coordinate[0]
+
+            if id not in already_loaded_ids:
+                active_coordinates.append([id, box])
+                already_loaded_ids.append(id)
+
+        end = timer()
+        time_active_coords = end - start
+        if self.settings.verbosity > 2:
+            print("Attention model found",len(active_coordinates),"active crops in the image (out of",len(evaluation_coordinates),") in ",time_active_coords)
+
+        self.history.report_time_getting_active_crops(time_active_coords, self.settings.frame_number)
+        self.history.report_attention(len(active_coordinates), len(evaluation_coordinates), self.settings.frame_number)
+
+        return active_coordinates
+
+
     def get_active_crops_intersections(self, projected_evaluation, evaluation_coordinates, frame):
         """
             Even faster, just looking at intersections
         """
         start = timer()
+
+        if self.settings.turn_off_attention_baseline:
+            already_loaded_ids = []
+            active_coordinates = []
+
+            for b_coordinate in evaluation_coordinates:
+                box = list(b_coordinate[1])
+                id = b_coordinate[0]
+                intersects = True
+                if intersects:
+                    if id not in already_loaded_ids:
+                        active_coordinates.append([id, box])
+                        already_loaded_ids.append(id)
+
+            end = timer()
+            time_active_coords = end - start
+            if self.settings.verbosity > 2:
+                print("Attention model found",len(active_coordinates),"active crops in the image (out of",len(evaluation_coordinates),") in ",time_active_coords)
+
+            self.history.report_time_getting_active_crops(time_active_coords, self.settings.frame_number)
+            self.history.report_attention(len(active_coordinates), len(evaluation_coordinates), self.settings.frame_number)
+            return active_coordinates
 
         # careful, this has to be calculated exactly once! (its changing the values)
         projected_evaluation = self.cropscoordinates.project_evaluation_to(projected_evaluation, 'original_image_to_evaluation_space')
