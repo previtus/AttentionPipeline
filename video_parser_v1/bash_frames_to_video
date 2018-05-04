@@ -9,6 +9,10 @@ ffmpeg -r 6/1 -pattern_type glob -i 'frames/*.jpg' -c:v libx264 -vf fps=6 -pix_f
 30 fps
 ffmpeg -r 30/1 -pattern_type glob -i 'frames/*.jpg' -c:v libx264 -vf fps=30 -pix_fmt yuv420p out_30fps.mp4
 
+ffmpeg -r 5/1 -pattern_type glob -i 'm7_021_full_frames1min_serversideclient_all/*.jpg' -c:v libx264 -vf fps=5 -pix_fmt yuv420p m7_021_full_frames1min_serversideclient_all.mp4
+
+# no libx264?
+ffmpeg -r 30/1 -pattern_type glob -i 'Walking_day_outdoor_3_GTannot/*.jpg' -vf fps=30 -pix_fmt yuv420p annotated_tests_23.mp4
 
 
 # convert img to the right size - ps put it there in multiple copies, to be properly visible

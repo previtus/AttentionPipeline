@@ -3,36 +3,16 @@ from mark_frame_with_bbox import annotate_image_with_bounding_boxes
 import matplotlib.pyplot as plt
 import numpy as np
 
-#gt_path_folder = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/samples/_S1000040_5fps/"
-#output_model_predictions_folder = '/home/ekmek/intership_project/video_parser_v1/_videos_to_test/RuzickaDataset/output/Annot_S1000040_5fps_Splits2to4/'
-
-# EXAMPLE
-#gt_path_folder = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/input/auto_annot/"
-#output_model_predictions_folder = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/output_annotation_results/"
-
-gt_path_folder = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PEViD_UHD_annot/Exchanging_bags_day_indoor_2/"
-# v1 code
-output_model_predictions_folder = "/home/ekmek/intership_project/video_parser_v1/_videos_to_test/output/Exchanging_bags_day_indoor_2_1to2/"
-# v2 code
-### NMS definitely helps .. output_model_predictions_folder = "/home/ekmek/intership_project/video_parser_v2/__Renders/Exchanging_bags_day_indoor_2__1to2_beforeNMS/"
-output_model_predictions_folder = "/media/ekmek/VitekDrive_I/___Results_for_internship/Accuracy/PEViD_full/Exchanging_bags_day_outdoor_6_1to3/"
-
-#2to4_20px_subset 0.81
-output_model_predictions_folder = "/home/ekmek/intership_project/video_parser_v2/__Renders/cleanSet_Exchanging_bags_day_indoor_2_2to4/"
-#1to3_50px_subset 0.95
-output_model_predictions_folder = "/home/ekmek/intership_project/video_parser_v2/__Renders/cleanSet_Exchanging_bags_day_indoor_2_1to3_over50/"
-#1to3_50px_90perc subset 0.95
-output_model_predictions_folder = "/home/ekmek/intership_project/video_parser_v2/__Renders/cleanSet_Exchanging_bags_day_indoor_2_1to3_over50_90percovereat/"
-
-
-output_model_predictions_folder = "/home/ekmek/intership_project/video_parser_v2/__Renders/cleanSet_Exchanging_bags_day_indoor_2_1to3/"
-
-
-file = "2to4_over20/My4KOver20__S1000040_5fps_2to4" # is worse!
-gt = "_S1000040_5fps"
+file = "2to6_over20/My4K__S1000010_5fps_2to6"
+gt = "_S1000010_5fps"
 output_model_predictions_folder = "/media/ekmek/VitekDrive_I/___Results_for_internship/Accuracy/Custom_4k_videos/"+file+"/"
 gt_path_folder = "/media/ekmek/VitekDrive_I/2017-18_CMU internship, part 1, Fall 2017/4K_DATASET_REC/annotations/samples/"+gt+"/"
 globally_saved_annotations = "/media/ekmek/VitekDrive_I/2017-18_CMU internship, part 1, Fall 2017/4K_DATASET_REC/annotations/samples/"
+
+image_redirection_path = "/media/ekmek/VitekDrive_I/2017-18_CMU internship, part 1, Fall 2017/4K_DATASET_REC/" \
+                         "annotations/samples - SLOWLY blurring/S1000010_5fps/"
+
+#image_redirection_path = gt_path_folder
 
 
 show_figures = True
@@ -70,20 +50,27 @@ imagenames = [x.strip() for x in lines]
 
 aps = []
 
+#imagenames = [imagenames[-1]]
+print(imagenames)
+imagenames = ['0077']
+#imagenames = [imagenames[0]]
+
 for imagename in imagenames:
-    img = gt_path_folder + imagename + ".jpg"
+    img = image_redirection_path + imagename + ".jpg"
     gt_file = gt_path_folder + imagename + ".xml"
 
     gt = parse_rec(gt_file)
     if imagename not in predictions_dict:
         continue
-    predictions = predictions_dict[imagename]
+    predictions = predictions_dict[imagename ]
 
     print(imagename)
     print("ground truth:", len(gt), gt)
     print("predictions:", len(predictions), predictions)
 
     colors = [(0,128,0,125), (255, 165,0,125)] # green=GT orange=PRED
+    colors = [(0,128,0,0), (255, 0,0,255)] # red=PRED
+    colors = [(0,128,0,0), "lightcoral"] # red=PRED
 
     bboxes_gt = []
     bboxes_pred = []
@@ -107,6 +94,7 @@ for imagename in imagenames:
 
     bboxes = bboxes_gt + bboxes_pred
     #bboxes = bboxes_gt
+    bboxes = bboxes_pred
 
     rec, prec, ap = voc_eval_twoArrs(bboxes_gt,bboxes_pred,ovthresh=0.5)
     aps.append(ap)
@@ -116,8 +104,9 @@ for imagename in imagenames:
 
     if show_figures:
         img = annotate_image_with_bounding_boxes(img, "", bboxes, colors, ignore_crops_drawing=True, draw_text=draw_text,
-                                       show=False, save=False, thickness=[4.0, 1.0], resize_output = 1.0)
+                                       show=False, save=False, thickness=[0.0, 6.0], resize_output = 1.0)
 
+    img.save("last_gt_pred.jpg", quality=90)
 
     if show_figures:
         #fig = plt.figure()
@@ -128,9 +117,9 @@ for imagename in imagenames:
 
     print("")
 
-print(aps)
-print("[AP] min, max, avg:",np.min(aps), np.max(aps), np.mean(aps))
-fig = plt.figure()
-plt.title("AP over frames, avg: "+str(np.mean(aps)))
-plt.plot(aps)
-plt.show()
+#print(aps)
+#print("[AP] min, max, avg:",np.min(aps), np.max(aps), np.mean(aps))
+#fig = plt.figure()
+#plt.title("AP over frames, avg: "+str(np.mean(aps)))
+#plt.plot(aps)
+#plt.show()

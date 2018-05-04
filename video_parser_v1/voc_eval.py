@@ -200,7 +200,7 @@ def voc_eval(detpath,
     recs = {}
     for i, imagename in enumerate(imagenames):
         path = annopath+imagename+".xml"
-        print(path)
+        #print(path)
 
         recs[imagename] = parse_rec(path)
         if i % 100 == 0:
@@ -305,7 +305,7 @@ def voc_eval(detpath,
         else:
             fp[d] = 1.
 
-    print("NPOSSSS ", npos)
+    #print("NPOSSSS ", npos)
 
     # compute precision recall
     fp = np.cumsum(fp)
@@ -317,6 +317,74 @@ def voc_eval(detpath,
     ap = voc_ap(rec, prec, use_07_metric)
 
     return rec, prec, ap
+
+
+def voc_eval__returnNumberOfGTObjects(detpath,
+             annopath,
+             imagesetfile,
+             classname):
+
+    with open(imagesetfile, 'r') as f:
+        lines = f.readlines()
+    imagenames = [x.strip() for x in lines]
+
+    recs = {}
+    for i, imagename in enumerate(imagenames):
+        path = annopath+imagename+".xml"
+        #print(path)
+
+        recs[imagename] = parse_rec(path)
+        if i % 100 == 0:
+            print('Reading annotation for {:d}/{:d}'.format(
+                i + 1, len(imagenames)))
+
+    # extract gt objects for this class
+    class_recs = {}
+    npos = 0
+
+    numbers_of_gt_bboxes_in_files = []
+    for imagename in imagenames:
+        R = [obj for obj in recs[imagename] if obj['name'] == classname]
+        bbox = np.array([x['bbox'] for x in R])
+        difficult = np.array([x['difficult'] for x in R]).astype(np.bool)
+        det = [False] * len(R)
+        npos = npos + sum(~difficult)
+        class_recs[imagename] = {'bbox': bbox,
+                                 'difficult': difficult,
+                                 'det': det}
+        #print("R",R)
+        #print("bbox",bbox)
+        num_of_boxes = len(bbox)
+        numbers_of_gt_bboxes_in_files.append(num_of_boxes)
+    print("numbers_of_gt_bboxes_in_files",numbers_of_gt_bboxes_in_files)
+
+    # read dets
+    detfile = detpath.format(classname)
+    with open(detfile, 'r') as f:
+        lines = f.readlines()
+
+    frame_number_to_bboxes_number = {}
+    splitlines = [x.strip().split(' ') for x in lines]
+    image_ids = [x[0] for x in splitlines]
+    confidence = np.array([float(x[1]) for x in splitlines])
+    BB = np.array([[float(z) for z in x[2:]] for x in splitlines])
+    sorted_ind = np.argsort(-confidence)
+    BB = BB[sorted_ind, :]
+
+    ## BB is array of all bboxes
+    ## image_ids tells to which frame it belongs
+    for d,id in enumerate(imagenames):
+        if id not in frame_number_to_bboxes_number:
+            frame_number_to_bboxes_number[id] = [numbers_of_gt_bboxes_in_files[d],0]
+
+    #print("frame_number_to_bboxes_number pred",frame_number_to_bboxes_number)
+
+    #print("image_ids",image_ids)
+    #print("imagenames",imagenames)
+    for id in image_ids:
+        frame_number_to_bboxes_number[id][1] = frame_number_to_bboxes_number[id][1] + 1
+    #print("frame_number_to_bboxes_number after", frame_number_to_bboxes_number)
+    return frame_number_to_bboxes_number
 
 """
 gt = '/home/ekmek/intership_project/video_parser_v1/_videos_to_test/PittsMine/input/annotated/0013.xml'
@@ -334,3 +402,40 @@ print("rec", rec)
 print("prec", prec)
 print("ap", ap)
 """
+
+"""
+gt = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/input/test_s21_input/0018.xml"
+obj = parse_rec(gt)
+print(len(obj), obj)
+
+
+gt_path = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/input/test_s21_input/"
+
+imagesetfile = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/output_test_s21/annotnames.txt"
+predictions  = "/home/ekmek/intership_project/_side_projects/annotation_conversion/annotated examples/output_test_s21/annotbboxes.txt"
+rec, prec, ap = voc_eval(predictions,gt_path,imagesetfile,'person')
+
+print("rec", rec)
+print("prec", prec)
+print("ap", ap)
+"""
+
+# format of bboxes?
+
+"""
+ixmin = np.maximum(BBGT[:, 0], bb[0])
+iymin = np.maximum(BBGT[:, 1], bb[1])
+ixmax = np.minimum(BBGT[:, 2], bb[2])
+iymax = np.minimum(BBGT[:, 3], bb[3])
+"""
+# xmin maybe left = bb[0] == bbgt[*,0]
+# ymin maybe bottom = bb[1] == bbgt[*,1]
+# xmax maybe right = bb[2] == bbgt[*,2]
+# ymax maybe top = bb[3] == bbgt[*,3]
+## but top and bottom might be swapped
+
+# [left, bottom, right, top]
+# or
+# [left, top, right, bottom]
+# well anyway, should be
+# [xmin, ymin, xmax, ymax] - easy

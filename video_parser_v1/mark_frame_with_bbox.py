@@ -75,7 +75,7 @@ def annotate_image_with_bounding_boxes(image_path, save_path, bboxes, colors, ig
 
             color = colors[c]
             draw.rectangle(
-                    [left + i, top + i, right - i, bottom - i],
+                    [left + i - thickness_val, top + i - thickness_val, right - i, bottom - i],
                     outline=color) #colors[c])
 
         if draw_text:

@@ -9,8 +9,9 @@ def visualize_time_measurements(time_measurements, names, title, show=True, save
 
     data_y_max = y_max - (y_max/2.0)
     for t in time_measurements:
-        m = np.max(t)
-        data_y_max = np.max([m,data_y_max])
+        if len(t)>0:
+            m = np.max(t)
+            data_y_max = np.max([m,data_y_max])
 
     data_y_max = data_y_max + (data_y_max/10.0)
     plt.ylim(y_min, data_y_max)
