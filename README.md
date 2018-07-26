@@ -1,4 +1,4 @@
-# intership_project
+# Fast and accurate object detection in high resolution 4K and 8K video using GPUs
 internship project at CMU, 2017-2018
 
 ![Illustration image](https://github.com/previtus/intership_project/blob/master/project_illustration.jpg)
