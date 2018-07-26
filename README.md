@@ -26,7 +26,8 @@ _ps: useful to install on server with restricted access: `python setup.py instal
 
 **Install**
 - python 3.6.1, tensorflow with gpu and cuda support, keras (see list above)
-- YAD2K, python YOLO v2 implementation: https://github.com/allanzelener/YAD2K (commit hash a42c760ef868bc115e596b56863dc25624d2e756)
+- version 1: YAD2K, python YOLO v2 implementation: https://github.com/allanzelener/YAD2K (commit hash a42c760ef868bc115e596b56863dc25624d2e756)
+- version 2: darkflow, another tensorflow YOLO v2 implementation, worked better with server deployment: https://github.com/thtrieu/darkflow
 - put files from "__to-be-put-with-YAD2K" to YAD2K folder
 - make sure that there is correct path to the YAD2K folder in "yolo_handler.py" on line `yolo_paths = ["/home/<whatever>/YAD2K/","<more possible paths>"]`
 - prepare data *(see the ffmpeg commands bellow)* so it follows this hierarchy:
@@ -51,9 +52,9 @@ We can convert the resulting annotated output frames back into video.
 ## Running
 
 - Go through proper installation of everything required.
-- `cd /<whatever>/intership_project/video_parser`
-- `python run_fast_sketch.py -horizontal_splits 2 -attention_horizontal_splits 1 -input "/<path>/PL_Pizza sample/input/frames/" -name "_ExampleRunNameHere"`
-- See the results in `/<path>/PL_Pizza sample/output_ExampleRunNameHere`
+- `cd /<path to project>/video_parser_v1`
+- `python run_fast_sketch.py -horizontal_splits 2 -attention_horizontal_splits 1 -input "/<custom path>/PL_Pizza sample/input/frames/" -name "_ExampleRunNameHere"`
+- See the results in `/<custom path>/PL_Pizza sample/output_ExampleRunNameHere`
 
 ## (optional) Annotation
 When the python code is run with `-annotategt 'True'`, then the model will look for which frames have ground truth annotations accompanying them (in VOC style .xml file next to the .jpg). For these frames it then saves results into the output folder (into files `annotbboxes.txt` and `annotnames.txt`).
@@ -63,7 +64,7 @@ Visualization tool can be then run (with paths to the input and output folder se
 `gt_path_folder = "/<path>/intership_project/_side_projects/annotation_conversion/annotated examples/input/auto_annot/"
 output_model_predictions_folder = "/<path>/intership_project/_side_projects/annotation_conversion/annotated examples/output_annotation_results/"`
 
-As result we should see something like image in  *_side_projects/annotation_conversion/annotated examples/example_visualization_of_ap_measurement.jpg*
+As result we should see something like image in  [*_side_projects/annotation_conversion/annotated examples/example_visualization_of_ap_measurement.jpg*](https://github.com/previtus/intership_project/blob/master/_side_projects/annotation_conversion/annotated%20examples/example_visualization_of_ap_measurement.jpg)
 
 - hand annotation possible with labelImg: https://github.com/tzutalin/labelImg (install with `pip install labelImg`)
 - automatic annotation of the "PNNL ParkingLot Pizza" dataset with _side_projects/annotation_conversion/convert_parking_lot_to_voc.py
