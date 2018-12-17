@@ -26,5 +26,14 @@ for server_name in server_names:
     first_gpu = 9000 + i
     second_gpu = 9100 + i
     print("ssh -N -f -L  "+str(first_gpu)+":"+server_name+":8123 "+user+"@"+server_name+".pvt.bridges.psc.edu")
-    print("ssh -N -f -L  "+str(second_gpu)+":"+server_name+":8666 "+user+"@"+server_name+".pvt.bridges.psc.edu")
+    #print("ssh -N -f -L  "+str(second_gpu)+":"+server_name+":8666 "+user+"@"+server_name+".pvt.bridges.psc.edu")
+    i+=1
+
+i = 0
+for server_name in server_names:
+    N_servers = 9
+    for Nth_gpu in range(N_servers):
+        local_port = 9000 + Nth_gpu*11
+        distant_port = 8000 + Nth_gpu*11
+        print("ssh -N -f -L  "+str(local_port)+":"+server_name+":"+str(distant_port)+" "+user+"@"+server_name+".pvt.bridges.psc.edu")
     i+=1
