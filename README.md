@@ -67,6 +67,8 @@ We can convert the resulting annotated output frames back into video.
 
 To add the support of additional server workers:
 
+![Client - server illustration](https://github.com/previtus/AttentionPipeline/blob/master/client-servers.jpg)
+
 - (optionally) prepare server workers with either this setup: 
   * python Server.py	(useful `CUDA_VISIBLE_DEVICES=0 python Server.py`) on several server nodes. Each of these binds port :8123
   * connect via ssh tunnel from the client, use `python ssh_server_connect.py` as a guidance on which calls you need to run. It will be something like `ssh -N -f -L 9000:"+server_name+":8123 "+user+"@"+server_name+".pvt.bridges.psc.edu`
