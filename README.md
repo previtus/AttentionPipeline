@@ -75,10 +75,10 @@ We can convert the resulting annotated output frames back into video.
   * Finally run the client on yet another GPU and it will try to locally connect to all ports between 8000 ... 8099
 
 - run client with this:
-  * `python run_serverside.py -verbosity 1 -render_history_every 50 -endframe 100 -input "/<custom path>/PL_Pizza sample/input/frames/" -atthorizontal_splits 2 -horizontal_splits 4 -LimitEvalMach 18 -SetAttMach 1 -name "_ExampleRunNameHere"`
-  * note that this will go through the first 100 frames (`-endframe`) and it will save history twice (`-render_history_every` was set on 50 = after every 50 frames we save the statistics plots and history). We are also looking at 2to4 split of the images (see paper) (`-atthorizontal_splits 2 -horizontal_splits 4`). And finally we are forcing all available workers but 1 (`-SetAttMach 1`) to be working on final evaluation, with the limit of maximally 18 (`-LimitEvalMach 18`)
-- See the results in `/<by default "", changeable in Settings.py as self.render_folder_name>/__Renders/<RUN_NAME>/`
-
+  * `python run_serverside.py -atthorizontal_splits 2 -horizontal_splits 4 -input "/<custom path>/PL_Pizza sample/input/frames/" -name "_ExampleRunNameHere"`
+  * note that we are looking at 2to4 split of the images (see paper) (`-atthorizontal_splits 2 -horizontal_splits 4`).
+  
+- See the results in `/<by default "", changeable in Settings.py as self.render_folder_name>/__Renders/<_ExampleRunNameHere>/`
 
 ## (optional) Annotation
 When the python code is run with `-annotategt 'True'`, then the model will look for which frames have ground truth annotations accompanying them (in VOC style .xml file next to the .jpg). For these frames it then saves results into the output folder (into files `annotbboxes.txt` and `annotnames.txt`).
