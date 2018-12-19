@@ -60,8 +60,7 @@ We can convert the resulting annotated output frames back into video.
 
 - Go through proper installation of everything required.
 - `cd /<path to project>/video_parser_v2`
-- run client with this: `python run_serverside.py -atthorizontal_splits 2 -horizontal_splits 4 -input "/<custom path>/PL_Pizza sample/input/frames/" -name "_ExampleRunNameHere"`
-  * note that we are looking at 2to4 split of the images (see paper) (`-atthorizontal_splits 2 -horizontal_splits 4`).
+- `python run_serverside.py -horizontal_splits 2 -atthorizontal_splits 1 -input "/<custom path>/PL_Pizza sample/input/frames/" -name "_ExampleRunNameHere"`
 - See the results in `/<custom path>/__Renders/<_ExampleRunNameHere>/`
 
 To add the support of additional server workers:
