@@ -60,12 +60,16 @@ We can convert the resulting annotated output frames back into video.
 
 - Go through proper installation of everything required.
 - `cd /<path to project>/video_parser_v2`
+- run client with this: `python run_serverside.py -atthorizontal_splits 2 -horizontal_splits 4 -input "/<custom path>/PL_Pizza sample/input/frames/" -name "_ExampleRunNameHere"`
+  * note that we are looking at 2to4 split of the images (see paper) (`-atthorizontal_splits 2 -horizontal_splits 4`).
+- See the results in `/<custom path>/__Renders/<_ExampleRunNameHere>/`
+
+To add the support of additional server workers:
 
 - (optionally) prepare server workers with either this setup: 
   * python Server.py	(useful `CUDA_VISIBLE_DEVICES=0 python Server.py`) on several server nodes. Each of these binds port :8123
   * connect via ssh tunnel from the client, use `python ssh_server_connect.py` as a guidance on which calls you need to run. It will be something like `ssh -N -f -L 9000:"+server_name+":8123 "+user+"@"+server_name+".pvt.bridges.psc.edu`
   * (the main client code will try to connect to ports 9000 .. 9099 locally - with this tunnel it will connect to the server workers on their individual servers and port :8123)
-
 
 - (optionally) alternatively run on one server with multiple GPU's with this setup: 
   * `CUDA_VISIBLE_DEVICES=0 python Server_gpuN.py 1`
@@ -73,12 +77,6 @@ We can convert the resulting annotated output frames back into video.
   * etc. `CUDA_VISIBLE_DEVICES=<id-1> python Server_gpuN.py <id>`
   * Each one will again listen on local ports, this time it's :8000 + id*(11) (where id was 1,2, ...) 
   * Finally run the client on yet another GPU and it will try to locally connect to all ports between 8000 ... 8099
-
-- run client with this:
-  * `python run_serverside.py -atthorizontal_splits 2 -horizontal_splits 4 -input "/<custom path>/PL_Pizza sample/input/frames/" -name "_ExampleRunNameHere"`
-  * note that we are looking at 2to4 split of the images (see paper) (`-atthorizontal_splits 2 -horizontal_splits 4`).
-  
-- See the results in `/<by default "", changeable in Settings.py as self.render_folder_name>/__Renders/<_ExampleRunNameHere>/`
 
 ## (optional) Annotation
 When the python code is run with `-annotategt 'True'`, then the model will look for which frames have ground truth annotations accompanying them (in VOC style .xml file next to the .jpg). For these frames it then saves results into the output folder (into files `annotbboxes.txt` and `annotnames.txt`).
