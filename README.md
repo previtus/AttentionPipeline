@@ -31,6 +31,7 @@ _ps: useful to install on server with restricted access: `python setup.py instal
   * make sure that there is correct path to the YAD2K folder in "yolo_handler.py" on line `yolo_paths = ["/home/<whatever>/YAD2K/","<more possible paths>"]`
 
 - version 2: darkflow, another tensorflow YOLO v2 implementation, worked better with server deployment: https://github.com/thtrieu/darkflow
+  * See [this gist](https://gist.github.com/previtus/bbecf03ae2ab1e952eb6cde26dd85638) to test out darkflow on it's own
 - prepare data *(see the ffmpeg commands bellow)* so it follows this hierarchy:
   * VideoName (whatever name, for example `PL_Pizza sample`)
     * input
