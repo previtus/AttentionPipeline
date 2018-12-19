@@ -27,9 +27,10 @@ _ps: useful to install on server with restricted access: `python setup.py instal
 **Install**
 - python 3.6.1, tensorflow with gpu and cuda support, keras (see list above)
 - version 1: YAD2K, python YOLO v2 implementation: https://github.com/allanzelener/YAD2K (commit hash a42c760ef868bc115e596b56863dc25624d2e756)
+  * put files from "__to-be-put-with-YAD2K" to YAD2K folder
+  * make sure that there is correct path to the YAD2K folder in "yolo_handler.py" on line `yolo_paths = ["/home/<whatever>/YAD2K/","<more possible paths>"]`
+
 - version 2: darkflow, another tensorflow YOLO v2 implementation, worked better with server deployment: https://github.com/thtrieu/darkflow
-- put files from "__to-be-put-with-YAD2K" to YAD2K folder
-- make sure that there is correct path to the YAD2K folder in "yolo_handler.py" on line `yolo_paths = ["/home/<whatever>/YAD2K/","<more possible paths>"]`
 - prepare data *(see the ffmpeg commands bellow)* so it follows this hierarchy:
   * VideoName (whatever name, for example `PL_Pizza sample`)
     * input
