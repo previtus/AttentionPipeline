@@ -1,4 +1,4 @@
-# Fast and accurate object detection in high resolution 4K and 8K video using GPUs
+# Fast and accurate object detection in high resolution 4K and 8K video using GPUs [[arXiv:1810.10551]](https://arxiv.org/abs/1810.10551)
 internship project at CMU, 2017-2018
 
 ![Illustration image](https://github.com/previtus/intership_project/blob/master/project_illustration.jpg)
