@@ -21,6 +21,8 @@ Used Anaconda3 and these modules (likely also works with newer versions)
 - Keras 2.0.3
 - hdf5 1.8.17
 - pillow 4.1.0
+- additionally, depending on the version - either _YAD2K_ or _darkflow_ (see instruction bellow)
+
 
 _ps: useful to install on server with restricted access: `python setup.py install --user`_
 
