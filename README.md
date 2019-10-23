@@ -1,7 +1,9 @@
-# Fast and accurate object detection in high resolution 4K and 8K video using GPUs [arXiv:[1810.10551](https://arxiv.org/abs/1810.10551)] [media: [1](https://www.ece.cmu.edu/news-and-events/story/2018/11/franchetti-object-detection.html), [2](https://techxplore.com/news/2018-11-4k-8k-video-gpus.html)]
+# Fast and accurate object detection in high resolution 4K and 8K video using GPUs [arXiv:[1810.10551](https://arxiv.org/abs/1810.10551)] [media: [1](https://www.ece.cmu.edu/news-and-events/story/2018/11/franchetti-object-detection.html), [2](https://techxplore.com/news/2018-11-4k-8k-video-gpus.html)] [[video](https://www.youtube.com/watch?v=07wCxSItnAk)]
 internship project at CMU, 2017-2018
 
 ![Illustration image](https://github.com/previtus/intership_project/blob/master/project_illustration.jpg)
+
+**Video: https://www.youtube.com/watch?v=07wCxSItnAk**
 
 Working with high resolution videos to locate certain objects. First pass serves as attention selection on low res version / fast check, second pass then checks more thoroughly on selected areas.
 
